@@ -1,6 +1,6 @@
 import sys, os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from algorithm.RSA import*
+from src.algorithm.RSA import*
 def test_biginteger():
     # 测试1：基础加法（验证PPT理论）
     # 创建第⼀个⼤整数对象，值为123456789

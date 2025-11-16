@@ -1,4 +1,4 @@
-echo "__pycache__/
+__pycache__/
 *.pyc
 *.pyo
 *.pyd
@@ -10,3 +10,6 @@ pip-delete-this-directory.txt
 .idea/
 *.iml
 *.iws" > .gitignore
+.env
+*.json
+*.log

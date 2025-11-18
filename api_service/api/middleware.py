@@ -5,7 +5,7 @@ from collections import defaultdict
 import re
 import json
 from src.unified_service import UnifiedEcommerceService
-
+from api_service.utils.jwt_balcklist import jwt_blacklist
 
 class JWTAuthenticationMiddleware(MiddlewareMixin):
     def process_request(self, request):
@@ -18,7 +18,7 @@ class JWTAuthenticationMiddleware(MiddlewareMixin):
             '/api/docs/',
             '/api/swagger/',
             '/admin/',
-            '/api/auth/logout',
+            '/api/auth/logout',  # 登出需要特殊处理
             '/api/products',
             '/health',
             '/api/v1/api/login',
@@ -45,6 +45,16 @@ class JWTAuthenticationMiddleware(MiddlewareMixin):
 
         token = auth_header[7:]
         print(f"[JWT DEBUG] 提取的token: {token[:20]}...")
+
+        # 检查令牌是否在黑名单中
+        if jwt_blacklist.is_blacklisted(token):
+            print("[JWT DEBUG] 令牌已在黑名单中")
+            return JsonResponse({
+                "code": 401,
+                "message": "令牌已失效",
+                "data": None,
+                "timestamp": time.strftime('%Y-%m-%dT%H:%M:%S')
+            }, status=401)
 
         try:
             service = UnifiedEcommerceService()

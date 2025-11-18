@@ -10,8 +10,9 @@ from datetime import datetime
 import sys
 import os
 from django.http import JsonResponse
-
-
+from api_service.utils.jwt_balcklist import jwt_blacklist
+from api_service.utils.cache_utils import ProductCache, UserCache
+from api_service.utils.redis_client import redis_client
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 from src.unified_service import UnifiedEcommerceService
 
@@ -327,7 +328,7 @@ class UserLogoutView(APIView):
 
     @swagger_auto_schema(
         operation_summary="用户登出",
-        operation_description="用户登出",
+        operation_description="用户登出，将令牌加入黑名单",
         responses={
             200: openapi.Response(
                 description="登出成功",
@@ -349,10 +350,13 @@ class UserLogoutView(APIView):
         if auth_header.startswith('Bearer '):
             token = auth_header[7:]
             try:
+                # 将令牌加入Redis黑名单
+                jwt_blacklist.add_token(token)
+
+                # 调用原有的登出逻辑
                 service = UnifiedEcommerceService()
-                # 只调用原有的登出逻辑，不操作黑名单
                 result = service.user_system.logout(token)
-                print(f"[LOGOUT] 用户登出")
+                print(f"[LOGOUT] 用户登出，令牌已加入Redis黑名单")
             except Exception as e:
                 print(f"[LOGOUT ERROR] 登出异常: {e}")
 
@@ -384,7 +388,7 @@ class UserProfileView(APIView):
     def get(self, request):
         print(f"[Profile DEBUG] request.user_info: {getattr(request, 'user_info', 'NOT SET')}")
 
-        # 检查用户认证状态 - 现在使用 user_info
+        # 检查用户认证状态
         if not hasattr(request, 'user_info') or not request.user_info:
             print("[Profile DEBUG] 用户未认证")
             return JsonResponse({
@@ -395,10 +399,10 @@ class UserProfileView(APIView):
             }, status=401)
 
         try:
-            service = UnifiedEcommerceService()
-            # 使用 user_info 中的 username
+            # 使用缓存获取用户信息
             username = request.user_info['username']
-            user_info = service.user_system.get_user_info(username)
+            user_info = UserCache.get_user_profile(username)
+
             print(f"[Profile DEBUG] 获取的用户信息: {user_info}")
 
             if user_info:
@@ -493,14 +497,12 @@ class ProductListView(APIView):
     )
     def get(self, request):
         try:
-            service = UnifiedEcommerceService()
-
             keyword = request.GET.get('keyword')
             category_id = request.GET.get('category_id')
             min_price = request.GET.get('min_price')
             max_price = request.GET.get('max_price')
 
-            # 添加参数验证和转换
+            # 参数验证和转换
             try:
                 category_id = int(category_id) if category_id and category_id != 'null' else None
             except (ValueError, TypeError):
@@ -516,7 +518,8 @@ class ProductListView(APIView):
             except (ValueError, TypeError):
                 max_price = None
 
-            products = service.search_products(
+            # 使用缓存获取商品列表
+            products = ProductCache.get_product_list(
                 keyword=keyword,
                 category_id=category_id,
                 min_price=min_price,
@@ -655,6 +658,92 @@ class ProductDetailView(APIView):
             return Response({
                 "code": 500,
                 "message": f"获取商品详情失败: {str(e)}",
+                "data": None,
+                "timestamp": datetime.now().isoformat()
+            }, status=500)
+
+
+class HealthCheckView(APIView):
+    permission_classes = [AllowAny]
+
+    def get(self, request):
+        """健康检查接口"""
+        services_status = {
+            'api': 'healthy',
+            'database': 'unknown',
+            'redis': 'unknown',
+            'timestamp': datetime.now().isoformat()
+        }
+
+        # 检查数据库连接
+        try:
+            service = UnifiedEcommerceService()
+            # 简单的数据库查询测试
+            categories = service.get_categories()
+            services_status['database'] = 'healthy'
+        except Exception as e:
+            services_status['database'] = f'unhealthy: {str(e)}'
+
+        # 检查Redis连接
+        try:
+            if redis_client.ping():
+                services_status['redis'] = 'healthy'
+            else:
+                services_status['redis'] = 'unhealthy: ping failed'
+        except Exception as e:
+            services_status['redis'] = f'unhealthy: {str(e)}'
+
+        # 检查整体健康状态
+        overall_health = all(
+            status == 'healthy'
+            for service, status in services_status.items()
+            if service in ['api', 'database', 'redis']
+        )
+
+        return JsonResponse({
+            "code": 0 if overall_health else 503,
+            "message": "服务正常" if overall_health else "服务异常",
+            "data": services_status,
+            "timestamp": datetime.now().isoformat()
+        }, status=200 if overall_health else 503)
+
+
+class CacheStatusView(APIView):
+    """缓存状态查看"""
+
+    def get(self, request):
+        """查看缓存状态"""
+        try:
+            from api_service.utils.jwt_balcklist import jwt_blacklist
+
+            # 获取黑名单信息
+            blacklist_info = jwt_blacklist.get_blacklist_info()
+            blacklist_size = jwt_blacklist.get_blacklist_size()
+
+            # Redis连接状态
+            redis_status = "connected" if redis_client.ping() else "disconnected"
+
+            cache_status = {
+                'redis_status': redis_status,
+                'jwt_blacklist': {
+                    'total_tokens': blacklist_size,
+                    'valid_tokens': blacklist_info.get('valid_tokens', 0),
+                    'avg_ttl_minutes': round(blacklist_info.get('avg_ttl_minutes', 0), 2)
+                },
+                'timestamp': datetime.now().isoformat()
+            }
+
+            return JsonResponse({
+                "code": 0,
+                "message": "success",
+                "data": cache_status,
+                "timestamp": datetime.now().isoformat()
+            })
+
+        except Exception as e:
+            return JsonResponse({
+                "code": 500,
+                "message": f"获取缓存状态失败: {str(e)}",
                 "data": None,
                 "timestamp": datetime.now().isoformat()
             }, status=500)

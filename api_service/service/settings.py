@@ -112,10 +112,12 @@ CORS_ALLOW_CREDENTIALS = True
 
 # JWT 配置
 JWT_CONFIG = {
-    'SECRET_KEY': os.getenv('JWT_SECRET_KEY', 'your-jwt-secret-key'),
+    'SECRET_KEY': os.getenv('JWT_SECRET_KEY'),
     'ALGORITHM': 'HS256',
+    'ACCESS_TOKEN_EXPIRE_MINUTES': int(os.getenv('JWT_ACCESS_TOKEN_EXPIRE_MINUTES', 60)),
+    'REFRESH_TOKEN_EXPIRE_DAYS': int(os.getenv('JWT_REFRESH_TOKEN_EXPIRE_DAYS', 7)),
+    'BLACKLIST_PREFIX': 'jwt_blacklist',
 }
-
 # 日志配置
 LOGGING = {
     'version': 1,
@@ -150,3 +152,33 @@ SWAGGER_SETTINGS = {
     'JSON_EDITOR': True,
     'DEFAULT_INFO': 'service.urls.swagger_info',
 }
+
+
+# Session 使用 Redis（可选）
+SESSION_ENGINE = 'django.contrib.sessions.backends.cache'
+SESSION_CACHE_ALIAS = 'default'
+
+# Redis 配置 - 连接WSL中的Redis
+REDIS_CONFIG = {
+    'HOST': '172.28.225.228',  # WSL的IP
+    'PORT': 6379,
+    'DB': 0,
+    'PASSWORD': 'Redis_passwd',  # 你的Redis密码
+    # 移除 SSL 配置
+}
+
+CACHES = {
+    'default': {
+        'BACKEND': 'django_redis.cache.RedisCache',
+        'LOCATION': 'redis://:Redis_passwd@172.28.225.228:6379/0',
+        'OPTIONS': {
+            'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+            'SOCKET_CONNECT_TIMEOUT': 5,
+            'SOCKET_TIMEOUT': 5,
+        },
+        'KEY_PREFIX': 'ecommerce'
+    }
+}
+
+# 缓存配置
+CACHE_TTL = 60 * 15  # 15分钟默认缓存时间

@@ -47,9 +47,25 @@ class Command(BaseCommand):
             self.stdout.write(
                 self.style.SUCCESS('JWT黑名单统计信息:')
             )
-            self.stdout.write(f"  总令牌数: {size}")
-            self.stdout.write(f"  有效令牌数: {info.get('valid_tokens', 0)}")
-            self.stdout.write(f"  平均TTL: {info.get('avg_ttl_minutes', 0):.2f} 分钟")
+            self.stdout.write(f"   总令牌数: {info.get('total_tokens', 0)}")
+            self.stdout.write(f"   有效令牌数: {info.get('valid_tokens', 0)}")
+            self.stdout.write(f"   过期令牌数: {info.get('expired_tokens', 0)}")
+            self.stdout.write(f"   平均TTL: {info.get('avg_ttl_minutes', 0):.2f} 分钟")
+
+            # 显示详细建议
+            expired_count = info.get('expired_tokens', 0)
+            if expired_count > 0:
+                self.stdout.write(
+                    self.style.WARNING(f'有 {expired_count} 个过期令牌需要清理，使用 --cleanup 清理')
+                )
+            elif info.get('total_tokens', 0) > 0:
+                self.stdout.write(
+                    self.style.SUCCESS('所有令牌都在有效期内')
+                )
+            else:
+                self.stdout.write(
+                    self.style.WARNING('黑名单为空')
+                )
 
         except Exception as e:
             self.stderr.write(self.style.ERROR(f'获取统计信息失败: {e}'))

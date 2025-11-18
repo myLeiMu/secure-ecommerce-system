@@ -35,10 +35,10 @@ class RedisClient:
 
             # 测试连接
             self.connection.ping()
-            print(f"✅ Redis连接成功！主机: {host}:{port}, 数据库: {db}")
+            print(f"Redis连接成功！主机: {host}:{port}, 数据库: {db}")
 
         except Exception as e:
-            print(f"⚠️  Redis连接失败: {e}，将使用内存缓存")
+            print(f"Redis连接失败: {e}，将使用内存缓存")
             self.connection = None
 
     def set_key(self, key, value, expire=None):

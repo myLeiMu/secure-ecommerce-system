@@ -58,20 +58,18 @@ class JWTBlacklist:
 
     def cleanup_expired_tokens(self):
         """清理过期的黑名单令牌（Redis会自动处理）"""
-        # Redis会自动删除过期的键，这里主要用于手动清理
         try:
             pattern = f"{self.prefix}:*"
             keys = redis_client.keys(pattern)
             cleaned_count = 0
 
             for key in keys:
-                # 检查TTL，如果已经过期但还未被删除，手动删除
                 ttl = redis_client.get_ttl(key)
-                if ttl == -2:  # 键不存在
+                if ttl <= 0:  # TTL为0或负数表示已过期
                     redis_client.delete_key(key)
                     cleaned_count += 1
+                    print(f"[JWT黑名单] 清理过期令牌: {key}")
 
-            print(f"[JWT黑名单] 清理了 {cleaned_count} 个过期令牌")
             return cleaned_count
         except Exception as e:
             print(f"[JWT黑名单] 清理过期令牌失败: {e}")
@@ -82,7 +80,13 @@ class JWTBlacklist:
         try:
             pattern = f"{self.prefix}:*"
             keys = redis_client.keys(pattern)
-            return len(keys)
+            valid_count = 0
+
+            for key in keys:
+                if redis_client.get_ttl(key) > 0:
+                    valid_count += 1
+
+            return valid_count
         except Exception as e:
             print(f"[JWT黑名单] 获取黑名单大小失败: {e}")
             return 0
@@ -94,27 +98,35 @@ class JWTBlacklist:
             keys = redis_client.keys(pattern)
             total_size = len(keys)
 
-            # 计算平均剩余时间
-            total_ttl = 0
+            # 正确计算有效令牌数（TTL > 0）
             valid_tokens = 0
+            total_ttl = 0
 
             for key in keys:
                 ttl = redis_client.get_ttl(key)
-                if ttl > 0:
-                    total_ttl += ttl
+                if ttl > 0:  # 只有TTL大于0的才是有效令牌
                     valid_tokens += 1
+                    total_ttl += ttl
 
+            # 计算平均TTL
             avg_ttl = total_ttl / valid_tokens if valid_tokens > 0 else 0
 
             return {
                 'total_tokens': total_size,
-                'valid_tokens': valid_tokens,
+                'valid_tokens': valid_tokens,  # 正确的有效令牌数
+                'expired_tokens': total_size - valid_tokens,  # 新增：过期令牌数
                 'avg_ttl_seconds': avg_ttl,
                 'avg_ttl_minutes': avg_ttl / 60
             }
         except Exception as e:
             print(f"[JWT黑名单] 获取黑名单信息失败: {e}")
-            return {}
+            return {
+                'total_tokens': 0,
+                'valid_tokens': 0,
+                'expired_tokens': 0,
+                'avg_ttl_seconds': 0,
+                'avg_ttl_minutes': 0
+            }
 
 
 # 全局黑名单实例

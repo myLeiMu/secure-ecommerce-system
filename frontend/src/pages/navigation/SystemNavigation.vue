@@ -4,81 +4,13 @@
       <div>
         <p class="eyebrow">System Navigation</p>
         <h1>系统导航中心</h1>
-        <p class="subtitle">依据实验4 & 6 的业务流程，统一管理顶部导航、侧边栏、面包屑与移动端快捷入口，确保用户在不同终端都能便捷操作。</p>
+        <p class="subtitle">快速导航</p>
       </div>
       <div class="header-actions">
         <router-link to="/products" class="btn primary">前往商品模块</router-link>
         <router-link to="/profile" class="btn outline">进入个人中心</router-link>
       </div>
     </header>
-
-    <section class="navigation-grid">
-      <article class="nav-card">
-        <h2>顶部导航（Header）</h2>
-        <p>突出业务主入口，结合搜索与用户菜单，实现跨模块跳转。</p>
-        <ul>
-          <li>Logo + 关键模块（控制台 / 商品 / 导航中心）</li>
-          <li>全局搜索：支持关键字过滤，阻断 XSS</li>
-          <li>用户菜单：个人中心、系统导航、退出登录</li>
-        </ul>
-      </article>
-
-      <article class="nav-card">
-        <h2>侧边栏（Sidebar）</h2>
-        <p>映射实验6 的模块划分，实现角色可扩展的纵向导航。</p>
-        <ul>
-          <li>控制台、商品模块、导航中心、个人中心</li>
-          <li>支持折叠，桌面端粘性定位，移动端自动收起</li>
-          <li>所有链接均指向实际存在的页面，避免死链</li>
-        </ul>
-      </article>
-
-      <article class="nav-card">
-        <h2>面包屑 & 辅助导航</h2>
-        <p>在详情页（如商品详情）按用例路径展示当前位置，提供快速返回。</p>
-        <ul>
-          <li>首页 / 列表 / 详情的逐级反馈</li>
-          <li>结合页面操作按钮（如快捷操作、重试）</li>
-          <li>错误状态保留重试通道，避免流程中断</li>
-        </ul>
-      </article>
-
-      <article class="nav-card">
-        <h2>移动端底部导航</h2>
-        <p>同一套业务节点，通过 MobileNav 提供触控友好的入口。</p>
-        <ul>
-          <li>首页、商品、导航中心、个人中心</li>
-          <li>固定在底部并与桌面端导航保持一致</li>
-          <li>命中 WCAG 触控尺寸要求（最小44px）</li>
-        </ul>
-      </article>
-    </section>
-
-    <section class="responsive-section">
-      <h2>响应式断点 & 适配策略</h2>
-      <div class="responsive-grid">
-        <div v-for="breakpoint in breakpoints" :key="breakpoint.label" class="responsive-card">
-          <p class="bp-label">{{ breakpoint.label }}</p>
-          <p class="bp-size">{{ breakpoint.size }}</p>
-          <ul>
-            <li v-for="item in breakpoint.items" :key="item">{{ item }}</li>
-          </ul>
-        </div>
-      </div>
-    </section>
-
-    <section class="safety-section">
-      <h2>安全与体验强化</h2>
-      <div class="safety-grid">
-        <article class="safety-card" v-for="item in safetyChecklist" :key="item.title">
-          <h3>{{ item.title }}</h3>
-          <p>{{ item.description }}</p>
-          <ul>
-            <li v-for="point in item.points" :key="point">{{ point }}</li>
-          </ul>
-        </article>
-      </div>
-    </section>
   </div>
 </template>
 

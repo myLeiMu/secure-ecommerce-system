@@ -33,7 +33,7 @@
       </div>
       
       <div class="footer-bottom">
-        <p>&copy; 2024 电商系统. 保留所有权利.</p>
+        <p>&copy; 2025 电商系统. 保留所有权利.</p>
       </div>
     </div>
   </footer>

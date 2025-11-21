@@ -15,7 +15,6 @@
             控制台
           </router-link>
           <router-link to="/products" class="nav-link">商品</router-link>
-          <router-link to="/navigation" class="nav-link">导航中心</router-link>
         </nav>
       </div>
 
@@ -39,9 +38,6 @@
           <div v-if="showUserMenu" class="user-dropdown">
             <router-link to="/profile" class="dropdown-item">
               <i class="icon">👤</i>个人中心
-            </router-link>
-            <router-link to="/navigation" class="dropdown-item">
-              <i class="icon">🧭</i>系统导航
             </router-link>
             <div class="dropdown-divider"></div>
             <button @click="handleLogout" class="dropdown-item logout">

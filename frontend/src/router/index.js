@@ -9,7 +9,6 @@ import Profile from '../pages/user/Profile.vue';
 import ProductList from '../pages/products/ProductList.vue';
 import ProductDetail from '../pages/products/ProductDetail.vue';
 import Dashboard from '../pages/dashboard/Dashboard.vue';
-import SystemNavigation from '../pages/navigation/SystemNavigation.vue';
 
 const routes = [
   {
@@ -54,12 +53,6 @@ const routes = [
     path: '/products/:id',
     name: 'ProductDetail',
     component: ProductDetail
-  },
-  {
-    path: '/navigation',
-    name: 'SystemNavigation',
-    component: SystemNavigation,
-    meta: { requiresAuth: true }
   },
   {
     path: '/:pathMatch(.*)*',

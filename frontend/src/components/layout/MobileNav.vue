@@ -13,10 +13,6 @@
       <span class="icon">🛍️</span>
       <span class="label">商品</span>
     </router-link>
-    <router-link to="/navigation" class="nav-item">
-      <span class="icon">🧭</span>
-      <span class="label">导航</span>
-    </router-link>
     <router-link to="/profile" class="nav-item">
       <span class="icon">👤</span>
       <span class="label">我</span>

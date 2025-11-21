@@ -23,10 +23,6 @@
         <span class="text">商品模块</span>
       </router-link>
       
-      <router-link to="/navigation" class="nav-item">
-        <span class="icon" aria-hidden="true">🧭</span>
-        <span class="text">导航中心</span>
-      </router-link>
       
       <router-link to="/profile" class="nav-item">
         <span class="icon" aria-hidden="true">👤</span>

@@ -1,0 +1,19 @@
+{
+    "name": "ecommerce-frontend",
+    "version": "1.0.0",
+    "scripts": {
+    "serve": "vue-cli-service serve",
+    "build": "vue-cli-service build",
+    "dev": "vue-cli-service serve --port 3000"
+    },
+    "dependencies": {
+    "vue": "^3.3.0",
+    "vuex": "^4.0.2",
+    "vue-router": "^4.2.0",
+    "axios": "^1.4.0"
+    },
+    "devDependencies": {
+    "@vue/cli-service": "^5.0.0",
+    "sass": "^1.60.0"
+    }
+}

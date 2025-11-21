@@ -23,10 +23,6 @@
 
         <div v-else-if="currentUser" class="info-list">
           <div class="info-row">
-            <label>用户ID</label>
-            <span>{{ currentUser.user_id }}</span>
-          </div>
-          <div class="info-row">
             <label>用户名</label>
             <span>{{ currentUser.username }}</span>
           </div>
@@ -37,10 +33,6 @@
           <div class="info-row">
             <label>手机号</label>
             <span>{{ currentUser.phone || '未设置' }}</span>
-          </div>
-          <div class="info-row">
-            <label>角色</label>
-            <span class="tag info">{{ currentUser.user_role || 'normal' }}</span>
           </div>
           <div class="info-row">
             <label>状态</label>

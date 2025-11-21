@@ -1,4 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router';
+import store from '../store';
 
 // 页面组件
 import Login from '../pages/auth/Login.vue';
@@ -9,14 +10,16 @@ import ProductList from '../pages/products/ProductList.vue';
 import ProductDetail from '../pages/products/ProductDetail.vue';
 import Dashboard from '../pages/dashboard/Dashboard.vue';
 import SystemNavigation from '../pages/navigation/SystemNavigation.vue';
-import store from '../store';
 
 const routes = [
   {
     path: '/',
     name: 'Dashboard',
     component: Dashboard,
-    meta: { requiresAuth: true }
+    meta: { 
+      requiresAuth: true,
+      requiresAdmin: true  // 添加管理员权限要求
+    }
   },
   {
     path: '/login',
@@ -69,12 +72,13 @@ const router = createRouter({
   routes
 });
 
-// 路由守卫
+// 路由守卫 - 添加管理员权限检查
 router.beforeEach(async (to, from, next) => {
   const isAuthenticated = store.getters['auth/isAuthenticated'];
+  const currentUser = store.getters['auth/currentUser'];
 
   // 刷新后如果有token但还未拉取用户信息，则自动同步一次
-  if (isAuthenticated && !store.getters['auth/currentUser']) {
+  if (isAuthenticated && !currentUser) {
     try {
       await store.dispatch('auth/fetchProfile', { silent: true });
     } catch (error) {
@@ -82,12 +86,29 @@ router.beforeEach(async (to, from, next) => {
     }
   }
 
-  if (to.meta.requiresAuth && !isAuthenticated) {
+  // 检查是否需要管理员权限
+  if (to.matched.some(record => record.meta.requiresAdmin)) {
+    if (!isAuthenticated) {
+      next({
+        path: '/login',
+        query: { redirect: to.fullPath }
+      });
+    } else if (currentUser?.role !== 'admin') {
+      // 如果不是管理员，重定向到商品页面或其他适当页面
+      next('/products');
+    } else {
+      next();
+    }
+  } 
+  // 检查是否需要登录
+  else if (to.meta.requiresAuth && !isAuthenticated) {
     next({
       path: '/login',
       query: { redirect: to.fullPath }
     });
-  } else if (to.meta.requiresGuest && isAuthenticated) {
+  } 
+  // 检查是否需要游客状态（未登录）
+  else if (to.meta.requiresGuest && isAuthenticated) {
     next('/');
   } else {
     next();

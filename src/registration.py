@@ -235,6 +235,36 @@ class UserSystem:
         else:
             return False, "手机号未注册"
 
+    def change_password(self, username, old_password, new_password):
+        """已登录用户修改密码"""
+        user = self.user_repository.get_user_by_username(username)
+        if not user:
+            return False, "用户不存在"
+
+        # 验证旧密码
+        old_hash, _ = self.hash_password(old_password, user.salt)
+        if old_hash != user.pass_word:
+            return False, "原密码不正确"
+
+        # 验证新密码强度
+        valid, msg = self.validate_input(username, new_password, user.phone, user.email)
+        if not valid:
+            return False, msg
+
+        # 更新密码
+        try:
+            new_hash, new_salt = self.hash_password(new_password)
+            user.pass_word = new_hash
+            user.salt = new_salt
+            user.failed_attempts = 0
+            user.account_locked_until = None
+            self.user_repository.db.commit()
+            return True, "密码修改成功"
+        except Exception as e:
+            self.user_repository.db.rollback()
+            print(f"修改密码失败: {e}")
+            return False, "密码修改失败，请稍后重试"
+
     def admin_login(self, username, password, admin_token):
         """管理员登录 - 增强安全验证"""
         # T6防护：管理员额外令牌验证

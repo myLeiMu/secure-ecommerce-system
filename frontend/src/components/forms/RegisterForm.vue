@@ -7,7 +7,7 @@
         v-model="formData.username"
         type="text"
         :class="['form-control', { 'error': errors.username }]"
-        placeholder="4-20位字母、数字或下划线"
+        placeholder="3-20位字母、数字或下划线"
         @input="clearError('username')"
       />
       <div v-if="errors.username" class="error-message">{{ errors.username }}</div>
@@ -46,7 +46,7 @@
         v-model="formData.password"
         type="password"
         :class="['form-control', { 'error': errors.password }]"
-        placeholder="8-20位，包含字母和数字"
+        placeholder="8-20位，包含大小写字母、数字和特殊字符"
         @input="clearError('password')"
       />
       <div v-if="errors.password" class="error-message">{{ errors.password }}</div>

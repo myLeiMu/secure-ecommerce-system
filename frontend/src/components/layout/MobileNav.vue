@@ -1,6 +1,11 @@
 <template>
   <nav class="mobile-nav" aria-label="移动端主导航">
-    <router-link to="/" class="nav-item">
+    <!-- 只有管理员能看到首页（控制台）链接 -->
+    <router-link 
+      v-if="isAdmin"
+      to="/" 
+      class="nav-item"
+    >
       <span class="icon">🏠</span>
       <span class="label">首页</span>
     </router-link>
@@ -20,8 +25,24 @@
 </template>
 
 <script>
+import { computed } from 'vue';
+import { useStore } from 'vuex';
+
 export default {
-  name: 'MobileNav'
+  name: 'MobileNav',
+  setup() {
+    const store = useStore();
+    
+    // 检查是否是管理员
+    const isAdmin = computed(() => {
+      const currentUser = store.getters['auth/currentUser'];
+      return currentUser?.role === 'admin';
+    });
+    
+    return {
+      isAdmin
+    };
+  }
 };
 </script>
 

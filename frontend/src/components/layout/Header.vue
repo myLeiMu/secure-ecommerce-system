@@ -6,7 +6,14 @@
           <h1>电商系统</h1>
         </router-link>
         <nav class="main-nav" aria-label="主导航">
-          <router-link to="/" class="nav-link">控制台</router-link>
+          <!-- 只有管理员能看到控制台链接 -->
+          <router-link 
+            v-if="isAdmin"
+            to="/" 
+            class="nav-link"
+          >
+            控制台
+          </router-link>
           <router-link to="/products" class="nav-link">商品</router-link>
           <router-link to="/navigation" class="nav-link">导航中心</router-link>
         </nav>
@@ -70,6 +77,10 @@ export default {
     const isAuthenticated = computed(() => store.getters['auth/isAuthenticated']);
     const currentUser = computed(() => store.getters['auth/currentUser']);
 
+    const isAdmin = computed(() => {
+      return currentUser.value?.role === 'admin';
+    });
+
     const getInitials = (username) => {
       if (!username) return 'U';
       return username.charAt(0).toUpperCase();
@@ -114,6 +125,7 @@ export default {
       showUserMenu,
       isAuthenticated,
       currentUser,
+      isAdmin,
       getInitials,
       handleSearch,
       toggleUserMenu,

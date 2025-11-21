@@ -8,7 +8,7 @@ class User(Base):
     __tablename__ = 'users'
 
     user_id = Column(BigInteger, primary_key=True, autoincrement=True)
-    username = Column(String(50), unique=True, nullable=False, index=True)
+    username = Column(String(20), unique=True, nullable=False, index=True)
     email = Column(String(100), unique=True, nullable=False, index=True)
     phone = Column(String(20), index=True)
     avatar_url = Column(String(255))

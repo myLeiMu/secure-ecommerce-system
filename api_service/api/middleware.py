@@ -15,6 +15,8 @@ class JWTAuthenticationMiddleware(MiddlewareMixin):
         excluded_paths = [
             '/api/auth/login',
             '/api/users/register',
+            '/api/users/send-reset-code',
+            '/api/users/reset-password',
             '/api/docs/',
             '/api/swagger/',
             '/admin/',

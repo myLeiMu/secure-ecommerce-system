@@ -8,7 +8,12 @@
     </button>
     
     <nav class="sidebar-nav">
-      <router-link to="/" class="nav-item">
+      <!-- 只有管理员能看到控制台链接 -->
+      <router-link 
+        v-if="isAdmin"
+        to="/" 
+        class="nav-item"
+      >
         <span class="icon" aria-hidden="true">🏠</span>
         <span class="text">控制台</span>
       </router-link>
@@ -32,12 +37,20 @@
 </template>
 
 <script>
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
+import { useStore } from 'vuex';
 
 export default {
   name: 'AppSidebar',
   setup() {
+    const store = useStore();
     const collapsed = ref(false);
+    
+    // 检查是否是管理员
+    const isAdmin = computed(() => {
+      const currentUser = store.getters['auth/currentUser'];
+      return currentUser?.role === 'admin';
+    });
     
     const toggleSidebar = () => {
       collapsed.value = !collapsed.value;
@@ -45,6 +58,7 @@ export default {
     
     return {
       collapsed,
+      isAdmin,
       toggleSidebar
     };
   }

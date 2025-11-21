@@ -7,5 +7,13 @@ export const userAPI = {
 
   async changePassword(passwordData) {
     return await apiClient.request('POST', '/users/change-password', passwordData);
+  },
+
+  async sendResetCode(payload) {
+    return await apiClient.request('POST', '/users/send-reset-code', payload);
+  },
+
+  async resetPassword(payload) {
+    return await apiClient.request('POST', '/users/reset-password', payload);
   }
 };

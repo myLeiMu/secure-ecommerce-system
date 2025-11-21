@@ -35,13 +35,67 @@
           <div v-if="errors.phone" class="error-message">{{ errors.phone }}</div>
         </div>
 
+        <div class="form-group">
+          <label for="code">短信验证码</label>
+          <div class="code-input">
+            <input
+              id="code"
+              v-model="formData.code"
+              type="text"
+              maxlength="6"
+              class="form-control"
+              :class="{ error: errors.code }"
+              placeholder="请输入6位验证码"
+              @input="clearError('code')"
+            />
+            <button
+              type="button"
+              class="code-btn"
+              :disabled="countdown > 0 || sendingCode"
+              @click="sendCode"
+            >
+              <LoadingSpinner v-if="sendingCode" small />
+              <template v-else>{{ countdown > 0 ? `${countdown}s后重发` : '获取验证码' }}</template>
+            </button>
+          </div>
+          <div v-if="errors.code" class="error-message">{{ errors.code }}</div>
+        </div>
+
+        <div class="form-group">
+          <label for="newPassword">新密码</label>
+          <input
+            id="newPassword"
+            v-model="formData.password"
+            type="password"
+            class="form-control"
+            :class="{ error: errors.password }"
+            placeholder="请输入8-20位包含字母和数字的密码"
+            @input="clearError('password')"
+          />
+          <div v-if="errors.password" class="error-message">{{ errors.password }}</div>
+        </div>
+
+        <div class="form-group">
+          <label for="confirmPassword">确认新密码</label>
+          <input
+            id="confirmPassword"
+            v-model="formData.confirmPassword"
+            type="password"
+            class="form-control"
+            :class="{ error: errors.confirmPassword }"
+            placeholder="请再次输入新密码"
+            @input="clearError('confirmPassword')"
+          />
+          <div v-if="errors.confirmPassword" class="error-message">{{ errors.confirmPassword }}</div>
+        </div>
+
         <div v-if="feedback" :class="['feedback', feedbackType]">
           {{ feedback }}
         </div>
 
         <button type="submit" class="submit-btn" :disabled="submitting">
           <LoadingSpinner v-if="submitting" small />
-          {{ submitting ? '发送中...' : '发送验证码' }}
+          {{ submitting ? '提交中...' : '立即重置' }}
         </button>
 
         <p class="back-link">
@@ -56,6 +110,7 @@
 import { reactive, ref } from 'vue';
 import LoadingSpinner from '../../components/common/LoadingSpinner.vue';
 import { SecurityUtils } from '../../utils/security';
+import { userAPI } from '../../services/api/userAPI';
 
 export default {
   name: 'ForgotPassword',
@@ -65,16 +120,24 @@ export default {
   setup() {
     const formData = reactive({
       identifier: '',
-      phone: ''
+      phone: '',
+      code: '',
+      password: '',
+      confirmPassword: ''
     });
     const errors = reactive({});
     const submitting = ref(false);
+    const sendingCode = ref(false);
+    const countdown = ref(0);
     const feedback = ref('');
     const feedbackType = ref('success');
 
     const validate = () => {
       errors.identifier = '';
       errors.phone = '';
+      errors.code = '';
+      errors.password = '';
+      errors.confirmPassword = '';
 
       if (!formData.identifier.trim()) {
         errors.identifier = '用户名或邮箱不能为空';
@@ -82,12 +145,57 @@ export default {
       if (!formData.phone.trim()) {
         errors.phone = '请填写预留手机号';
       }
-      return !errors.identifier && !errors.phone;
+      if (!formData.code.trim()) {
+        errors.code = '请输入验证码';
+      } else if (!/^\d{6}$/.test(formData.code.trim())) {
+        errors.code = '验证码必须为6位数字';
+      }
+      if (!formData.password.trim()) {
+        errors.password = '请设置新密码';
+      } else if (!SecurityUtils.validatePassword(formData.password.trim())) {
+        errors.password = '密码需8-20位，包含字母和数字';
+      }
+      if (!formData.confirmPassword.trim()) {
+        errors.confirmPassword = '请再次输入新密码';
+      } else if (formData.password.trim() !== formData.confirmPassword.trim()) {
+        errors.confirmPassword = '两次输入的密码不一致';
+      }
+
+      return !errors.identifier && !errors.phone && !errors.code && !errors.password && !errors.confirmPassword;
     };
 
     const clearError = (field) => {
       errors[field] = '';
       feedback.value = '';
+    };
+
+    const sendCode = async () => {
+      if (!formData.phone.trim()) {
+        errors.phone = '请先输入预留手机号';
+        return;
+      }
+      sendingCode.value = true;
+      try {
+        const phone = SecurityUtils.sanitizeInput(formData.phone.trim());
+        const response = await userAPI.sendResetCode({ phone });
+        if (response.code !== 0) {
+          throw new Error(response.message || '验证码发送失败');
+        }
+        feedback.value = `验证码已发送至 ${phone.slice(0, 3)}****${phone.slice(-2)}`;
+        feedbackType.value = 'success';
+        countdown.value = 60;
+        const timer = setInterval(() => {
+          countdown.value -= 1;
+          if (countdown.value <= 0) {
+            clearInterval(timer);
+          }
+        }, 1000);
+      } catch (error) {
+        feedback.value = error.message || '验证码发送失败，请稍后重试';
+        feedbackType.value = 'error';
+      } finally {
+        sendingCode.value = false;
+      }
     };
 
     const handleSubmit = async () => {
@@ -96,17 +204,20 @@ export default {
       feedback.value = '';
 
       const payload = {
-        identifier: SecurityUtils.sanitizeInput(formData.identifier),
-        phone: SecurityUtils.sanitizeInput(formData.phone)
+        phone: SecurityUtils.sanitizeInput(formData.phone.trim()),
+        code: SecurityUtils.sanitizeInput(formData.code.trim()),
+        new_password: formData.password.trim()
       };
 
       try {
-        // 此处可以对接后端忘记密码接口
-        await new Promise(resolve => setTimeout(resolve, 800));
-        feedback.value = `验证码已发送至 ${payload.phone.slice(0, 3)}****${payload.phone.slice(-2)}`;
+        const response = await userAPI.resetPassword(payload);
+        if (response.code !== 0) {
+          throw new Error(response.message || '重置失败，请稍后重试');
+        }
+        feedback.value = '密码已重置成功，请使用新密码登录';
         feedbackType.value = 'success';
       } catch (error) {
-        feedback.value = error.message || '发送失败，请稍后重试';
+        feedback.value = error.message || '重置失败，请稍后重试';
         feedbackType.value = 'error';
       } finally {
         submitting.value = false;
@@ -117,10 +228,13 @@ export default {
       formData,
       errors,
       submitting,
+      sendingCode,
+      countdown,
       feedback,
       feedbackType,
       handleSubmit,
-      clearError
+      clearError,
+      sendCode
     };
   }
 };
@@ -167,6 +281,35 @@ export default {
 
 .form-group {
   margin-bottom: 1.5rem;
+}
+
+.code-input {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.code-input .form-control {
+  flex: 1;
+}
+
+.code-btn {
+  padding: 0.65rem 1rem;
+  border: none;
+  border-radius: 8px;
+  background: #0ea5e9;
+  color: white;
+  font-weight: 600;
+  min-width: 120px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+}
+
+.code-btn:disabled {
+  background: #94a3b8;
+  cursor: not-allowed;
 }
 
 label {
@@ -262,4 +405,3 @@ label {
   }
 }
 </style>
-

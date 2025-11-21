@@ -124,8 +124,8 @@ class InputValidator:
         """用户名验证"""
         if not username or len(username) < 3:
             return False, "用户名至少3个字符"
-        if len(username) > 50:
-            return False, "用户名不能超过50个字符"
+        if len(username) > 20:
+            return False, "用户名不能超过20个字符"
         if not re.match(r'^[\u4e00-\u9fa5a-zA-Z0-9_]+$', username):
             return False, "用户名只能包含中文、字母、数字和下划线"
         if SQLInjectionValidator.contains_sql_injection(username):
@@ -138,8 +138,8 @@ class InputValidator:
         """密码强度验证"""
         if not password or len(password) < 8:
             return False, "密码至少8个字符"
-        if len(password) > 128:
-            return False, "密码不能超过128个字符"
+        if len(password) > 20:
+            return False, "密码不能超过20个字符"
         if not any(c.isupper() for c in password):
             return False, "密码必须包含大写字母"
         if not any(c.islower() for c in password):

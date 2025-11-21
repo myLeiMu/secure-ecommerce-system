@@ -119,6 +119,21 @@ class ProductListQuerySerializer(serializers.Serializer):
     max_price = serializers.FloatField(required=False, help_text="最高价格")
 
 
+class PasswordChangeSerializer(serializers.Serializer):
+    old_password = serializers.CharField(max_length=128, required=True, help_text="原密码", write_only=True)
+    new_password = serializers.CharField(max_length=128, required=True, help_text="新密码", write_only=True)
+
+
+class PasswordResetCodeSerializer(serializers.Serializer):
+    phone = serializers.CharField(max_length=20, required=True, help_text="手机号")
+
+
+class PasswordResetSerializer(serializers.Serializer):
+    phone = serializers.CharField(max_length=20, required=True, help_text="手机号")
+    code = serializers.CharField(max_length=6, required=True, help_text="验证码")
+    new_password = serializers.CharField(max_length=128, required=True, help_text="新密码", write_only=True)
+
+
 # API视图
 @method_decorator(csrf_exempt, name='dispatch')
 class UserRegistrationView(APIView):
@@ -323,6 +338,123 @@ class UserLoginView(APIView):
             }, status=500)
 
 
+class PasswordChangeView(APIView):
+    @swagger_auto_schema(
+        operation_summary="修改密码",
+        operation_description="已登录用户修改密码",
+        request_body=PasswordChangeSerializer,
+        responses={
+            200: openapi.Response(description="修改成功"),
+            400: openapi.Response(description="修改失败")
+        },
+        tags=['用户管理'],
+        security=[{'Bearer': []}]
+    )
+    def post(self, request):
+        serializer = PasswordChangeSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response({
+                "code": 400,
+                "message": serializer.errors,
+                "data": None,
+                "timestamp": datetime.now().isoformat()
+            }, status=400)
+
+        if not hasattr(request, 'user_info') or not request.user_info:
+            return Response({
+                "code": 401,
+                "message": "用户未认证",
+                "data": None,
+                "timestamp": datetime.now().isoformat()
+            }, status=401)
+
+        username = request.user_info.get('username')
+        service = UnifiedEcommerceService()
+        result = service.change_password(
+            username=username,
+            old_password=serializer.validated_data['old_password'],
+            new_password=serializer.validated_data['new_password']
+        )
+
+        status_code = 200 if result['success'] else 400
+        return Response({
+            "code": 0 if result['success'] else 400,
+            "message": result['message'],
+            "data": None,
+            "timestamp": datetime.now().isoformat()
+        }, status=status_code)
+
+
+class PasswordResetCodeView(APIView):
+    permission_classes = [AllowAny]
+
+    @swagger_auto_schema(
+        operation_summary="发送重置密码验证码",
+        request_body=PasswordResetCodeSerializer,
+        responses={
+            200: openapi.Response(description="发送成功"),
+            400: openapi.Response(description="发送失败")
+        },
+        tags=['用户管理']
+    )
+    def post(self, request):
+        serializer = PasswordResetCodeSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response({
+                "code": 400,
+                "message": serializer.errors,
+                "data": None,
+                "timestamp": datetime.now().isoformat()
+            }, status=400)
+
+        service = UnifiedEcommerceService()
+        result = service.send_reset_code(serializer.validated_data['phone'])
+        status_code = 200 if result['success'] else 400
+        return Response({
+            "code": 0 if result['success'] else 400,
+            "message": result['message'],
+            "data": None,
+            "timestamp": datetime.now().isoformat()
+        }, status=status_code)
+
+
+class PasswordResetView(APIView):
+    permission_classes = [AllowAny]
+
+    @swagger_auto_schema(
+        operation_summary="重置密码",
+        request_body=PasswordResetSerializer,
+        responses={
+            200: openapi.Response(description="重置成功"),
+            400: openapi.Response(description="重置失败")
+        },
+        tags=['用户管理']
+    )
+    def post(self, request):
+        serializer = PasswordResetSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response({
+                "code": 400,
+                "message": serializer.errors,
+                "data": None,
+                "timestamp": datetime.now().isoformat()
+            }, status=400)
+
+        service = UnifiedEcommerceService()
+        result = service.reset_password(
+            phone=serializer.validated_data['phone'],
+            new_password=serializer.validated_data['new_password'],
+            code=serializer.validated_data['code']
+        )
+        status_code = 200 if result['success'] else 400
+        return Response({
+            "code": 0 if result['success'] else 400,
+            "message": result['message'],
+            "data": None,
+            "timestamp": datetime.now().isoformat()
+        }, status=status_code)
+
+
 @method_decorator(csrf_exempt, name='dispatch')
 class UserLogoutView(APIView):
 
@@ -448,6 +580,79 @@ class UserProfileView(APIView):
                 "timestamp": datetime.now().isoformat()
             }, status=500)
 
+    @swagger_auto_schema(
+        operation_summary="更新用户信息",
+        operation_description="更新当前用户的个人信息",
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            properties={
+                'username': openapi.Schema(type=openapi.TYPE_STRING, description='用户名'),
+                'email': openapi.Schema(type=openapi.TYPE_STRING, description='邮箱'),
+                'phone': openapi.Schema(type=openapi.TYPE_STRING, description='手机号'),
+            }
+        ),
+        responses={
+            200: openapi.Response(description="更新成功"),
+            400: openapi.Response(description="更新失败"),
+            401: openapi.Response(description="未认证")
+        },
+        tags=['用户管理'],
+        security=[{'Bearer': []}]
+    )
+    def put(self, request):
+        """更新用户资料"""
+        if not hasattr(request, 'user_info') or not request.user_info:
+            return Response({
+                "code": 401,
+                "message": "用户未认证",
+                "data": None,
+                "timestamp": datetime.now().isoformat()
+            }, status=401)
+
+        try:
+            username = request.user_info['username']
+            update_data = request.data
+
+            # 使用 UnifiedEcommerceService 更新用户资料
+            service = UnifiedEcommerceService()
+            result = service.update_user_profile(username, update_data)
+
+            if result['success']:
+                # 清理用户缓存，确保下次获取的是最新数据
+                try:
+                    from api_service.utils.cache_utils import UserCache
+                    UserCache.invalidate_user_caches(username)
+                    print(f"[缓存] 已清理用户 {username} 的缓存")
+                except Exception as cache_error:
+                    # 缓存清理失败不影响主要功能，只记录日志
+                    print(f"[缓存警告] 清理用户缓存失败: {cache_error}")
+                    # 继续执行，不抛出异常
+
+                return Response({
+                    "code": 0,
+                    "message": result['message'],
+                    "data": None,
+                    "timestamp": datetime.now().isoformat()
+                })
+            else:
+                return Response({
+                    "code": 400,
+                    "message": result['message'],
+                    "data": None,
+                    "timestamp": datetime.now().isoformat()
+                }, status=400)
+
+        except Exception as e:
+            import traceback
+            print(f"更新用户资料错误: {str(e)}")
+            print(f"异常详情: {traceback.format_exc()}")
+
+            return Response({
+                "code": 500,
+                "message": f"更新资料失败: {str(e)}",
+                "data": None,
+                "timestamp": datetime.now().isoformat()
+            }, status=500)
 # 商品相关视图
 class ProductListView(APIView):
     permission_classes = [AllowAny]

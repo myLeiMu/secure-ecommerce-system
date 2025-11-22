@@ -285,3 +285,11 @@ class EnhancedUserSystem:
     def get_user_info(self, username: str):
         """获取用户信息"""
         return self.user_system.get_user_info(username)
+
+    def change_password(self, username: str, old_password: str, new_password: str):
+        """修改密码"""
+        return self.user_system.change_password(username, old_password, new_password)
+
+    def reset_password(self, phone: str, new_password: str, code: str):
+        """重置密码"""
+        return self.user_system.reset_password(phone, new_password, code)

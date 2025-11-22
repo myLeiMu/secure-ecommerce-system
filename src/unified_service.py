@@ -290,6 +290,76 @@ class UnifiedEcommerceService:
         except Exception as e:
             return {'success': False, 'message': f'登录失败: {str(e)}'}
 
+    def change_password(self, username: str, old_password: str, new_password: str) -> Dict[str, Any]:
+        """修改密码"""
+        try:
+            success, message = self.user_system.change_password(username, old_password, new_password)
+            return {'success': success, 'message': message}
+        except Exception as e:
+            return {'success': False, 'message': f'修改密码失败: {str(e)}'}
+
+    def send_reset_code(self, phone: str) -> Dict[str, Any]:
+        """发送重置密码验证码"""
+        try:
+            success, message = self.user_system.send_code(phone)
+            return {'success': success, 'message': message}
+        except Exception as e:
+            return {'success': False, 'message': f'发送验证码失败: {str(e)}'}
+
+    def reset_password(self, phone: str, new_password: str, code: str) -> Dict[str, Any]:
+        """重置密码"""
+        try:
+            success, message = self.user_system.reset_password(phone, new_password, code)
+            return {'success': success, 'message': message}
+        except Exception as e:
+            return {'success': False, 'message': f'密码重置失败: {str(e)}'}
+
+    def update_user_profile(self, username: str, update_data: Dict[str, Any]) -> Dict[str, Any]:
+        """更新用户资料"""
+        try:
+            # 获取用户
+            user = self.user_repo.get_user_by_username(username)
+            if not user:
+                return {'success': False, 'message': '用户不存在'}
+
+            # 验证输入数据
+            if 'email' in update_data and update_data['email']:
+                valid = SQLInjectionValidator.validate_email(update_data['email'])
+                if not valid:
+                    return {'success': False, 'message': '邮箱格式不正确'}
+
+            if 'phone' in update_data and update_data['phone']:
+                # 简单的手机号格式验证
+                import re
+                if not re.match(r'^1[3-9]\d{9}$', update_data['phone']):
+                    return {'success': False, 'message': '手机号格式不正确'}
+
+            # 更新允许修改的字段
+            updated_fields = []
+            if 'email' in update_data:
+                user.email = update_data['email']
+                updated_fields.append('邮箱')
+
+            if 'phone' in update_data:
+                user.phone = update_data['phone']
+                updated_fields.append('手机号')
+
+            # 保存更改
+            self.db_session.commit()
+
+            if updated_fields:
+                return {
+                    'success': True,
+                    'message': f'成功更新: {", ".join(updated_fields)}'
+                }
+            else:
+                return {'success': True, 'message': '没有需要更新的字段'}
+
+        except Exception as e:
+            self.db_session.rollback()
+            print(f"更新用户资料失败: {e}")
+            return {'success': False, 'message': f'更新资料失败: {str(e)}'}
+
     def verify_token(self, token: str) -> Optional[Dict[str, Any]]:
         """验证令牌"""
         try:
@@ -338,6 +408,7 @@ class UnifiedEcommerceService:
         except Exception as e:
             print(f"获取分类失败: {e}")
             return []
+
 
     def create_order(self, order_data: Dict[str, Any], items_data: List[Dict[str, Any]]) -> Optional[Any]:
         """创建订单"""

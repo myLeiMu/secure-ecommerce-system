@@ -158,19 +158,22 @@ SWAGGER_SETTINGS = {
 SESSION_ENGINE = 'django.contrib.sessions.backends.cache'
 SESSION_CACHE_ALIAS = 'default'
 
-# Redis 配置 - 连接WSL中的Redis
+# Redis 配置 - 从.env文件读取
 REDIS_CONFIG = {
-    'HOST': '172.28.225.228',  # WSL的IP
-    'PORT': 6379,
-    'DB': 0,
-    'PASSWORD': 'Redis_passwd',  # 你的Redis密码
-    # 移除 SSL 配置
+    'HOST': os.getenv('REDIS_HOST', 'localhost'),
+    'PORT': int(os.getenv('REDIS_PORT', 6379)),
+    'DB': int(os.getenv('REDIS_DB', 0)),
+    'PASSWORD': os.getenv('REDIS_PASSWORD', ''),
 }
+
+# 构建 Redis 连接 URL
+redis_password = f":{REDIS_CONFIG['PASSWORD']}@" if REDIS_CONFIG['PASSWORD'] else ""
+redis_location = f"redis://{redis_password}{REDIS_CONFIG['HOST']}:{REDIS_CONFIG['PORT']}/{REDIS_CONFIG['DB']}"
 
 CACHES = {
     'default': {
         'BACKEND': 'django_redis.cache.RedisCache',
-        'LOCATION': 'redis://:Redis_passwd@172.28.225.228:6379/0',
+        'LOCATION': redis_location,
         'OPTIONS': {
             'CLIENT_CLASS': 'django_redis.client.DefaultClient',
             'SOCKET_CONNECT_TIMEOUT': 5,
@@ -179,6 +182,7 @@ CACHES = {
         'KEY_PREFIX': 'ecommerce'
     }
 }
+
 
 # 缓存配置
 CACHE_TTL = 60 * 15  # 15分钟默认缓存时间

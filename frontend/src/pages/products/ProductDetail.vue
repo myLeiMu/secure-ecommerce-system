@@ -122,7 +122,7 @@
 </template>
 
 <script>
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { productAPI } from '../../services/api/productAPI';
 import LoadingSpinner from '../../components/common/LoadingSpinner.vue';
@@ -147,10 +147,10 @@ export default {
     const productId = computed(() => route.params.id);
 
     const currentImage = computed(() => {
-      if (!product.value || !product.value.image_urls) {
+      if (!product.value || !product.value.image_urls || product.value.image_urls.length === 0) {
         return '/placeholder-image.jpg';
       }
-      return product.value.image_urls[currentImageIndex.value] || '/placeholder-image.jpg';
+      return product.value.image_urls[currentImageIndex.value] || product.value.image_urls[0] || '/placeholder-image.jpg';
     });
 
     const fetchProductDetail = async () => {
@@ -167,22 +167,45 @@ export default {
         
         if (response.code === 0 && response.data) {
           product.value = response.data;
+          quantity.value = 1;
+          currentImageIndex.value = 0;
         } else {
           error.value = response.message || '商品不存在';
         }
       } catch (err) {
+        console.error('获取商品详情错误:', err);
         error.value = err.message || '获取商品详情失败';
       } finally {
         loading.value = false;
       }
     };
 
+    const formatPrice = (price) => {
+      if (!price) return '0.00';
+      return parseFloat(price).toFixed(2);
+    };
+
     const calculateDiscount = (salePrice, comparePrice) => {
+      if (!salePrice || !comparePrice || comparePrice <= salePrice) return '0';
       return ((salePrice / comparePrice) * 10).toFixed(1);
     };
 
     const handleImageError = (event) => {
       event.target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjQwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZGRkIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxOCIgZmlsbD0iIzk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPuWbvuWDj+WbvueahOa1i+ivlTwvdGV4dD48L3N2Zz4=';
+    };
+
+    const handleThumbnailError = (event) => {
+      event.target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iODAiIGhlaWdodD0iODAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsbD0iI2RkZCIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMTIiIGZpbGw9IiM5OTkiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGR5PSIuM2VtIj7lm77lg488L3RleHQ+PC9zdmc+';
+    };
+
+    const validateQuantity = () => {
+      if (!product.value) return;
+      
+      if (quantity.value < 1) {
+        quantity.value = 1;
+      } else if (quantity.value > product.value.stock_quantity) {
+        quantity.value = product.value.stock_quantity;
+      }
     };
 
     const decreaseQuantity = () => {
@@ -198,22 +221,32 @@ export default {
     };
 
     const addToCart = () => {
+      if (!product.value) return;
+      
       console.log('添加到购物车:', {
-        product: product.value,
-        quantity: quantity.value
+        product_id: product.value.product_id,
+        product_name: product.value.product_name,
+        quantity: quantity.value,
+        price: product.value.sale_price
       });
-      // 这里调用购物车相关的action
     };
 
     const buyNow = () => {
+      if (!product.value) return;
+      
       console.log('立即购买:', {
-        product: product.value,
-        quantity: quantity.value
+        product_id: product.value.product_id,
+        product_name: product.value.product_name,
+        quantity: quantity.value,
+        price: product.value.sale_price
       });
-      // 这里跳转到订单确认页面
     };
 
     onMounted(() => {
+      fetchProductDetail();
+    });
+
+    watch(productId, () => {
       fetchProductDetail();
     });
 
@@ -225,8 +258,11 @@ export default {
       currentImageIndex,
       currentImage,
       fetchProductDetail,
+      formatPrice,
       calculateDiscount,
       handleImageError,
+      handleThumbnailError,
+      validateQuantity,
       decreaseQuantity,
       increaseQuantity,
       addToCart,

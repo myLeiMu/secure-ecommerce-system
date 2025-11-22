@@ -14,6 +14,7 @@
           @keyup.enter="searchProducts"
         />
         <button @click="searchProducts" class="search-btn">搜索</button>
+        <button @click="clearFilters" class="clear-btn">清除</button>
       </div>
 
       <div class="filter-options">
@@ -26,16 +27,18 @@
 
         <div class="price-range">
           <input
-            v-model="filters.min_price"
+            v-model.number="filters.min_price"
             type="number"
             placeholder="最低价"
+            min="0"
             @change="searchProducts"
           />
           <span>-</span>
           <input
-            v-model="filters.max_price"
+            v-model.number="filters.max_price"
             type="number"
             placeholder="最高价"
+            min="0"
             @change="searchProducts"
           />
         </div>
@@ -64,13 +67,13 @@
       />
     </div>
 
-    <div v-if="products.length > 0" class="pagination">
+    <div v-if="products.length > 0 && hasMore" class="pagination">
       <button 
         @click="loadMore" 
-        :disabled="loading || !hasMore"
+        :disabled="loading"
         class="load-more-btn"
       >
-        {{ loading ? '加载中...' : hasMore ? '加载更多' : '没有更多商品了' }}
+        {{ loading ? '加载中...' : '加载更多' }}
       </button>
     </div>
   </div>
@@ -116,6 +119,8 @@ export default {
       if (filters.category_id) payload.category_id = filters.category_id;
       if (filters.min_price) payload.min_price = filters.min_price;
       if (filters.max_price) payload.max_price = filters.max_price;
+      payload.page = currentPage.value;
+      payload.limit = 12;
       return payload;
     };
 
@@ -140,14 +145,13 @@ export default {
           hasMore.value = true;
         }
 
-        const response = await productAPI.getProducts({
-          ...buildSafeFilters(),
-          page: currentPage.value,
-          limit: 12
-        });
+        console.log('📦 请求商品列表参数:', buildSafeFilters());
+        const response = await productAPI.getProducts(buildSafeFilters());
+        console.log('📦 商品列表API响应:', response);
 
         if (response.code === 0) {
           const newProducts = response.data || [];
+          console.log('📦 商品数据:', newProducts);
           
           if (reset) {
             products.value = newProducts;
@@ -160,6 +164,7 @@ export default {
           error.value = response.message || '获取商品列表失败';
         }
       } catch (err) {
+        console.error('❌ 获取商品列表错误:', err);
         error.value = err.message || '网络错误，请重试';
       } finally {
         loading.value = false;
@@ -167,19 +172,32 @@ export default {
     };
 
     const updateQueryFromFilters = () => {
+      const query = {};
+      if (filters.keyword) query.keyword = filters.keyword;
+      if (filters.category_id) query.category_id = filters.category_id;
+      if (filters.min_price) query.min_price = filters.min_price;
+      if (filters.max_price) query.max_price = filters.max_price;
+
       router.replace({
         path: route.path,
-        query: {
-          ...(filters.keyword && { keyword: filters.keyword }),
-          ...(filters.category_id && { category_id: filters.category_id }),
-          ...(filters.min_price && { min_price: filters.min_price }),
-          ...(filters.max_price && { max_price: filters.max_price })
-        }
+        query
       });
     };
 
     const searchProducts = () => {
+      currentPage.value = 1;
       updateQueryFromFilters();
+      fetchProducts(true);
+    };
+
+    const clearFilters = () => {
+      filters.keyword = '';
+      filters.category_id = '';
+      filters.min_price = '';
+      filters.max_price = '';
+      currentPage.value = 1;
+      router.replace({ path: route.path });
+      fetchProducts(true);
     };
 
     const loadMore = () => {
@@ -190,25 +208,58 @@ export default {
     };
 
     const handleAddToCart = (product) => {
-      console.log('添加到购物车:', product);
+      console.log('🛒 添加到购物车:', product);
     };
 
-    const fetchCategories = () => {
-      categories.value = [
-        { category_id: 1, category_name: '电子产品' },
-        { category_id: 2, category_name: '服装' },
-        { category_id: 3, category_name: '家居' },
-        { category_id: 4, category_name: '图书' }
-      ];
+    const fetchCategories = async () => {
+      try {
+        console.log('📂 开始获取分类数据...');
+        const response = await productAPI.getCategories();
+        console.log('📂 分类API响应:', response);
+
+        if (response.code === 0 && response.data) {
+          console.log('📂 原始分类数据:', response.data);
+          categories.value = flattenCategories(response.data);
+          console.log('📂 处理后的分类数据:', categories.value);
+        } else {
+          console.warn('⚠️ 分类API返回失败:', response.message);
+          categories.value = []; // 不设置默认数据
+        }
+      } catch (err) {
+        console.error('❌ 获取分类失败:', err);
+        categories.value = []; // 不设置默认数据
+      }
+    };
+
+    const flattenCategories = (categoryTree) => {
+      const flattened = [];
+      
+      const traverse = (categories) => {
+        categories.forEach(category => {
+          flattened.push({
+            category_id: category.category_id,
+            category_name: category.category_name
+          });
+          
+          if (category.children && category.children.length > 0) {
+            traverse(category.children);
+          }
+        });
+      };
+      
+      traverse(categoryTree);
+      return flattened;
     };
 
     onMounted(() => {
+      console.log('🚀 ProductList 组件挂载');
       fetchCategories();
       syncQueryToFilters();
       fetchProducts(true);
     });
 
     watch(() => route.query, () => {
+      console.log('🔄 路由查询参数变化:', route.query);
       syncQueryToFilters();
       fetchProducts(true);
     });
@@ -222,6 +273,7 @@ export default {
       filters,
       fetchProducts,
       searchProducts,
+      clearFilters,
       loadMore,
       handleAddToCart
     };
@@ -291,6 +343,19 @@ export default {
 
 .search-btn:hover {
   background: #0056b3;
+}
+
+.clear-btn {
+  padding: 0.75rem 1rem;
+  background: #6c757d;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.clear-btn:hover {
+  background: #545b62;
 }
 
 .filter-options {

@@ -339,13 +339,45 @@ class UserLoginView(APIView):
 
 
 class PasswordChangeView(APIView):
+
     @swagger_auto_schema(
         operation_summary="修改密码",
         operation_description="已登录用户修改密码",
         request_body=PasswordChangeSerializer,
         responses={
-            200: openapi.Response(description="修改成功"),
-            400: openapi.Response(description="修改失败")
+            200: openapi.Response(
+                description="修改成功",
+                examples={
+                    "application/json": {
+                        "code": 0,
+                        "message": "密码修改成功",
+                        "data": None,
+                        "timestamp": "2024-01-01T12:00:00"
+                    }
+                }
+            ),
+            400: openapi.Response(
+                description="修改失败",
+                examples={
+                    "application/json": {
+                        "code": 400,
+                        "message": "原密码错误",
+                        "data": None,
+                        "timestamp": "2024-01-01T12:00:00"
+                    }
+                }
+            ),
+            401: openapi.Response(
+                description="未认证",
+                examples={
+                    "application/json": {
+                        "code": 401,
+                        "message": "用户未认证",
+                        "data": None,
+                        "timestamp": "2024-01-01T12:00:00"
+                    }
+                }
+            )
         },
         tags=['用户管理'],
         security=[{'Bearer': []}]
@@ -390,10 +422,31 @@ class PasswordResetCodeView(APIView):
 
     @swagger_auto_schema(
         operation_summary="发送重置密码验证码",
+        operation_description="向指定手机号发送重置密码的验证码",
         request_body=PasswordResetCodeSerializer,
         responses={
-            200: openapi.Response(description="发送成功"),
-            400: openapi.Response(description="发送失败")
+            200: openapi.Response(
+                description="发送成功",
+                examples={
+                    "application/json": {
+                        "code": 0,
+                        "message": "验证码发送成功",
+                        "data": None,
+                        "timestamp": "2024-01-01T12:00:00"
+                    }
+                }
+            ),
+            400: openapi.Response(
+                description="发送失败",
+                examples={
+                    "application/json": {
+                        "code": 400,
+                        "message": "手机号未注册",
+                        "data": None,
+                        "timestamp": "2024-01-01T12:00:00"
+                    }
+                }
+            )
         },
         tags=['用户管理']
     )
@@ -423,10 +476,31 @@ class PasswordResetView(APIView):
 
     @swagger_auto_schema(
         operation_summary="重置密码",
+        operation_description="使用手机号和验证码重置密码",
         request_body=PasswordResetSerializer,
         responses={
-            200: openapi.Response(description="重置成功"),
-            400: openapi.Response(description="重置失败")
+            200: openapi.Response(
+                description="重置成功",
+                examples={
+                    "application/json": {
+                        "code": 0,
+                        "message": "密码重置成功",
+                        "data": None,
+                        "timestamp": "2024-01-01T12:00:00"
+                    }
+                }
+            ),
+            400: openapi.Response(
+                description="重置失败",
+                examples={
+                    "application/json": {
+                        "code": 400,
+                        "message": "验证码错误或已过期",
+                        "data": None,
+                        "timestamp": "2024-01-01T12:00:00"
+                    }
+                }
+            )
         },
         tags=['用户管理']
     )
@@ -511,7 +585,26 @@ class UserProfileView(APIView):
                 schema=UserProfileSerializer,
             ),
             401: openapi.Response(
-                description="未认证"
+                description="未认证",
+                examples={
+                    "application/json": {
+                        "code": 401,
+                        "message": "用户未认证",
+                        "data": None,
+                        "timestamp": "2024-01-01T12:00:00"
+                    }
+                }
+            ),
+            404: openapi.Response(
+                description="用户不存在",
+                examples={
+                    "application/json": {
+                        "code": 404,
+                        "message": "用户信息获取失败",
+                        "data": None,
+                        "timestamp": "2024-01-01T12:00:00"
+                    }
+                }
             )
         },
         tags=['用户管理'],
@@ -592,9 +685,39 @@ class UserProfileView(APIView):
             }
         ),
         responses={
-            200: openapi.Response(description="更新成功"),
-            400: openapi.Response(description="更新失败"),
-            401: openapi.Response(description="未认证")
+            200: openapi.Response(
+                description="更新成功",
+                examples={
+                    "application/json": {
+                        "code": 0,
+                        "message": "用户信息更新成功",
+                        "data": None,
+                        "timestamp": "2024-01-01T12:00:00"
+                    }
+                }
+            ),
+            400: openapi.Response(
+                description="更新失败",
+                examples={
+                    "application/json": {
+                        "code": 400,
+                        "message": "用户名已存在",
+                        "data": None,
+                        "timestamp": "2024-01-01T12:00:00"
+                    }
+                }
+            ),
+            401: openapi.Response(
+                description="未认证",
+                examples={
+                    "application/json": {
+                        "code": 401,
+                        "message": "用户未认证",
+                        "data": None,
+                        "timestamp": "2024-01-01T12:00:00"
+                    }
+                }
+            )
         },
         tags=['用户管理'],
         security=[{'Bearer': []}]
@@ -653,6 +776,8 @@ class UserProfileView(APIView):
                 "data": None,
                 "timestamp": datetime.now().isoformat()
             }, status=500)
+
+
 # 商品相关视图
 class ProductListView(APIView):
     permission_classes = [AllowAny]
@@ -774,6 +899,127 @@ class ProductListView(APIView):
             }, status=500)
 
 
+class CategoryListView(APIView):
+    permission_classes = [AllowAny]
+
+    @swagger_auto_schema(
+        operation_summary="获取分类列表",
+        operation_description="获取所有商品分类的树形结构",
+        responses={
+            200: openapi.Response(
+                description="获取成功",
+                examples={
+                    "application/json": {
+                        "code": 0,
+                        "message": "success",
+                        "data": [
+                            {
+                                "category_id": 1,
+                                "category_name": "电子产品",
+                                "parent_id": None,
+                                "level": 1,
+                                "sort_order": 0,
+                                "children": [
+                                    {
+                                        "category_id": 2,
+                                        "category_name": "手机",
+                                        "parent_id": 1,
+                                        "level": 2,
+                                        "sort_order": 0
+                                    }
+                                ]
+                            }
+                        ],
+                        "timestamp": "2024-01-01T12:00:00"
+                    }
+                }
+            ),
+            500: openapi.Response(
+                description="服务器错误",
+                examples={
+                    "application/json": {
+                        "code": 500,
+                        "message": "获取分类列表失败",
+                        "data": None,
+                        "timestamp": "2024-01-01T12:00:00"
+                    }
+                }
+            )
+        },
+        tags=['商品管理']
+    )
+    def get(self, request):
+        """获取分类列表"""
+        try:
+            print("开始处理分类列表请求")
+            service = UnifiedEcommerceService()
+
+            # 获取顶级分类
+            top_categories = service.category_repo.get_categories_tree()
+            print(f"获取到 {len(top_categories)} 个顶级分类")
+
+            if not top_categories:
+                print("没有找到任何分类数据")
+                return Response({
+                    "code": 0,
+                    "message": "success",
+                    "data": [],
+                    "timestamp": datetime.now().isoformat()
+                })
+
+            # 构建分类树
+            category_list = []
+            for category in top_categories:
+                print(f"处理分类: {category.category_name} (ID: {category.category_id})")
+
+                # 获取子分类
+                subcategories = service.category_repo.get_subcategories(category.category_id)
+                print(f"  ├─ 子分类数量: {len(subcategories)}")
+
+                category_dict = {
+                    'category_id': getattr(category, 'category_id', None),
+                    'category_name': getattr(category, 'category_name', ''),
+                    'parent_id': getattr(category, 'parent_category_id', None),
+                    'level': getattr(category, 'category_level', 1),
+                    'sort_order': getattr(category, 'sort_order', 0),
+                    'children': []
+                }
+
+                # 处理子分类
+                for child in subcategories:
+                    child_dict = {
+                        'category_id': getattr(child, 'category_id', None),
+                        'category_name': getattr(child, 'category_name', ''),
+                        'parent_id': getattr(child, 'parent_category_id', None),
+                        'level': getattr(child, 'category_level', 2),
+                        'sort_order': getattr(child, 'sort_order', 0)
+                    }
+                    category_dict['children'].append(child_dict)
+                    print(f"  ├─ 子分类: {child.category_name} (ID: {child.category_id})")
+
+                category_list.append(category_dict)
+
+            print(f"返回分类数据: {len(category_list)} 个分类组")
+            return Response({
+                "code": 0,
+                "message": "success",
+                "data": category_list,
+                "timestamp": datetime.now().isoformat()
+            })
+
+        except Exception as e:
+            import traceback
+            print(f"获取分类列表错误: {str(e)}")
+            print(f"异常详情: {traceback.format_exc()}")
+
+            return Response({
+                "code": 500,
+                "message": f"获取分类列表失败: {str(e)}",
+                "data": None,
+                "timestamp": datetime.now().isoformat()
+            }, status=500)
+
+
 class ProductDetailView(APIView):
     permission_classes = [AllowAny]
 
@@ -871,6 +1117,45 @@ class ProductDetailView(APIView):
 class HealthCheckView(APIView):
     permission_classes = [AllowAny]
 
+    @swagger_auto_schema(
+        operation_summary="健康检查",
+        operation_description="检查API服务及其依赖组件的健康状态",
+        responses={
+            200: openapi.Response(
+                description="服务正常",
+                examples={
+                    "application/json": {
+                        "code": 0,
+                        "message": "服务正常",
+                        "data": {
+                            "api": "healthy",
+                            "database": "healthy",
+                            "redis": "healthy",
+                            "timestamp": "2024-01-01T12:00:00"
+                        },
+                        "timestamp": "2024-01-01T12:00:00"
+                    }
+                }
+            ),
+            503: openapi.Response(
+                description="服务异常",
+                examples={
+                    "application/json": {
+                        "code": 503,
+                        "message": "服务异常",
+                        "data": {
+                            "api": "healthy",
+                            "database": "unhealthy: connection failed",
+                            "redis": "healthy",
+                            "timestamp": "2024-01-01T12:00:00"
+                        },
+                        "timestamp": "2024-01-01T12:00:00"
+                    }
+                }
+            )
+        },
+        tags=['系统管理']
+    )
     def get(self, request):
         """健康检查接口"""
         services_status = {
@@ -916,6 +1201,44 @@ class HealthCheckView(APIView):
 class CacheStatusView(APIView):
     """缓存状态查看"""
 
+    @swagger_auto_schema(
+        operation_summary="缓存状态",
+        operation_description="查看系统缓存和JWT黑名单状态",
+        responses={
+            200: openapi.Response(
+                description="获取成功",
+                examples={
+                    "application/json": {
+                        "code": 0,
+                        "message": "success",
+                        "data": {
+                            "redis_status": "connected",
+                            "jwt_blacklist": {
+                                "total_tokens": 10,
+                                "valid_tokens": 8,
+                                "avg_ttl_minutes": 25.5
+                            },
+                            "timestamp": "2024-01-01T12:00:00"
+                        },
+                        "timestamp": "2024-01-01T12:00:00"
+                    }
+                }
+            ),
+            500: openapi.Response(
+                description="获取失败",
+                examples={
+                    "application/json": {
+                        "code": 500,
+                        "message": "获取缓存状态失败",
+                        "data": None,
+                        "timestamp": "2024-01-01T12:00:00"
+                    }
+                }
+            )
+        },
+        tags=['系统管理'],
+        security=[{'Bearer': []}]
+    )
     def get(self, request):
         """查看缓存状态"""
         try:

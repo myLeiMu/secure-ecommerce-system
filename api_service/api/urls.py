@@ -2,7 +2,8 @@ from django.urls import path
 from .views import (
     UserRegistrationView, UserLoginView, UserLogoutView, UserProfileView,
     PasswordChangeView, PasswordResetCodeView, PasswordResetView,
-    ProductListView, ProductDetailView, HealthCheckView, CacheStatusView
+    ProductListView, ProductDetailView, HealthCheckView, CacheStatusView,
+    CategoryListView
 )
 
 urlpatterns = [
@@ -21,7 +22,10 @@ urlpatterns = [
     path('products', ProductListView.as_view(), name='product-list'),
     path('products/<int:product_id>', ProductDetailView.as_view(), name='product-detail'),
 
-    # 健康检查和缓存状态（新增）
+    # 分类管理
+    path('categories', CategoryListView.as_view(), name='category-list'),
+
+    # 健康检查和缓存状态
     path('health/', HealthCheckView.as_view(), name='health-check'),
     path('cache/status/', CacheStatusView.as_view(), name='cache-status'),
 

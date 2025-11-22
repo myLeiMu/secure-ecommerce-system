@@ -20,9 +20,10 @@ class JWTAuthenticationMiddleware(MiddlewareMixin):
             '/api/docs/',
             '/api/swagger/',
             '/admin/',
-            '/api/auth/logout',  # 登出需要特殊处理
             '/api/products',
-            '/health',
+            '/api/categories',
+            '/api/products',
+            '/api/health',
             '/api/v1/api/login',
             '/api/v1/api/register',
         ]

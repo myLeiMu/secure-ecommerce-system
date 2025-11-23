@@ -14,26 +14,26 @@ export const productAPI = {
     });
 
     try {
-      console.log('🛜 发送商品列表请求:', queryParams);
+      console.log('发送商品列表请求:', queryParams);
       const response = await apiClient.request('GET', '/products', null, {
         params: queryParams
       });
-      console.log('🛜 商品列表响应:', response);
+      console.log('商品列表响应:', response);
       return response;
     } catch (error) {
-      console.error('❌ 获取商品列表失败:', error);
+      console.error('获取商品列表失败:', error);
       throw error;
     }
   },
 
   async getProductDetail(productId) {
     try {
-      console.log('🛜 发送商品详情请求:', productId);
+      console.log('发送商品详情请求:', productId);
       const response = await apiClient.request('GET', `/products/${productId}`);
-      console.log('🛜 商品详情响应:', response);
+      console.log('商品详情响应:', response);
       return response;
     } catch (error) {
-      console.error('❌ 获取商品详情失败:', error);
+      console.error('获取商品详情失败:', error);
       throw error;
     }
   },
@@ -49,12 +49,12 @@ export const productAPI = {
   // 使用新的分类接口
   async getCategories() {
     try {
-      console.log('🛜 发送分类列表请求');
+      console.log('发送分类列表请求');
       const response = await apiClient.request('GET', '/categories');
-      console.log('🛜 分类列表响应:', response);
+      console.log('分类列表响应:', response);
       return response;
     } catch (error) {
-      console.error('❌ 获取分类失败:', error);
+      console.error('获取分类失败:', error);
       // 直接抛出错误，不返回默认数据
       throw error;
     }

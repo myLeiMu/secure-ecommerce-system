@@ -6,7 +6,7 @@
         :alt="product.product_name"
         @error="handleImageError"
       />
-      <div v-if="!product.is_available" class="out-of-stock">已售罄</div>
+      <div v-if="product.is_available === 0" class="out-of-stock">已售罄</div>
     </div>
     
     <div class="product-info">

@@ -145,13 +145,13 @@ export default {
           hasMore.value = true;
         }
 
-        console.log('📦 请求商品列表参数:', buildSafeFilters());
+        console.log('请求商品列表参数:', buildSafeFilters());
         const response = await productAPI.getProducts(buildSafeFilters());
-        console.log('📦 商品列表API响应:', response);
+        console.log('商品列表API响应:', response);
 
         if (response.code === 0) {
           const newProducts = response.data || [];
-          console.log('📦 商品数据:', newProducts);
+          console.log('商品数据:', newProducts);
           
           if (reset) {
             products.value = newProducts;
@@ -164,7 +164,7 @@ export default {
           error.value = response.message || '获取商品列表失败';
         }
       } catch (err) {
-        console.error('❌ 获取商品列表错误:', err);
+        console.error('获取商品列表错误:', err);
         error.value = err.message || '网络错误，请重试';
       } finally {
         loading.value = false;
@@ -208,25 +208,25 @@ export default {
     };
 
     const handleAddToCart = (product) => {
-      console.log('🛒 添加到购物车:', product);
+      console.log('添加到购物车:', product);
     };
 
     const fetchCategories = async () => {
       try {
-        console.log('📂 开始获取分类数据...');
+        console.log('开始获取分类数据...');
         const response = await productAPI.getCategories();
-        console.log('📂 分类API响应:', response);
+        console.log('分类API响应:', response);
 
         if (response.code === 0 && response.data) {
-          console.log('📂 原始分类数据:', response.data);
+          console.log('原始分类数据:', response.data);
           categories.value = flattenCategories(response.data);
-          console.log('📂 处理后的分类数据:', categories.value);
+          console.log('处理后的分类数据:', categories.value);
         } else {
-          console.warn('⚠️ 分类API返回失败:', response.message);
+          console.warn('分类API返回失败:', response.message);
           categories.value = []; // 不设置默认数据
         }
       } catch (err) {
-        console.error('❌ 获取分类失败:', err);
+        console.error('获取分类失败:', err);
         categories.value = []; // 不设置默认数据
       }
     };
@@ -252,14 +252,14 @@ export default {
     };
 
     onMounted(() => {
-      console.log('🚀 ProductList 组件挂载');
+      console.log('ProductList 组件挂载');
       fetchCategories();
       syncQueryToFilters();
       fetchProducts(true);
     });
 
     watch(() => route.query, () => {
-      console.log('🔄 路由查询参数变化:', route.query);
+      console.log('路由查询参数变化:', route.query);
       syncQueryToFilters();
       fetchProducts(true);
     });

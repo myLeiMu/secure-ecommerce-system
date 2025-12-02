@@ -35,13 +35,13 @@ class SimpleMonitor:
     def start_monitoring(self, interval=5):
         """开始监控"""
         self.running = True
-        print(f"📊 开始监控 (间隔: {interval}秒)")
+        print(f" 开始监控 (间隔: {interval}秒)")
 
         def monitor_loop():
             while self.running:
                 success, elapsed = self.check_endpoint()
 
-                status = "✅" if success else "❌"
+                status = "yes" if success else "no"
                 color = "\033[92m" if elapsed < 1 else "\033[93m" if elapsed < 3 else "\033[91m"
 
                 print(f"{status} {color}响应: {elapsed:.3f}s\033[0m")
@@ -62,7 +62,7 @@ class SimpleMonitor:
     def stop_monitoring(self):
         """停止监控"""
         self.running = False
-        print("⏹️  停止监控")
+        print("  停止监控")
 
         # 生成监控报告
         if self.response_times:
@@ -71,7 +71,7 @@ class SimpleMonitor:
     def generate_report(self):
         """生成监控报告"""
         if not self.response_times:
-            print("⚠️  无监控数据")
+            print("  无监控数据")
             return
 
         avg_time = sum(self.response_times) / len(self.response_times)
@@ -80,7 +80,7 @@ class SimpleMonitor:
 
         error_rate = len(self.errors) / len(self.response_times) if self.response_times else 0
 
-        print("\n📊 监控报告")
+        print("\n 监控报告")
         print("=" * 40)
         print(f"总检查次数: {len(self.response_times)}")
         print(f"平均响应时间: {avg_time:.3f}秒")
@@ -97,7 +97,7 @@ def main():
     monitor = SimpleMonitor()
 
     try:
-        print("🔄 性能监控启动 (按Ctrl+C停止)")
+        print(" 性能监控启动 (按Ctrl+C停止)")
         monitor.start_monitoring(interval=3)
 
         # 保持主线程运行
@@ -106,7 +106,7 @@ def main():
 
     except KeyboardInterrupt:
         monitor.stop_monitoring()
-        print("\n👋 监控已停止")
+        print("\n 监控已停止")
 
 
 if __name__ == "__main__":

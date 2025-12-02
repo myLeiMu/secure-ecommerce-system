@@ -6,13 +6,13 @@ from datetime import datetime
 
 def quick_performance_test():
     """快速性能测试"""
-    print("⚡ 快速性能测试开始")
+    print(" 快速性能测试开始")
 
     base_url = "http://127.0.0.1:8080"
     results = []
 
     # 1. 测试单个端点
-    print("📡 测试单个端点...")
+    print(" 测试单个端点...")
 
     endpoints = [
         "/api/products",
@@ -35,7 +35,7 @@ def quick_performance_test():
         print(f"  {endpoint}: {avg_time:.3f}s")
 
     # 2. 快速并发测试
-    print("\n🔁 快速并发测试 (10用户)...")
+    print("\n 快速并发测试 (10用户)...")
 
     def make_request(_):
         start = time.time()
@@ -75,16 +75,16 @@ def quick_performance_test():
 """
 
     if concurrent_result['avg_time'] < 1.0:
-        report += "✅ 性能良好"
+        report += " 性能良好"
     elif concurrent_result['avg_time'] < 3.0:
-        report += "⚠️  性能一般，建议优化"
+        report += "  性能一般，建议优化"
     else:
-        report += "❌ 性能较差，需要优化"
+        report += " 性能较差，需要优化"
 
     with open(report_file, 'w', encoding='utf-8') as f:
         f.write(report)
 
-    print(f"\n📄 报告已生成: {report_file}")
+    print(f"\n 报告已生成: {report_file}")
     return True
 
 

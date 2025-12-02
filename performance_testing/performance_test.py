@@ -76,7 +76,7 @@ class SimplePerformanceTester:
 
     def test_concurrent(self, endpoint="/api/products", users=50):
         """并发测试 - 简化版"""
-        print(f"🔁 执行{users}并发测试: {endpoint}")
+        print(f" 执行{users}并发测试: {endpoint}")
 
         def worker(_):
             start = time.time()
@@ -101,7 +101,7 @@ class SimplePerformanceTester:
 
     def test_single_endpoint(self, endpoint, method="GET", iterations=10):
         """单端点测试"""
-        print(f"📍 测试 {endpoint}")
+        print(f" 测试 {endpoint}")
 
         times = []
         for i in range(iterations):
@@ -124,7 +124,7 @@ class SimplePerformanceTester:
     def run_basic_tests(self):
         """运行基础测试"""
         print("=" * 50)
-        print("🚀 开始基础性能测试")
+        print(" 开始基础性能测试")
         print("=" * 50)
 
         # 测试公开端点
@@ -138,10 +138,10 @@ class SimplePerformanceTester:
         for method, endpoint in endpoints:
             result = self.test_single_endpoint(endpoint, method, 5)
             results.append(result)
-            print(f"✅ {endpoint}: {result['avg_time']:.3f}s")
+            print(f" {endpoint}: {result['avg_time']:.3f}s")
 
         # 并发测试
-        print("\n🔁 执行并发测试")
+        print("\n 执行并发测试")
         concurrent_result = self.test_concurrent("/api/products", 50)
 
         # 生成报告
@@ -174,7 +174,7 @@ class SimplePerformanceTester:
 """
 
         for result in single_results:
-            status = '✅' if result['success_rate'] > 0.9 else '⚠️'
+            status = 'yes' if result['success_rate'] > 0.9 else 'no'
             report += f"- {status} {result['endpoint']}: {result['avg_time']:.3f}s\n"
 
         # 保存报告
@@ -196,8 +196,8 @@ class SimplePerformanceTester:
                     r['status_code']
                 ])
 
-        print(f"\n📄 报告已生成: {report_file}")
-        print(f"📊 数据已保存: {csv_file}")
+        print(f"\n 报告已生成: {report_file}")
+        print(f" 数据已保存: {csv_file}")
 
 
 def main():

@@ -41,7 +41,7 @@ def get_db():
         db.close()
 
 def get_db_session():
-    """获取数据库会话（非上下文管理器版本）"""
+    """获取数据库会话"""
     return SessionLocal()
 
 def init_db():

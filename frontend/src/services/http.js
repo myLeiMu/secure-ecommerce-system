@@ -2,11 +2,11 @@ import axios from 'axios';
 
 class APIClient {
   constructor() {
-    this.baseURL = process.env.VUE_APP_API_BASE_URL || '/api';
+    this.baseURL = this.resolveBaseURL(process.env.VUE_APP_API_BASE_URL);
     this.token = localStorage.getItem('access_token');
     this.client = axios.create({
       baseURL: this.baseURL,
-      timeout: 15000,
+      timeout: 20000,
       headers: {
         'Content-Type': 'application/json'
       }
@@ -15,6 +15,27 @@ class APIClient {
     if (this.token) {
       this.client.defaults.headers.common.Authorization = `Bearer ${this.token}`;
     }
+  }
+
+  resolveBaseURL(rawBaseURL) {
+    const fallback = '/api';
+    if (!rawBaseURL) {
+      return fallback;
+    }
+
+    const normalized = rawBaseURL.endsWith('/')
+      ? rawBaseURL.slice(0, -1)
+      : rawBaseURL;
+
+    const isLocalBackend = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?(\/|$)/i.test(normalized);
+    const currentHost = window.location.hostname;
+    const isLocalFrontendHost = currentHost === 'localhost' || currentHost === '127.0.0.1';
+
+    if (isLocalBackend && !isLocalFrontendHost) {
+      return fallback;
+    }
+
+    return normalized || fallback;
   }
 
   async request(method, url, data = null, config = {}) {
@@ -45,7 +66,9 @@ class APIClient {
     }
 
     if (error.request) {
-      throw new Error('网络连接失败，请检查网络设置');
+      const networkError = new Error('网络连接失败，请检查网络设置');
+      networkError.isNetworkError = true;
+      throw networkError;
     }
 
     throw new Error('请求配置错误');

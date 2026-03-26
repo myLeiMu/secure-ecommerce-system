@@ -7,7 +7,7 @@ from src.Data_base.models.product import Product, Category
 from src.registration import UserSystem
 from src.authentication import EnhancedUserSystem
 from src.utils.security import InputValidator, SQLInjectionValidator
-from src.algorithm.rsa_service import RSAService
+from src.algorithm.rsa_service import SM2Service
 import os
 
 class UnifiedEcommerceService:
@@ -38,9 +38,8 @@ class UnifiedEcommerceService:
                 jwt_secret=jwt_secret  # 传递密钥
             )
 
-            # 初始化RSA服务并生成密钥
-            self.rsa_service = RSAService()
-            self.rsa_service.generate_keys(bits=512)
+            self.asymmetric_service = SM2Service()
+            self.asymmetric_service.generate_keys()
 
             # 创建示例数据
             self._create_sample_data()
@@ -290,6 +289,12 @@ class UnifiedEcommerceService:
         except Exception as e:
             return {'success': False, 'message': f'登录失败: {str(e)}'}
 
+    def cert_login_user(self, username: str) -> Dict[str, Any]:
+        try:
+            return self.user_system.issue_token_for_username(username)
+        except Exception as e:
+            return {'success': False, 'message': f'证书登录失败: {str(e)}'}
+
     def change_password(self, username: str, old_password: str, new_password: str) -> Dict[str, Any]:
         """修改密码"""
         try:
@@ -426,18 +431,18 @@ class UnifiedEcommerceService:
             print(f"获取用户订单失败: {e}")
             return []
 
-    def encrypt_data(self, data: str) -> int:
+    def encrypt_data(self, data) -> str:
         """加密数据"""
         try:
-            return self.rsa_service.encrypt_message(data)
+            return self.asymmetric_service.encrypt_message(data)
         except Exception as e:
             print(f"加密失败: {e}")
-            return 0
+            return ""
 
-    def decrypt_data(self, ciphertext: int) -> str:
+    def decrypt_data(self, ciphertext: str) -> str:
         """解密数据"""
         try:
-            return self.rsa_service.decrypt_message(ciphertext)
+            return self.asymmetric_service.decrypt_message(ciphertext)
         except Exception as e:
             print(f"解密失败: {e}")
             return ""

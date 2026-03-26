@@ -1,7 +1,7 @@
-import hashlib
 import time
 from django.conf import settings
 from api_service.utils.redis_client import redis_client
+from src.utils.security import sm3_hexdigest
 
 
 class JWTBlacklist:
@@ -13,7 +13,7 @@ class JWTBlacklist:
 
     def _get_blacklist_key(self, token):
         """生成黑名单键（使用token的MD5哈希）"""
-        token_hash = hashlib.md5(token.encode()).hexdigest()
+        token_hash = sm3_hexdigest(token.encode("utf-8"))
         return f"{self.prefix}:{token_hash}"
 
     def add_token(self, token, expire_minutes=None):
@@ -31,7 +31,7 @@ class JWTBlacklist:
 
         # 存储令牌信息
         blacklist_data = {
-            'token_hash': hashlib.md5(token.encode()).hexdigest(),
+            'token_hash': sm3_hexdigest(token.encode("utf-8")),
             'added_at': time.time(),
             'expires_at': time.time() + expire_seconds
         }

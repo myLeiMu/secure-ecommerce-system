@@ -7,6 +7,9 @@ from rest_framework.views import exception_handler
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 from datetime import datetime
+import time
+import secrets
+from urllib.parse import unquote
 import sys
 import os
 from django.http import JsonResponse
@@ -15,6 +18,8 @@ from api_service.utils.cache_utils import ProductCache, UserCache
 from api_service.utils.redis_client import redis_client
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 from src.unified_service import UnifiedEcommerceService
+from gmssl import sm2
+from src.algorithm.ca_center import parse_certificate_pem, verify_certificate_with_root
 
 
 # 统一响应格式
@@ -101,6 +106,21 @@ class UserLoginSerializer(serializers.Serializer):
     password = serializers.CharField(max_length=128, required=True, help_text="密码", write_only=True)
 
 
+class CertChallengeSerializer(serializers.Serializer):
+    username = serializers.CharField(max_length=50, required=True, help_text="用户名")
+
+
+class CertLoginSerializer(serializers.Serializer):
+    username = serializers.CharField(max_length=50, required=True, help_text="用户名")
+    certificate_pem = serializers.CharField(required=True, help_text="PEM证书")
+    challenge = serializers.CharField(required=True, help_text="挑战字符串")
+    signature_hex = serializers.CharField(required=True, help_text="SM2签名hex")
+
+
+class CertMTLSLoginSerializer(serializers.Serializer):
+    username = serializers.CharField(max_length=50, required=False, help_text="用户名（可选）")
+
+
 class UserProfileSerializer(serializers.Serializer):
     user_id = serializers.IntegerField(read_only=True, help_text="用户ID")
     username = serializers.CharField(read_only=True, help_text="用户名")
@@ -132,6 +152,315 @@ class PasswordResetSerializer(serializers.Serializer):
     phone = serializers.CharField(max_length=20, required=True, help_text="手机号")
     code = serializers.CharField(max_length=6, required=True, help_text="验证码")
     new_password = serializers.CharField(max_length=128, required=True, help_text="新密码", write_only=True)
+
+
+CERT_LOGIN_CHALLENGES = {}
+CERT_LOGIN_CHALLENGE_TTL_SECONDS = 300
+
+
+def _resolve_root_cert_path() -> str:
+    env_path = os.getenv("CA_ROOT_CERT_PATH")
+    candidate_paths = []
+    if env_path:
+        candidate_paths.append(env_path)
+
+    project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    candidate_paths.extend([
+        os.path.join(project_root, "keys", "ca", "root_ca.crt.pem"),
+        os.path.join(os.getcwd(), "keys", "ca", "root_ca.crt.pem"),
+        os.path.join(os.path.dirname(os.getcwd()), "keys", "ca", "root_ca.crt.pem"),
+    ])
+
+    for path in candidate_paths:
+        absolute = path if os.path.isabs(path) else os.path.abspath(path)
+        if os.path.exists(absolute):
+            return absolute
+    return ""
+
+
+def _extract_cn_from_dn(dn: str) -> str:
+    if not dn:
+        return ""
+    parts = [p.strip() for p in dn.split(",")]
+    for p in parts:
+        if p.startswith("CN="):
+            return p[3:].strip()
+        if p.startswith("/CN="):
+            return p[4:].strip()
+    return ""
+
+
+@method_decorator(csrf_exempt, name='dispatch')
+class CertChallengeView(APIView):
+    permission_classes = [AllowAny]
+
+    @swagger_auto_schema(
+        operation_summary="证书登录挑战",
+        operation_description="生成证书登录挑战字符串",
+        request_body=CertChallengeSerializer,
+        tags=['用户认证']
+    )
+    def post(self, request):
+        serializer = CertChallengeSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response({
+                "code": 400,
+                "message": serializer.errors,
+                "data": None,
+                "timestamp": datetime.now().isoformat()
+            }, status=400)
+        username = serializer.validated_data["username"]
+        challenge = secrets.token_urlsafe(32)
+        CERT_LOGIN_CHALLENGES[username] = {
+            "challenge": challenge,
+            "expires_at": time.time() + CERT_LOGIN_CHALLENGE_TTL_SECONDS
+        }
+        return Response({
+            "code": 0,
+            "message": "success",
+            "data": {
+                "challenge": challenge,
+                "expires_in": CERT_LOGIN_CHALLENGE_TTL_SECONDS
+            },
+            "timestamp": datetime.now().isoformat()
+        })
+
+
+@method_decorator(csrf_exempt, name='dispatch')
+class CertLoginView(APIView):
+    permission_classes = [AllowAny]
+
+    @swagger_auto_schema(
+        operation_summary="证书登录",
+        operation_description="使用SM2证书与签名进行登录，成功后返回JWT",
+        request_body=CertLoginSerializer,
+        tags=['用户认证']
+    )
+    def post(self, request):
+        serializer = CertLoginSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response({
+                "code": 400,
+                "message": serializer.errors,
+                "data": None,
+                "timestamp": datetime.now().isoformat()
+            }, status=400)
+
+        username = serializer.validated_data["username"]
+        certificate_pem = serializer.validated_data["certificate_pem"]
+        challenge = serializer.validated_data["challenge"]
+        signature_hex = serializer.validated_data["signature_hex"]
+
+        challenge_state = CERT_LOGIN_CHALLENGES.get(username)
+        if not challenge_state:
+            return Response({
+                "code": 401,
+                "message": "挑战不存在，请先获取挑战",
+                "data": None,
+                "timestamp": datetime.now().isoformat()
+            }, status=401)
+
+        if time.time() > challenge_state["expires_at"]:
+            CERT_LOGIN_CHALLENGES.pop(username, None)
+            return Response({
+                "code": 401,
+                "message": "挑战已过期，请重新获取",
+                "data": None,
+                "timestamp": datetime.now().isoformat()
+            }, status=401)
+
+        if challenge != challenge_state["challenge"]:
+            return Response({
+                "code": 401,
+                "message": "挑战不匹配",
+                "data": None,
+                "timestamp": datetime.now().isoformat()
+            }, status=401)
+
+        root_cert_path = _resolve_root_cert_path()
+        if not root_cert_path:
+            return Response({
+                "code": 500,
+                "message": "根证书不存在",
+                "data": None,
+                "timestamp": datetime.now().isoformat()
+            }, status=500)
+
+        try:
+            with open(root_cert_path, "r", encoding="utf-8") as f:
+                root_cert_pem = f.read()
+            cert_ok = verify_certificate_with_root(certificate_pem, root_cert_pem)
+            if not cert_ok:
+                return Response({
+                    "code": 401,
+                    "message": "证书验签失败",
+                    "data": None,
+                    "timestamp": datetime.now().isoformat()
+                }, status=401)
+
+            cert_info = parse_certificate_pem(certificate_pem)
+            cert_cn = cert_info.get("subject_common_name", "")
+            if cert_cn and cert_cn != username:
+                return Response({
+                    "code": 401,
+                    "message": "证书主体与用户名不一致",
+                    "data": None,
+                    "timestamp": datetime.now().isoformat()
+                }, status=401)
+
+            verifier = sm2.CryptSM2(public_key=cert_info["subject_public_key_hex"], private_key="")
+            if not verifier.verify(signature_hex, challenge.encode("utf-8")):
+                return Response({
+                    "code": 401,
+                    "message": "签名校验失败",
+                    "data": None,
+                    "timestamp": datetime.now().isoformat()
+                }, status=401)
+
+            service = UnifiedEcommerceService()
+            result = service.cert_login_user(username)
+            if not result.get("success"):
+                return Response({
+                    "code": 401,
+                    "message": result.get("message", "证书登录失败"),
+                    "data": None,
+                    "timestamp": datetime.now().isoformat()
+                }, status=401)
+            CERT_LOGIN_CHALLENGES.pop(username, None)
+            return Response({
+                "code": 0,
+                "message": result.get("message", "登录成功"),
+                "data": {
+                    "token": result.get("token"),
+                    "user": result.get("user")
+                },
+                "timestamp": datetime.now().isoformat()
+            })
+        except Exception as e:
+            return Response({
+                "code": 500,
+                "message": f"证书登录异常: {str(e)}",
+                "data": None,
+                "timestamp": datetime.now().isoformat()
+            }, status=500)
+
+
+@method_decorator(csrf_exempt, name='dispatch')
+class CertMTLSLoginView(APIView):
+    permission_classes = [AllowAny]
+
+    @swagger_auto_schema(
+        operation_summary="mTLS证书登录",
+        operation_description="通过反向代理透传的客户端证书进行登录，成功后返回JWT",
+        request_body=CertMTLSLoginSerializer,
+        tags=['用户认证']
+    )
+    def post(self, request):
+        serializer = CertMTLSLoginSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response({
+                "code": 400,
+                "message": serializer.errors,
+                "data": None,
+                "timestamp": datetime.now().isoformat()
+            }, status=400)
+
+        verify_header = request.META.get("HTTP_X_SSL_CLIENT_VERIFY", "")
+        if verify_header and verify_header.upper() != "SUCCESS":
+            return Response({
+                "code": 401,
+                "message": "客户端证书握手未通过",
+                "data": None,
+                "timestamp": datetime.now().isoformat()
+            }, status=401)
+
+        cert_header = request.META.get("HTTP_X_SSL_CLIENT_CERT") or request.META.get("HTTP_X_CLIENT_CERT_PEM")
+        if not cert_header:
+            return Response({
+                "code": 401,
+                "message": "未提供客户端证书",
+                "data": None,
+                "timestamp": datetime.now().isoformat()
+            }, status=401)
+
+        certificate_pem = unquote(cert_header)
+        strict_backend_verify = os.getenv("MTLS_BACKEND_VERIFY", "false").lower() in {"1", "true", "yes"}
+
+        try:
+            cert_cn = ""
+            if strict_backend_verify:
+                root_cert_path = _resolve_root_cert_path()
+                if not root_cert_path:
+                    return Response({
+                        "code": 500,
+                        "message": "根证书不存在",
+                        "data": None,
+                        "timestamp": datetime.now().isoformat()
+                    }, status=500)
+                with open(root_cert_path, "r", encoding="utf-8") as f:
+                    root_cert_pem = f.read()
+                cert_ok = verify_certificate_with_root(certificate_pem, root_cert_pem)
+                if not cert_ok:
+                    return Response({
+                        "code": 401,
+                        "message": "证书验签失败",
+                        "data": None,
+                        "timestamp": datetime.now().isoformat()
+                    }, status=401)
+                cert_info = parse_certificate_pem(certificate_pem)
+                cert_cn = cert_info.get("subject_common_name", "")
+            else:
+                try:
+                    cert_info = parse_certificate_pem(certificate_pem)
+                    cert_cn = cert_info.get("subject_common_name", "")
+                except Exception:
+                    cert_cn = _extract_cn_from_dn(request.META.get("HTTP_X_SSL_CLIENT_S_DN", ""))
+
+            input_username = serializer.validated_data.get("username")
+            login_username = input_username or cert_cn
+
+            if input_username and cert_cn and input_username != cert_cn:
+                return Response({
+                    "code": 401,
+                    "message": "证书主体与用户名不一致",
+                    "data": None,
+                    "timestamp": datetime.now().isoformat()
+                }, status=401)
+
+            if not login_username:
+                return Response({
+                    "code": 400,
+                    "message": "无法从证书中解析用户名",
+                    "data": None,
+                    "timestamp": datetime.now().isoformat()
+                }, status=400)
+
+            service = UnifiedEcommerceService()
+            result = service.cert_login_user(login_username)
+            if not result.get("success"):
+                return Response({
+                    "code": 401,
+                    "message": result.get("message", "证书登录失败"),
+                    "data": None,
+                    "timestamp": datetime.now().isoformat()
+                }, status=401)
+
+            return Response({
+                "code": 0,
+                "message": result.get("message", "登录成功"),
+                "data": {
+                    "token": result.get("token"),
+                    "user": result.get("user")
+                },
+                "timestamp": datetime.now().isoformat()
+            })
+        except Exception as e:
+            return Response({
+                "code": 500,
+                "message": f"mTLS证书登录异常: {str(e)}",
+                "data": None,
+                "timestamp": datetime.now().isoformat()
+            }, status=500)
 
 
 # API视图

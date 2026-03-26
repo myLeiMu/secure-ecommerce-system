@@ -4,6 +4,7 @@ from sqlalchemy import or_, func
 from src.Data_base.models.user import User, UserAddress
 from src.Data_base.repositories.base_repository import BaseRepository
 import logging
+from datetime import datetime
 
 logger = logging.getLogger(__name__)
 
@@ -19,12 +20,19 @@ class UserRepository(BaseRepository[User]):
         try:
             user = self.get_by_id(user_id)
             if user:
-                # 检查失败次数锁定
-                if user.failed_attempts >= 5:
-                    return True
-                # 检查时间锁定
-                if user.account_locked_until and user.account_locked_until > func.now():
-                    return True
+                now = datetime.now()
+                if user.account_locked_until:
+                    if user.account_locked_until > now:
+                        return True
+                    if user.failed_attempts >= 5:
+                        user.failed_attempts = 0
+                        user.account_locked_until = None
+                        self.db.commit()
+                        return False
+                if user.failed_attempts >= 5 and not user.account_locked_until:
+                    user.failed_attempts = 0
+                    self.db.commit()
+                    return False
             return False
         except Exception as e:
             logger.error(f"检查账户锁定状态失败: {str(e)}")
@@ -111,11 +119,10 @@ class UserRepository(BaseRepository[User]):
     def update_last_login(self, user_id: int) -> bool:
         """更新最后登录时间"""
         try:
-            from datetime import datetime
             user = self.get_by_id(user_id)
             if user:
                 user.last_login = datetime.now()
-                user.login_count = User.login_count + 1
+                user.login_count = (user.login_count or 0) + 1
                 self.db.commit()
                 logger.info(f"更新用户 {user_id} 最后登录时间")
                 return True

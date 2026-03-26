@@ -105,10 +105,30 @@ REST_FRAMEWORK = {
 # CORS 配置
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
+    "http://localhost:3001",
     "http://127.0.0.1:3000",
+    "http://127.0.0.1:3001",
+    "http://192.168.31.244:3000",
+    "http://192.168.185.197:3000",
+    "http://10.252.105.57:3000"
+]
+CORS_ALLOWED_ORIGIN_REGEXES = [
+    r"^http://localhost:\d+$",
+    r"^http://127\.0\.0\.1:\d+$",
+]
+CSRF_TRUSTED_ORIGINS = [
+    "http://localhost:3000",
+    "http://localhost:3001",
+    "http://127.0.0.1:3000",
+    "http://127.0.0.1:3001",
 ]
 
 CORS_ALLOW_CREDENTIALS = True
+
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+USE_X_FORWARDED_HOST = True
+
+
 
 # JWT 配置
 JWT_CONFIG = {
@@ -154,7 +174,7 @@ SWAGGER_SETTINGS = {
 }
 
 
-# Session 使用 Redis（可选）
+# Session 使用 Redis
 SESSION_ENGINE = 'django.contrib.sessions.backends.cache'
 SESSION_CACHE_ALIAS = 'default'
 

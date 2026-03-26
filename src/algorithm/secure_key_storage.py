@@ -2,31 +2,47 @@ import json
 import os
 import base64
 import time
-from Crypto.Cipher import AES
-from Crypto.Protocol.KDF import PBKDF2
-from Crypto.Random import get_random_bytes
-from Crypto.Util.Padding import pad, unpad
+from gmssl.sm4 import CryptSM4, SM4_ENCRYPT, SM4_DECRYPT
+from gmssl import sm3
 
 class SecureKeyStorage:
-    def __init__(self, filepath="rsa_key_secure.json", public_path="keys/public_key.json"):
+    def __init__(self, filepath="asym_key_secure.json", public_path="keys/public_key.json"):
         self.filepath = filepath
         self.public_path = public_path
 
+    @staticmethod
+    def _pkcs7_pad(data: bytes, block_size: int = 16) -> bytes:
+        pad_len = block_size - (len(data) % block_size)
+        return data + bytes([pad_len]) * pad_len
+
+    @staticmethod
+    def _pkcs7_unpad(data: bytes, block_size: int = 16) -> bytes:
+        if not data or len(data) % block_size != 0:
+            raise ValueError("invalid padded data")
+        pad_len = data[-1]
+        if pad_len < 1 or pad_len > block_size:
+            raise ValueError("invalid padding length")
+        if data[-pad_len:] != bytes([pad_len]) * pad_len:
+            raise ValueError("invalid padding")
+        return data[:-pad_len]
+
     def _derive_key(self, password: str, salt: bytes) -> bytes:
-        """从用户口令派生 AES 密钥（PBKDF2）"""
-        return PBKDF2(password.encode('utf-8'), salt, dkLen=32, count=200000)
+        z = (password.encode("utf-8") + salt).hex().encode("utf-8")
+        key_hex = sm3.sm3_kdf(z, 16)
+        return bytes.fromhex(key_hex)
 
     def encrypt_and_save(self, private_key_data: dict, password: str):
-        """用 AES-CBC 对私钥 JSON 序列化后加密并保存到文件"""
-        salt = get_random_bytes(16)
+        salt = os.urandom(16)
+        iv = os.urandom(16)
         key = self._derive_key(password, salt)
-        cipher = AES.new(key, AES.MODE_CBC)
-        data = json.dumps(private_key_data).encode("utf-8")
-        ciphertext = cipher.encrypt(pad(data, AES.block_size))
+        crypt_sm4 = CryptSM4()
+        crypt_sm4.set_key(key, SM4_ENCRYPT)
+        data = json.dumps(private_key_data, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
+        ciphertext = crypt_sm4.crypt_cbc(iv, self._pkcs7_pad(data, 16))
 
         package = {
             "salt": base64.b64encode(salt).decode(),
-            "iv": base64.b64encode(cipher.iv).decode(),
+            "iv": base64.b64encode(iv).decode(),
             "ciphertext": base64.b64encode(ciphertext).decode(),
         }
 
@@ -47,8 +63,10 @@ class SecureKeyStorage:
         ciphertext = base64.b64decode(package["ciphertext"])
 
         key = self._derive_key(password, salt)
-        cipher = AES.new(key, AES.MODE_CBC, iv)
-        plaintext = unpad(cipher.decrypt(ciphertext), AES.block_size)
+        crypt_sm4 = CryptSM4()
+        crypt_sm4.set_key(key, SM4_DECRYPT)
+        plaintext_padded = crypt_sm4.crypt_cbc(iv, ciphertext)
+        plaintext = self._pkcs7_unpad(plaintext_padded, 16)
         data = json.loads(plaintext.decode("utf-8"))
         return data
 
@@ -64,11 +82,11 @@ class SecureKeyStorage:
         print(f"[+] 已备份 {src_path} -> {backup_path}")
         return backup_path
 
-    def rotate_key(self, rsa_service, new_password: str = None):
+    def rotate_key(self, asymmetric_service, new_password: str = None):
         """
-        密钥轮换：生成新的 RSA 密钥对并用 new_password 加密保存
+        密钥轮换：生成新的 SM2 密钥对并用 new_password 加密保存
         参数:
-          rsa_service: 你的 RSAService 实例（用于生成新密钥）
+          asymmetric_service: 你的 SM2Service 实例（用于生成新密钥）
           new_password: 新口令（如果为 None，则会在函数内 input 提示输入）
         返回:
           new_private_key_dict
@@ -78,20 +96,14 @@ class SecureKeyStorage:
             self._backup_file(self.filepath)
 
         # 2) 生成新的密钥对
-        rsa_service.generate_keys()  # 可传 bits 参数到 generate_keys
-        rsa_obj = getattr(rsa_service, "rsa", rsa_service)
-        n = getattr(rsa_obj, "n", None)
-        e = getattr(rsa_obj, "e", None)
-        d = getattr(rsa_obj, "d", None)
-        if n is None or d is None:
-            raise RuntimeError("无法从 rsa_service 中获取 n/d，检查 RSAService 实现。")
-        private_key_data = {"n": n, "e": e, "d": d}
+        asymmetric_service.generate_keys()
+        private_key_data = asymmetric_service.export_private_key_data()
 
         # 更新公钥文件
         try:
             os.makedirs(os.path.dirname(self.public_path) or ".", exist_ok=True)
             with open(self.public_path, "w", encoding="utf-8") as fpub:
-                json.dump({"n": n, "e": e}, fpub, indent=4)
+                json.dump(asymmetric_service.export_public_key_data(), fpub, indent=4, ensure_ascii=False)
             print(f"[+] 公钥已写入 {self.public_path}")
         except Exception as ex:
             print("[!] 写入公钥文件失败：", ex)

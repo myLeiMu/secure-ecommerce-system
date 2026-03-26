@@ -1,9 +1,11 @@
 import hashlib
+import os
 import secrets
 import re
 import time
 from typing import Optional
 from datetime import datetime, timedelta
+from src.utils.security import pbkdf2_sm3, sm3_hexdigest
 
 
 class UserSystem:
@@ -14,14 +16,32 @@ class UserSystem:
         self.user_repository = user_repository
         self.verification_codes = {}  # 验证码存储
         self.attempts = {}  # 操作频率记录
+        self.primary_iterations = int(os.getenv("SM3_PBKDF2_ITERATIONS", "2500"))
+        self.legacy_iterations = 10000
 
-    def hash_password(self, password, salt=None):
+    def hash_password(self, password, salt=None, iterations=None):
         """T2防护：密码加盐哈希，防止数据篡改"""
         salt = salt or secrets.token_hex(16)
-        password_hash = hashlib.pbkdf2_hmac(
-            'sha256', password.encode(), salt.encode(), 100000
+        try:
+            salt_bytes = bytes.fromhex(salt)
+        except ValueError:
+            salt_bytes = salt.encode("utf-8")
+        rounds = iterations or self.primary_iterations
+        password_hash = pbkdf2_sm3(
+            password=password.encode("utf-8"),
+            salt=salt_bytes,
+            iterations=rounds,
+            dklen=32,
         ).hex()
         return password_hash, salt
+
+    def _hash_password_legacy_sha256(self, password: str, salt: str) -> str:
+        return hashlib.pbkdf2_hmac(
+            "sha256",
+            password.encode("utf-8"),
+            salt.encode("utf-8"),
+            100000,
+        ).hex()
 
     def validate_input(self, username, password, phone, email=None):
         """T2防护：输入验证，防止数据篡改"""
@@ -179,9 +199,29 @@ class UserSystem:
             return False, "账户已锁定，请稍后重试或联系管理员"
 
         # T1防护：密码验证防止身份欺骗
-        pwd_hash, _ = self.hash_password(password, user.salt)
-        if pwd_hash == user.pass_word:
+        current_hash, _ = self.hash_password(password, user.salt, self.primary_iterations)
+        if current_hash == user.pass_word:
             # 登录成功，重置尝试次数并更新登录信息
+            self.user_repository.reset_login_attempts(user.user_id)
+            self.user_repository.update_last_login(user.user_id)
+            return True, "登录成功"
+        legacy_sm3_hash, _ = self.hash_password(password, user.salt, self.legacy_iterations)
+        if legacy_sm3_hash == user.pass_word:
+            try:
+                user.pass_word = current_hash
+                self.user_repository.db.commit()
+            except Exception:
+                self.user_repository.db.rollback()
+            self.user_repository.reset_login_attempts(user.user_id)
+            self.user_repository.update_last_login(user.user_id)
+            return True, "登录成功"
+        legacy_hash = self._hash_password_legacy_sha256(password, user.salt)
+        if legacy_hash == user.pass_word:
+            try:
+                user.pass_word = current_hash
+                self.user_repository.db.commit()
+            except Exception:
+                self.user_repository.db.rollback()
             self.user_repository.reset_login_attempts(user.user_id)
             self.user_repository.update_last_login(user.user_id)
             return True, "登录成功"
@@ -244,7 +284,9 @@ class UserSystem:
         # 验证旧密码
         old_hash, _ = self.hash_password(old_password, user.salt)
         if old_hash != user.pass_word:
-            return False, "原密码不正确"
+            legacy_hash = self._hash_password_legacy_sha256(old_password, user.salt)
+            if legacy_hash != user.pass_word:
+                return False, "原密码不正确"
 
         # 验证新密码强度
         valid, msg = self.validate_input(username, new_password, user.phone, user.email)
@@ -268,7 +310,7 @@ class UserSystem:
     def admin_login(self, username, password, admin_token):
         """管理员登录 - 增强安全验证"""
         # T6防护：管理员额外令牌验证
-        expected_token = hashlib.sha256("secure_admin_token".encode()).hexdigest()
+        expected_token = sm3_hexdigest(b"secure_admin_token")
         if admin_token != expected_token:
             return False, "管理员令牌错误"
 

@@ -14,6 +14,9 @@ class JWTAuthenticationMiddleware(MiddlewareMixin):
         # 不需要认证的路径
         excluded_paths = [
             '/api/auth/login',
+            '/api/auth/cert/challenge',
+            '/api/auth/cert/login',
+            '/api/auth/cert/mtls-login',
             '/api/users/register',
             '/api/users/send-reset-code',
             '/api/users/reset-password',
@@ -99,6 +102,13 @@ class JWTAuthenticationMiddleware(MiddlewareMixin):
 
 class SecurityMiddleware(MiddlewareMixin):
     def process_request(self, request):
+        skip_paths = [
+            '/api/auth/cert/challenge',
+            '/api/auth/cert/login',
+            '/api/auth/cert/mtls-login',
+        ]
+        if any(request.path.startswith(path) for path in skip_paths):
+            return None
         # SQL注入检测
         if request.method in ['POST', 'PUT', 'GET']:
             for key, value in request.GET.items():

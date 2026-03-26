@@ -162,3 +162,47 @@ class InputValidator:
             return False, "商品名称包含非法字符"
 
         return True, "验证通过"
+
+
+def sm3_digest(data: bytes) -> bytes:
+    from gmssl import sm3
+    return bytes.fromhex(sm3.sm3_hash(list(data)))
+
+
+def sm3_hexdigest(data: bytes) -> str:
+    from gmssl import sm3
+    return sm3.sm3_hash(list(data))
+
+
+def hmac_sm3(key: bytes, message: bytes) -> bytes:
+    block_size = 64
+    if len(key) > block_size:
+        key = sm3_digest(key)
+    if len(key) < block_size:
+        key = key + b"\x00" * (block_size - len(key))
+
+    o_key_pad = bytes((b ^ 0x5C) for b in key)
+    i_key_pad = bytes((b ^ 0x36) for b in key)
+    return sm3_digest(o_key_pad + sm3_digest(i_key_pad + message))
+
+
+def pbkdf2_sm3(password: bytes, salt: bytes, iterations: int, dklen: int) -> bytes:
+    if iterations <= 0:
+        raise ValueError("iterations must be positive")
+    if dklen <= 0:
+        raise ValueError("dklen must be positive")
+
+    hlen = 32
+    blocks = (dklen + hlen - 1) // hlen
+    derived = bytearray()
+
+    for block_index in range(1, blocks + 1):
+        u = hmac_sm3(password, salt + block_index.to_bytes(4, "big"))
+        t = bytearray(u)
+        for _ in range(2, iterations + 1):
+            u = hmac_sm3(password, u)
+            for i in range(hlen):
+                t[i] ^= u[i]
+        derived.extend(t)
+
+    return bytes(derived[:dklen])

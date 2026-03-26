@@ -127,7 +127,7 @@
               type="password"
               v-model="passwordForm.newPassword"
               :class="['form-control', { error: passwordErrors.newPassword }]"
-              placeholder="至少8位，包含字母和数字"
+              placeholder="至少8位,包含字母和数字"
             />
             <p v-if="passwordErrors.newPassword" class="form-error">{{ passwordErrors.newPassword }}</p>
           </div>

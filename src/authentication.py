@@ -1,12 +1,13 @@
-import jwt
 import datetime
 import secrets
-import hashlib
 import time
 import re
+import base64
+import json
 from collections import defaultdict
 from typing import Optional, Dict, Any
 from src.registration import UserSystem
+from src.utils.security import hmac_sm3
 import os
 
 class JWTUtils:
@@ -37,25 +38,68 @@ class JWTUtils:
             'jti': secrets.token_urlsafe(16)
         }
 
-        # 确保使用正确的编码方法
-        token = jwt.encode(payload, self.secret_key, algorithm=self.algorithm)
-        return token
+        header = {
+            "alg": "HSM3",
+            "typ": "JWT"
+        }
+
+        header_b64 = self._b64url_encode(json.dumps(header, separators=(",", ":"), ensure_ascii=False).encode("utf-8"))
+        payload_b64 = self._b64url_encode(json.dumps(payload, separators=(",", ":"), ensure_ascii=False).encode("utf-8"))
+        signing_input = f"{header_b64}.{payload_b64}".encode("utf-8")
+        signature = hmac_sm3(self.secret_key.encode("utf-8"), signing_input)
+        signature_b64 = self._b64url_encode(signature)
+        return f"{header_b64}.{payload_b64}.{signature_b64}"
 
     def verify_token(self, token: str) -> Optional[Dict[str, Any]]:
         """验证JWT令牌"""
         try:
-            payload = jwt.decode(
-                token,
-                self.secret_key,
-                algorithms=[self.algorithm]
-            )
+            payload = self._decode_and_verify(token, verify_exp=True)
             return payload
-        except jwt.ExpiredSignatureError:
-            print("JWT令牌已过期")
-            return None
-        except jwt.InvalidTokenError as e:
+        except ValueError as e:
             print(f"JWT令牌无效: {e}")
             return None
+
+    def decode_without_exp_verification(self, token: str) -> Optional[Dict[str, Any]]:
+        try:
+            return self._decode_and_verify(token, verify_exp=False)
+        except ValueError:
+            return None
+
+    @staticmethod
+    def _b64url_encode(data: bytes) -> str:
+        return base64.urlsafe_b64encode(data).rstrip(b"=").decode("ascii")
+
+    @staticmethod
+    def _b64url_decode(data: str) -> bytes:
+        padding = "=" * (-len(data) % 4)
+        return base64.urlsafe_b64decode((data + padding).encode("ascii"))
+
+    def _decode_and_verify(self, token: str, verify_exp: bool) -> Dict[str, Any]:
+        parts = token.split(".")
+        if len(parts) != 3:
+            raise ValueError("invalid token format")
+
+        header_b64, payload_b64, signature_b64 = parts
+        signing_input = f"{header_b64}.{payload_b64}".encode("utf-8")
+        expected_sig = hmac_sm3(self.secret_key.encode("utf-8"), signing_input)
+        actual_sig = self._b64url_decode(signature_b64)
+        if not secrets.compare_digest(expected_sig, actual_sig):
+            raise ValueError("invalid token signature")
+
+        header = json.loads(self._b64url_decode(header_b64).decode("utf-8"))
+        if header.get("alg") != "HSM3":
+            raise ValueError("unsupported token algorithm")
+
+        payload = json.loads(self._b64url_decode(payload_b64).decode("utf-8"))
+        if verify_exp:
+            exp = payload.get("exp")
+            if not isinstance(exp, int):
+                raise ValueError("invalid exp")
+            now_ts = int(datetime.datetime.now(datetime.timezone.utc).timestamp())
+            if now_ts >= exp:
+                raise ValueError("token expired")
+
+        return payload
 # 认证服务类
 class AuthService:
     """认证服务类，集成实验5的防护措施"""
@@ -128,6 +172,31 @@ class AuthService:
                 'message': f'{msg}，剩余{remaining_attempts}次尝试'
             }
 
+    def issue_token_for_username(self, username: str) -> Dict[str, Any]:
+        user_info = self.user_system.get_user_info(username)
+        if not user_info:
+            return {
+                'success': False,
+                'message': '用户不存在'
+            }
+        if not user_info.get('is_verified', True):
+            return {
+                'success': False,
+                'message': '用户未验证'
+            }
+        user_data = {
+            'user_id': user_info['user_id'],
+            'username': username,
+            'role': user_info.get('user_role', 'normal')
+        }
+        token = self.jwt_utils.generate_token(user_data)
+        return {
+            'success': True,
+            'message': '登录成功',
+            'token': token,
+            'user': user_data
+        }
+
     def verify_token(self, token: str) -> Optional[Dict[str, Any]]:
         """完整的令牌验证流程"""
         # 检查黑名单
@@ -167,13 +236,9 @@ class AuthService:
     def refresh_token(self, old_token: str) -> Optional[str]:
         """刷新JWT令牌"""
         try:
-            # 验证旧令牌（即使过期也允许刷新）
-            payload = jwt.decode(
-                old_token,
-                self.jwt_utils.secret_key,
-                algorithms=[self.jwt_utils.algorithm],
-                options={'verify_exp': False}  # 不验证过期时间
-            )
+            payload = self.jwt_utils.decode_without_exp_verification(old_token)
+            if not payload:
+                return None
 
             # 检查令牌是否在黑名单中
             if self._is_token_blacklisted(old_token):
@@ -293,3 +358,6 @@ class EnhancedUserSystem:
     def reset_password(self, phone: str, new_password: str, code: str):
         """重置密码"""
         return self.user_system.reset_password(phone, new_password, code)
+
+    def issue_token_for_username(self, username: str):
+        return self.auth_service.issue_token_for_username(username)

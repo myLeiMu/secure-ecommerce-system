@@ -1,8 +1,8 @@
 from django.core.cache import cache
 from django.conf import settings
-import hashlib
 import json
 import time
+from src.utils.security import sm3_hexdigest
 
 
 class CacheUtils:
@@ -27,7 +27,7 @@ class CacheUtils:
 
         # 如果键太长，使用哈希
         if len(key_string) > 200:
-            key_hash = hashlib.md5(key_string.encode()).hexdigest()
+            key_hash = sm3_hexdigest(key_string.encode("utf-8"))
             key_string = f"{prefix}:{key_hash}"
 
         return key_string

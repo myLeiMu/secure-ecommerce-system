@@ -27,7 +27,7 @@ def int_to_string(number):
 
 
 def example_usage_complete():
-    """完整自动化测试脚本"""
+    """完整自动化测试"""
     print("\n初始化电商系统服务...")
 
     try:
@@ -120,7 +120,7 @@ def example_usage_complete():
             print(f"  {i}. {getattr(p, 'product_name', 'Unknown')} - ¥{getattr(p, 'sale_price', 0)}")
         test_results['商品搜索'] = len(products) > 0
 
-        # 获取商品详情 - 修复逻辑
+        # 获取商品详情
         if products:
             pid = products[0].product_id
             detail = service.get_product_detail(pid)
@@ -164,24 +164,22 @@ def example_usage_complete():
         print(f"分类功能测试出错: {e}")
         test_results['分类管理'] = False
 
-    # ========== 5. RSA加密 ==========
-    print("\n=== RSA加密功能测试 ===")
+    # ========== 5. SM2加密 ==========
+    print("\n=== SM2加密功能测试 ===")
     rsa_success = False
     try:
-        test_data = "Hello RSA"
-        plaintext_number = string_to_int(test_data)
-        encrypted = service.encrypt_data(plaintext_number)
-        decrypted_number = service.decrypt_data(encrypted)
-        decrypted_text = int_to_string(decrypted_number)
+        test_data = "Hello SM2"
+        encrypted = service.encrypt_data(test_data)
+        decrypted_text = service.decrypt_data(encrypted)
         if decrypted_text == test_data:
-            print("RSA 加解密成功")
+            print("SM2 加解密成功")
             rsa_success = True
         else:
-            print("RSA 加解密结果不一致")
+            print("SM2 加解密结果不一致")
     except Exception as e:
-        print(f"RSA 测试失败: {e}")
+        print(f"SM2 测试失败: {e}")
         traceback.print_exc()
-    test_results['RSA加密'] = rsa_success
+    test_results['SM2加密'] = rsa_success
 
     # ========== 6. 安全验证 ==========
     print("\n=== 安全验证测试 ===")

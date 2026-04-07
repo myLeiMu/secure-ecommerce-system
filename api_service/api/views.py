@@ -6,9 +6,10 @@ from rest_framework.response import Response
 from rest_framework.views import exception_handler
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
-from datetime import datetime
+from datetime import datetime, timezone
 import time
 import secrets
+from typing import Optional
 from urllib.parse import unquote
 import sys
 import os
@@ -117,6 +118,11 @@ class CertLoginSerializer(serializers.Serializer):
     signature_hex = serializers.CharField(required=True, help_text="SM2签名hex")
 
 
+class CertFileLoginSerializer(serializers.Serializer):
+    username = serializers.CharField(max_length=50, required=True, help_text="用户名")
+    certificate_pem = serializers.CharField(required=True, help_text="PEM证书")
+
+
 class CertMTLSLoginSerializer(serializers.Serializer):
     username = serializers.CharField(max_length=50, required=False, help_text="用户名（可选）")
 
@@ -188,6 +194,27 @@ def _extract_cn_from_dn(dn: str) -> str:
         if p.startswith("/CN="):
             return p[4:].strip()
     return ""
+
+
+def _verify_certificate_chain_no_crl(certificate_pem: str, expected_username: Optional[str] = None):
+    root_cert_path = _resolve_root_cert_path()
+    if not root_cert_path:
+        return False, "根证书不存在", None
+    with open(root_cert_path, "r", encoding="utf-8") as f:
+        root_cert_pem = f.read()
+    cert_ok = verify_certificate_with_root(certificate_pem, root_cert_pem)
+    if not cert_ok:
+        return False, "证书验签失败", None
+    cert_info = parse_certificate_pem(certificate_pem)
+    now = datetime.now(timezone.utc)
+    if cert_info.get("not_after") and now > cert_info["not_after"]:
+        return False, "证书已过期", None
+    if cert_info.get("not_before") and now < cert_info["not_before"]:
+        return False, "证书尚未生效", None
+    cert_cn = cert_info.get("subject_common_name", "")
+    if expected_username and cert_cn and cert_cn != expected_username:
+        return False, "证书主体与用户名不一致", None
+    return True, "", cert_info
 
 
 @method_decorator(csrf_exempt, name='dispatch')
@@ -277,36 +304,19 @@ class CertLoginView(APIView):
                 "timestamp": datetime.now().isoformat()
             }, status=401)
 
-        root_cert_path = _resolve_root_cert_path()
-        if not root_cert_path:
-            return Response({
-                "code": 500,
-                "message": "根证书不存在",
-                "data": None,
-                "timestamp": datetime.now().isoformat()
-            }, status=500)
-
         try:
-            with open(root_cert_path, "r", encoding="utf-8") as f:
-                root_cert_pem = f.read()
-            cert_ok = verify_certificate_with_root(certificate_pem, root_cert_pem)
-            if not cert_ok:
+            verify_ok, verify_message, cert_info = _verify_certificate_chain_no_crl(
+                certificate_pem=certificate_pem,
+                expected_username=username
+            )
+            if not verify_ok:
+                status = 500 if verify_message == "根证书不存在" else 401
                 return Response({
-                    "code": 401,
-                    "message": "证书验签失败",
+                    "code": status,
+                    "message": verify_message,
                     "data": None,
                     "timestamp": datetime.now().isoformat()
-                }, status=401)
-
-            cert_info = parse_certificate_pem(certificate_pem)
-            cert_cn = cert_info.get("subject_common_name", "")
-            if cert_cn and cert_cn != username:
-                return Response({
-                    "code": 401,
-                    "message": "证书主体与用户名不一致",
-                    "data": None,
-                    "timestamp": datetime.now().isoformat()
-                }, status=401)
+                }, status=status)
 
             verifier = sm2.CryptSM2(public_key=cert_info["subject_public_key_hex"], private_key="")
             if not verifier.verify(signature_hex, challenge.encode("utf-8")):
@@ -340,6 +350,71 @@ class CertLoginView(APIView):
             return Response({
                 "code": 500,
                 "message": f"证书登录异常: {str(e)}",
+                "data": None,
+                "timestamp": datetime.now().isoformat()
+            }, status=500)
+
+
+@method_decorator(csrf_exempt, name='dispatch')
+class CertFileLoginView(APIView):
+    permission_classes = [AllowAny]
+
+    @swagger_auto_schema(
+        operation_summary="证书文件登录",
+        operation_description="前端上传PEM证书字符串，后端验签后返回JWT",
+        request_body=CertFileLoginSerializer,
+        tags=['用户认证']
+    )
+    def post(self, request):
+        serializer = CertFileLoginSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response({
+                "code": 400,
+                "message": serializer.errors,
+                "data": None,
+                "timestamp": datetime.now().isoformat()
+            }, status=400)
+
+        username = serializer.validated_data["username"]
+        certificate_pem = serializer.validated_data["certificate_pem"]
+
+        try:
+            verify_ok, verify_message, _ = _verify_certificate_chain_no_crl(
+                certificate_pem=certificate_pem,
+                expected_username=username
+            )
+            if not verify_ok:
+                status = 500 if verify_message == "根证书不存在" else 401
+                return Response({
+                    "code": status,
+                    "message": verify_message,
+                    "data": None,
+                    "timestamp": datetime.now().isoformat()
+                }, status=status)
+
+            service = UnifiedEcommerceService()
+            result = service.cert_login_user(username)
+            if not result.get("success"):
+                return Response({
+                    "code": 401,
+                    "message": result.get("message", "证书登录失败"),
+                    "data": None,
+                    "timestamp": datetime.now().isoformat()
+                }, status=401)
+
+            return Response({
+                "code": 0,
+                "message": result.get("message", "登录成功"),
+                "data": {
+                    "token": result.get("token"),
+                    "user": result.get("user")
+                },
+                "timestamp": datetime.now().isoformat()
+            })
+        except Exception as e:
+            return Response({
+                "code": 500,
+                "message": f"证书文件登录异常: {str(e)}",
                 "data": None,
                 "timestamp": datetime.now().isoformat()
             }, status=500)
@@ -389,25 +464,15 @@ class CertMTLSLoginView(APIView):
         try:
             cert_cn = ""
             if strict_backend_verify:
-                root_cert_path = _resolve_root_cert_path()
-                if not root_cert_path:
+                verify_ok, verify_message, cert_info = _verify_certificate_chain_no_crl(certificate_pem=certificate_pem)
+                if not verify_ok:
+                    status = 500 if verify_message == "根证书不存在" else 401
                     return Response({
-                        "code": 500,
-                        "message": "根证书不存在",
+                        "code": status,
+                        "message": verify_message,
                         "data": None,
                         "timestamp": datetime.now().isoformat()
-                    }, status=500)
-                with open(root_cert_path, "r", encoding="utf-8") as f:
-                    root_cert_pem = f.read()
-                cert_ok = verify_certificate_with_root(certificate_pem, root_cert_pem)
-                if not cert_ok:
-                    return Response({
-                        "code": 401,
-                        "message": "证书验签失败",
-                        "data": None,
-                        "timestamp": datetime.now().isoformat()
-                    }, status=401)
-                cert_info = parse_certificate_pem(certificate_pem)
+                    }, status=status)
                 cert_cn = cert_info.get("subject_common_name", "")
             else:
                 try:
@@ -542,7 +607,7 @@ class UserRegistrationView(APIView):
                 return Response({
                     "code": 0,
                     "message": result['message'],
-                    "data": None,
+                    "data": result.get("data"),
                     "timestamp": datetime.now().isoformat()
                 })
             else:

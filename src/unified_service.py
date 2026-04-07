@@ -8,6 +8,16 @@ from src.registration import UserSystem
 from src.authentication import EnhancedUserSystem
 from src.utils.security import InputValidator, SQLInjectionValidator
 from src.algorithm.rsa_service import SM2Service
+from src.algorithm.ca_center import (
+    OID_CLIENT_AUTH,
+    bootstrap_ca_artifacts,
+    create_csr,
+    issue_certificate_from_csr,
+    parse_certificate_pem,
+    sm2_generate_keypair,
+)
+from src.algorithm.secure_key_storage import SecureKeyStorage
+from gmssl import sm2
 import os
 
 class UnifiedEcommerceService:
@@ -277,10 +287,140 @@ class UnifiedEcommerceService:
 
             # 直接使用传入的验证码进行注册
             success, message = self.user_system.register(username, password, phone, code, email)
-            return {'success': success, 'message': message}
+            if not success:
+                return {'success': False, 'message': message}
+
+            cert_result = self.issue_user_certificate(username)
+            if not cert_result.get('success'):
+                return {
+                    'success': True,
+                    'message': f'注册成功，但证书签发失败: {cert_result.get("message")}',
+                    'data': {
+                        'certificate_issued': False
+                    }
+                }
+
+            return {
+                'success': True,
+                'message': '注册成功，已签发用户证书',
+                'data': {
+                    'certificate_issued': True,
+                    'certificate': cert_result.get('certificate')
+                }
+            }
 
         except Exception as e:
             return {'success': False, 'message': f'注册失败: {str(e)}'}
+
+    def _resolve_ca_paths(self) -> Dict[str, str]:
+        project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        ca_dir = os.path.join(project_root, "keys", "ca")
+        root_cert_path = os.getenv("CA_ROOT_CERT_PATH") or os.path.join(ca_dir, "root_ca.crt.pem")
+        env_key_secure_path = os.getenv("CA_ROOT_KEY_SECURE_PATH")
+        if env_key_secure_path:
+            root_key_secure_path = env_key_secure_path
+            root_key_password_path = os.path.join(os.path.dirname(env_key_secure_path), "root_ca_key_password.txt")
+        else:
+            root_cert_dir = os.path.dirname(root_cert_path)
+            same_dir_key_secure = os.path.join(root_cert_dir, "root_ca_key_secure.json")
+            same_dir_key_password = os.path.join(root_cert_dir, "root_ca_key_password.txt")
+            if os.path.exists(same_dir_key_secure):
+                root_key_secure_path = same_dir_key_secure
+                root_key_password_path = same_dir_key_password
+            else:
+                root_key_secure_path = os.path.join(ca_dir, "root_ca_key_secure.json")
+                root_key_password_path = os.path.join(ca_dir, "root_ca_key_password.txt")
+        return {
+            "ca_dir": ca_dir,
+            "root_cert_path": root_cert_path,
+            "root_key_secure_path": root_key_secure_path,
+            "root_key_password_path": root_key_password_path
+        }
+
+    def _ensure_ca_artifacts(self, ca_dir: str):
+        root_cert_path = os.path.join(ca_dir, "root_ca.crt.pem")
+        root_key_secure_path = os.path.join(ca_dir, "root_ca_key_secure.json")
+        if os.path.exists(root_cert_path) and os.path.exists(root_key_secure_path):
+            return
+        bootstrap_ca_artifacts(ca_dir)
+
+    def _load_root_ca_private_key(self, root_key_secure_path: str, root_key_password_path: str) -> str:
+        password = os.getenv("CA_ROOT_KEY_PASSWORD")
+        if not password and os.path.exists(root_key_password_path):
+            with open(root_key_password_path, "r", encoding="utf-8") as f:
+                password = f.read().strip()
+        if not password:
+            raise RuntimeError("缺少CA_ROOT_KEY_PASSWORD且未找到root_ca_key_password.txt")
+        storage = SecureKeyStorage(filepath=root_key_secure_path)
+        key_data = storage.decrypt_and_load(password)
+        private_key = key_data.get("private_key")
+        if not private_key:
+            raise RuntimeError("根私钥数据无效")
+        return private_key
+
+    def _public_key_from_private_key(self, private_key_hex: str) -> str:
+        sm2c = sm2.CryptSM2(public_key="", private_key=private_key_hex)
+        return sm2c._kg(int(private_key_hex, 16), sm2c.ecc_table["g"])
+
+    def issue_user_certificate(self, username: str) -> Dict[str, Any]:
+        try:
+            paths = self._resolve_ca_paths()
+            self._ensure_ca_artifacts(paths["ca_dir"])
+            with open(paths["root_cert_path"], "r", encoding="utf-8") as f:
+                root_cert_pem = f.read()
+            root_private_key_hex = self._load_root_ca_private_key(
+                root_key_secure_path=paths["root_key_secure_path"],
+                root_key_password_path=paths["root_key_password_path"]
+            )
+            root_info = parse_certificate_pem(root_cert_pem)
+            derived_root_pub = self._public_key_from_private_key(root_private_key_hex)
+            if derived_root_pub != root_info["subject_public_key_hex"]:
+                bootstrap_ca_artifacts(paths["ca_dir"])
+                with open(paths["root_cert_path"], "r", encoding="utf-8") as f:
+                    root_cert_pem = f.read()
+                root_private_key_hex = self._load_root_ca_private_key(
+                    root_key_secure_path=paths["root_key_secure_path"],
+                    root_key_password_path=paths["root_key_password_path"]
+                )
+                root_info = parse_certificate_pem(root_cert_pem)
+                derived_root_pub = self._public_key_from_private_key(root_private_key_hex)
+                if derived_root_pub != root_info["subject_public_key_hex"]:
+                    return {
+                        'success': False,
+                        'message': '根证书与根私钥不匹配，请检查CA_ROOT_CERT_PATH与CA_ROOT_KEY_SECURE_PATH配置'
+                    }
+            user_priv, user_pub = sm2_generate_keypair()
+            user_csr = create_csr(
+                subject_common_name=username,
+                subject_organization="Secure Ecommerce",
+                subject_country="CN",
+                subject_private_key_hex=user_priv,
+                subject_public_key_hex=user_pub,
+            )
+            user_cert = issue_certificate_from_csr(
+                csr=user_csr,
+                issuer_common_name=root_info.get("subject_common_name") or "Ecommerce Root CA",
+                issuer_organization="Secure Ecommerce",
+                issuer_country="CN",
+                issuer_private_key_hex=root_private_key_hex,
+                issuer_public_key_hex=root_info["subject_public_key_hex"],
+                is_ca=False,
+                years_valid=1,
+                eku_oids=[OID_CLIENT_AUTH]
+            )
+            cert_pem = user_cert.to_pem()
+            return {
+                'success': True,
+                'certificate': {
+                    'username': username,
+                    'certificate_pem': cert_pem,
+                    'private_key_hex': user_priv,
+                    'cert_filename': f"{username}.crt.pem",
+                    'private_key_filename': f"{username}.private.hex"
+                }
+            }
+        except Exception as e:
+            return {'success': False, 'message': str(e)}
 
     def login_user(self, username: str, password: str) -> Dict[str, Any]:
         """用户登录"""

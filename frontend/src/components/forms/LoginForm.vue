@@ -34,6 +34,18 @@
       <router-link to="/forgot-password" class="forgot-link">忘记密码？</router-link>
     </div>
 
+    <div class="form-group">
+      <label for="certificateFile">证书文件（PEM/CRT/CER）</label>
+      <input
+        id="certificateFile"
+        type="file"
+        accept=".pem,.crt,.cer,text/plain"
+        class="form-control"
+        @change="handleCertFileChange"
+      />
+      <div v-if="errors.certificate" class="error-message">{{ errors.certificate }}</div>
+    </div>
+
     <button 
       type="submit" 
       class="submit-btn"
@@ -41,6 +53,24 @@
     >
       <LoadingSpinner v-if="loading" small />
       {{ loading ? '登录中...' : '登录' }}
+    </button>
+    <button
+      type="button"
+      class="cert-login-btn"
+      :disabled="loading"
+      @click="handleCertLogin"
+    >
+      <LoadingSpinner v-if="loading" small />
+      {{ loading ? '证书验证中...' : '浏览器证书登录' }}
+    </button>
+    <button
+      type="button"
+      class="cert-file-login-btn"
+      :disabled="loading"
+      @click="handleCertFileLogin"
+    >
+      <LoadingSpinner v-if="loading" small />
+      {{ loading ? '证书验证中...' : '证书文件登录' }}
     </button>
 
     <ErrorMessage v-if="errors.submit" :message="errors.submit" />
@@ -77,6 +107,7 @@ export default {
     
     const errors = ref({});
     const loading = ref(false);
+    const certFile = ref(null);
 
     const validateForm = () => {
       const newErrors = {};
@@ -104,6 +135,25 @@ export default {
       }
     };
 
+    const handleCertFileChange = (event) => {
+      certFile.value = event?.target?.files?.[0] || null;
+      if (errors.value.certificate) {
+        delete errors.value.certificate;
+      }
+      if (errors.value.submit) {
+        delete errors.value.submit;
+      }
+    };
+
+    const readFileAsText = (file) => {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(String(reader.result || ''));
+        reader.onerror = () => reject(new Error('证书文件读取失败'));
+        reader.readAsText(file, 'utf-8');
+      });
+    };
+
     const handleSubmit = async () => {
       if (!validateForm()) return;
       
@@ -127,11 +177,64 @@ export default {
       loading.value = false;
     };
 
+    const handleCertLogin = async () => {
+      if (!formData.username.trim()) {
+        errors.value.username = '请输入用户名';
+        return;
+      }
+      loading.value = true;
+      clearError('submit');
+      const username = SecurityUtils.sanitizeInput(formData.username);
+      const result = await store.dispatch('auth/certMtlsLogin', username);
+      if (result.success) {
+        const redirect = router.currentRoute.value.query.redirect || '/';
+        router.push(redirect);
+      } else {
+        errors.value.submit = result.error;
+      }
+      loading.value = false;
+    };
+
+    const handleCertFileLogin = async () => {
+      if (!formData.username.trim()) {
+        errors.value.username = '请输入用户名';
+        return;
+      }
+      if (!certFile.value) {
+        errors.value.certificate = '请选择证书文件';
+        return;
+      }
+      loading.value = true;
+      clearError('submit');
+      try {
+        const certificatePem = await readFileAsText(certFile.value);
+        const username = SecurityUtils.sanitizeInput(formData.username);
+        const result = await store.dispatch('auth/certFileLogin', {
+          username,
+          certificate_pem: certificatePem
+        });
+        if (result.success) {
+          const redirect = router.currentRoute.value.query.redirect || '/';
+          router.push(redirect);
+        } else {
+          errors.value.submit = result.error;
+        }
+      } catch (error) {
+        errors.value.submit = error.message;
+      } finally {
+        loading.value = false;
+      }
+    };
+
     return {
       formData,
       errors,
       loading,
+      certFile,
       handleSubmit,
+      handleCertLogin,
+      handleCertFileLogin,
+      handleCertFileChange,
       clearError
     };
   }
@@ -225,7 +328,59 @@ label {
   background: #0056b3;
 }
 
+.cert-login-btn {
+  width: 100%;
+  margin-top: 0.75rem;
+  padding: 0.75rem;
+  background: #14532d;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background-color 0.3s;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.cert-login-btn:hover:not(:disabled) {
+  background: #166534;
+}
+
+.cert-file-login-btn {
+  width: 100%;
+  margin-top: 0.75rem;
+  padding: 0.75rem;
+  background: #1d4ed8;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background-color 0.3s;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.cert-file-login-btn:hover:not(:disabled) {
+  background: #1e40af;
+}
+
 .submit-btn:disabled {
+  background: #6c757d;
+  cursor: not-allowed;
+}
+
+.cert-login-btn:disabled {
+  background: #6c757d;
+  cursor: not-allowed;
+}
+
+.cert-file-login-btn:disabled {
   background: #6c757d;
   cursor: not-allowed;
 }

@@ -3,7 +3,7 @@ from .views import (
     UserRegistrationView, UserLoginView, UserLogoutView, UserProfileView,
     PasswordChangeView, PasswordResetCodeView, PasswordResetView,
     ProductListView, ProductDetailView, HealthCheckView, CacheStatusView,
-    CategoryListView, CertChallengeView, CertLoginView, CertMTLSLoginView
+    CategoryListView, CertChallengeView, CertLoginView, CertFileLoginView, CertMTLSLoginView
 )
 
 urlpatterns = [
@@ -11,6 +11,7 @@ urlpatterns = [
     path('auth/login', UserLoginView.as_view(), name='user-login'),
     path('auth/cert/challenge', CertChallengeView.as_view(), name='cert-challenge'),
     path('auth/cert/login', CertLoginView.as_view(), name='cert-login'),
+    path('auth/cert/file-login', CertFileLoginView.as_view(), name='cert-file-login'),
     path('auth/cert/mtls-login', CertMTLSLoginView.as_view(), name='cert-mtls-login'),
     path('auth/logout', UserLogoutView.as_view(), name='user-logout'),
 

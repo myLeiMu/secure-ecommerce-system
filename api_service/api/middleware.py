@@ -16,6 +16,7 @@ class JWTAuthenticationMiddleware(MiddlewareMixin):
             '/api/auth/login',
             '/api/auth/cert/challenge',
             '/api/auth/cert/login',
+            '/api/auth/cert/file-login',
             '/api/auth/cert/mtls-login',
             '/api/users/register',
             '/api/users/send-reset-code',
@@ -105,6 +106,7 @@ class SecurityMiddleware(MiddlewareMixin):
         skip_paths = [
             '/api/auth/cert/challenge',
             '/api/auth/cert/login',
+            '/api/auth/cert/file-login',
             '/api/auth/cert/mtls-login',
         ]
         if any(request.path.startswith(path) for path in skip_paths):

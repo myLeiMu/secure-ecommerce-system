@@ -455,6 +455,11 @@ def parse_certificate_pem(cert_pem: str) -> dict:
     tbs_children = _decode_top_sequence_children(tbs_der)
     if len(tbs_children) < 7:
         raise ValueError("invalid tbs certificate structure")
+    validity_children = _decode_top_sequence_children(tbs_children[4])
+    if len(validity_children) < 2:
+        raise ValueError("invalid certificate validity")
+    not_before = _parse_x509_time_tlv(validity_children[0])
+    not_after = _parse_x509_time_tlv(validity_children[1])
     issuer_name_der = tbs_children[3]
     subject_name_der = tbs_children[5]
     spki_der = tbs_children[6]
@@ -473,6 +478,8 @@ def parse_certificate_pem(cert_pem: str) -> dict:
         "subject_name_der": subject_name_der,
         "subject_common_name": subject_common_name,
         "subject_public_key_hex": subject_public_key_hex,
+        "not_before": not_before,
+        "not_after": not_after,
     }
 
 
@@ -498,6 +505,18 @@ def _extract_spki_from_csr_info(info_der: bytes) -> bytes:
     if len(elements) < 4:
         raise ValueError("invalid csr info")
     return elements[2]
+
+
+def _parse_x509_time_tlv(time_tlv: bytes) -> datetime.datetime:
+    tag, start, end, _ = _read_tlv(time_tlv, 0)
+    value = time_tlv[start:end].decode("ascii")
+    if tag == 0x17:
+        dt = datetime.datetime.strptime(value, "%y%m%d%H%M%SZ")
+        return dt.replace(tzinfo=datetime.timezone.utc)
+    if tag == 0x18:
+        dt = datetime.datetime.strptime(value, "%Y%m%d%H%M%SZ")
+        return dt.replace(tzinfo=datetime.timezone.utc)
+    raise ValueError("invalid certificate time format")
 
 
 def _decode_top_sequence_children(der_bytes: bytes) -> list[bytes]:

@@ -116,6 +116,48 @@ const actions = {
       commit('SET_LOADING', false);
     }
   },
+  async certMtlsLogin({ commit, dispatch }, username) {
+    commit('SET_LOADING', true);
+    commit('CLEAR_ERROR');
+    try {
+      const response = await authAPI.certMtlsLogin(username);
+      if (response.code !== 0) {
+        throw new Error(response.message || '证书登录失败');
+      }
+      commit('SET_AUTH_DATA', {
+        user: response.data.user,
+        token: response.data.token
+      });
+      dispatch('scheduleSessionRefresh');
+      return { success: true, data: response.data };
+    } catch (error) {
+      commit('SET_ERROR', error.message);
+      return { success: false, error: error.message };
+    } finally {
+      commit('SET_LOADING', false);
+    }
+  },
+  async certFileLogin({ commit, dispatch }, payload) {
+    commit('SET_LOADING', true);
+    commit('CLEAR_ERROR');
+    try {
+      const response = await authAPI.certFileLogin(payload);
+      if (response.code !== 0) {
+        throw new Error(response.message || '证书登录失败');
+      }
+      commit('SET_AUTH_DATA', {
+        user: response.data.user,
+        token: response.data.token
+      });
+      dispatch('scheduleSessionRefresh');
+      return { success: true, data: response.data };
+    } catch (error) {
+      commit('SET_ERROR', error.message);
+      return { success: false, error: error.message };
+    } finally {
+      commit('SET_LOADING', false);
+    }
+  },
   async register({ commit }, userData) {
     commit('SET_LOADING', true);
     commit('CLEAR_ERROR');
@@ -124,7 +166,7 @@ const actions = {
       if (response.code !== 0) {
         throw new Error(response.message || '注册失败');
       }
-      return { success: true, data: response.data };
+      return { success: true, data: response.data, message: response.message };
     } catch (error) {
       commit('SET_ERROR', error.message);
       return { success: false, error: error.message };

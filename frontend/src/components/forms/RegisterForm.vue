@@ -228,6 +228,18 @@ export default {
       console.log('发送验证码到:', formData.phone);
     };
 
+    const downloadTextFile = (filename, content) => {
+      const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    };
+
     const handleSubmit = async () => {
       if (!validateRegisterForm()) return;
       
@@ -244,10 +256,22 @@ export default {
       const result = await store.dispatch('auth/register', userData);
       
       if (result.success) {
+        const certificate = result.data?.certificate;
+        const certIssued = !!result.data?.certificate_issued;
+        if (!certIssued || !certificate?.certificate_pem || !certificate?.private_key_hex) {
+          errors.value.submit = result.message || '注册成功，但证书签发失败，请检查后端CA配置';
+          loading.value = false;
+          return;
+        }
+        downloadTextFile(certificate.cert_filename || `${formData.username}.crt.pem`, certificate.certificate_pem);
+        downloadTextFile(certificate.private_key_filename || `${formData.username}.private.hex`, certificate.private_key_hex);
         // 注册成功，跳转到登录页面
         router.push({ 
           path: '/login',
-          query: { registered: 'true' }
+          query: {
+            registered: 'true',
+            certIssued: certIssued ? 'true' : 'false'
+          }
         });
       } else {
         errors.value.submit = result.error;

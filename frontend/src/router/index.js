@@ -9,15 +9,21 @@ import Profile from '../pages/user/Profile.vue';
 import ProductList from '../pages/products/ProductList.vue';
 import ProductDetail from '../pages/products/ProductDetail.vue';
 import Dashboard from '../pages/dashboard/Dashboard.vue';
+import CartPage from '../pages/orders/Cart.vue';
+import OrderListPage from '../pages/orders/OrderList.vue';
 
 const routes = [
   {
     path: '/',
+    redirect: '/products'
+  },
+  {
+    path: '/dashboard',
     name: 'Dashboard',
     component: Dashboard,
-    meta: { 
+    meta: {
       requiresAuth: true,
-      requiresAdmin: true  // 添加管理员权限要求
+      requiresAdmin: true
     }
   },
   {
@@ -55,6 +61,18 @@ const routes = [
     component: ProductDetail
   },
   {
+    path: '/cart',
+    name: 'Cart',
+    component: CartPage,
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/orders',
+    name: 'OrderList',
+    component: OrderListPage,
+    meta: { requiresAuth: true }
+  },
+  {
     path: '/:pathMatch(.*)*',
     redirect: '/'
   }
@@ -86,7 +104,7 @@ router.beforeEach(async (to, from, next) => {
         path: '/login',
         query: { redirect: to.fullPath }
       });
-    } else if (currentUser?.role !== 'admin') {
+    } else if ((currentUser?.role !== 'admin') && (currentUser?.user_role !== 'admin') && (currentUser?.user_role !== 'ADMIN')) {
       // 如果不是管理员，重定向到商品页面或其他适当页面
       next('/products');
     } else {

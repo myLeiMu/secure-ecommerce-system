@@ -38,6 +38,18 @@ export const productAPI = {
     }
   },
 
+  async createProduct(payload) {
+    return await apiClient.request('POST', '/products', payload);
+  },
+
+  async updateProduct(productId, payload) {
+    return await apiClient.request('PUT', `/products/${productId}`, payload);
+  },
+
+  async deleteProduct(productId) {
+    return await apiClient.request('DELETE', `/products/${productId}`);
+  },
+
   async searchProducts(keyword, filters = {}) {
     const params = { 
       keyword: SecurityUtils.sanitizeInput(keyword),

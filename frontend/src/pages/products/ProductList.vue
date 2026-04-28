@@ -1,22 +1,19 @@
 <template>
   <div class="product-list-page">
     <div class="page-header">
-      <h1>商品列表</h1>
-      <p>发现心仪的商品</p>
+      <div>
+        <h1>商品列表</h1>
+        <p>支持发布、编辑、删除、加入购物车</p>
+      </div>
+      <button v-if="isAuthenticated" class="btn btn-primary" @click="openCreateForm">发布商品</button>
     </div>
 
     <div class="filters-section">
       <div class="search-box">
-        <input
-          v-model="filters.keyword"
-          type="text"
-          placeholder="搜索商品..."
-          @keyup.enter="searchProducts"
-        />
+        <input v-model="filters.keyword" type="text" placeholder="搜索商品..." @keyup.enter="searchProducts" />
         <button @click="searchProducts" class="search-btn">搜索</button>
         <button @click="clearFilters" class="clear-btn">清除</button>
       </div>
-
       <div class="filter-options">
         <select v-model="filters.category_id" @change="searchProducts">
           <option value="">所有分类</option>
@@ -24,24 +21,63 @@
             {{ category.category_name }}
           </option>
         </select>
+        <label v-if="isAuthenticated" class="mine-filter">
+          <input v-model="showMineOnly" type="checkbox" />
+          只看我发布的商品
+        </label>
+      </div>
+    </div>
 
-        <div class="price-range">
-          <input
-            v-model.number="filters.min_price"
-            type="number"
-            placeholder="最低价"
-            min="0"
-            @change="searchProducts"
-          />
-          <span>-</span>
-          <input
-            v-model.number="filters.max_price"
-            type="number"
-            placeholder="最高价"
-            min="0"
-            @change="searchProducts"
-          />
+    <div v-if="notice" class="notice">{{ notice }}</div>
+    <div v-if="formVisible" class="form-card">
+      <h3>{{ editingProductId ? '编辑商品' : '发布商品' }}</h3>
+      <p class="form-meta">带 <span class="required">*</span> 为必填，括号内为后端参数名</p>
+      <div class="form-grid">
+        <div class="form-field">
+          <label class="field-label">SKU<span class="required">*</span></label>
+          <input v-model="form.sku" type="text" placeholder="例如：SECOND-IP13-9A2F" :disabled="!!editingProductId" />
+          <p class="field-hint">发布时必填且唯一，编辑时不可修改</p>
         </div>
+        <div class="form-field">
+          <label class="field-label">商品名称<span class="required">*</span></label>
+          <input v-model="form.product_name" type="text" placeholder="例如：iPhone 13 128G 95新" />
+          <p class="field-hint">建议写品牌 + 型号 + 成色</p>
+        </div>
+        <div class="form-field">
+          <label class="field-label">售价<span class="required">*</span></label>
+          <input v-model.number="form.sale_price" type="number" min="0" step="0.01" placeholder="例如：2899.00" />
+          <p class="field-hint">单位元，最多两位小数</p>
+        </div>
+        <div class="form-field">
+          <label class="field-label">库存<span class="required">*</span></label>
+          <input v-model.number="form.stock_quantity" type="number" min="1" placeholder="二手商品通常填 1" />
+          <p class="field-hint">必须大于 0</p>
+        </div>
+        <div class="form-field">
+          <label class="field-label">分类<span class="required">*</span></label>
+          <select v-model.number="form.category_id">
+            <option value="">选择分类</option>
+            <option v-for="category in categories" :key="category.category_id" :value="category.category_id">
+              {{ category.category_name }}
+            </option>
+          </select>
+          <p class="field-hint">请选择最匹配的交易分类</p>
+        </div>
+        <div class="form-field">
+          <label class="field-label">图片 URL</label>
+          <input v-model="form.image_urls_text" type="text" placeholder="多个链接用英文逗号分隔" />
+          <p class="field-hint">示例：https://a.com/1.jpg,https://a.com/2.jpg</p>
+        </div>
+      </div>
+      <div class="form-field">
+        <label class="field-label">商品描述</label>
+        <textarea v-model="form.description" rows="3" placeholder="写明成色、瑕疵、配件、交易方式等"></textarea>
+      </div>
+      <div class="form-actions">
+        <button class="btn btn-secondary" @click="closeForm">取消</button>
+        <button class="btn btn-primary" :disabled="submitting" @click="submitProduct">
+          {{ submitting ? '提交中...' : '确认提交' }}
+        </button>
       </div>
     </div>
 
@@ -49,233 +85,291 @@
       <LoadingSpinner />
       <p>加载商品中...</p>
     </div>
-
     <div v-else-if="error" class="error-section">
-      <ErrorMessage :message="error" :retry="fetchProducts" />
+      <ErrorMessage :message="error" :retry="() => fetchProducts()" />
     </div>
-
-    <div v-else-if="products.length === 0" class="empty-section">
+    <div v-else-if="displayedProducts.length === 0" class="empty-section">
       <p>暂无商品</p>
     </div>
-
     <div v-else class="products-grid">
-      <ProductCard
-        v-for="product in products"
-        :key="product.product_id"
-        :product="product"
-        @add-to-cart="handleAddToCart"
-      />
-    </div>
-
-    <div v-if="products.length > 0 && hasMore" class="pagination">
-      <button 
-        @click="loadMore" 
-        :disabled="loading"
-        class="load-more-btn"
-      >
-        {{ loading ? '加载中...' : '加载更多' }}
-      </button>
+      <div v-for="product in displayedProducts" :key="product.product_id" class="product-card-wrapper">
+        <ProductCard :product="product" @add-to-cart="handleAddToCart" />
+        <div v-if="canManage(product)" class="manage-actions">
+          <button class="btn btn-outline" @click="openEditForm(product)">编辑</button>
+          <button class="btn btn-danger" @click="removeProduct(product.product_id)">删除</button>
+        </div>
+      </div>
     </div>
   </div>
 </template>
 
 <script>
-import { ref, reactive, onMounted, watch } from 'vue';
+import { computed, onMounted, reactive, ref, watch } from 'vue';
+import { useStore } from 'vuex';
 import { useRoute, useRouter } from 'vue-router';
-import { productAPI } from '../../services/api/productAPI';
-import { SecurityUtils } from '../../utils/security';
 import ProductCard from '../../components/common/ProductCard.vue';
 import LoadingSpinner from '../../components/common/LoadingSpinner.vue';
 import ErrorMessage from '../../components/common/ErrorMessage.vue';
+import { productAPI } from '../../services/api/productAPI';
+import { cartAPI } from '../../services/api/cartAPI';
 
 export default {
   name: 'ProductList',
-  components: {
-    ProductCard,
-    LoadingSpinner,
-    ErrorMessage
-  },
+  components: { ProductCard, LoadingSpinner, ErrorMessage },
   setup() {
+    const store = useStore();
     const route = useRoute();
     const router = useRouter();
-
     const products = ref([]);
     const categories = ref([]);
     const loading = ref(false);
+    const submitting = ref(false);
     const error = ref('');
-    const hasMore = ref(true);
-    const currentPage = ref(1);
+    const notice = ref('');
+    const showMineOnly = ref(false);
+    const formVisible = ref(false);
+    const editingProductId = ref(null);
 
     const filters = reactive({
       keyword: '',
-      category_id: '',
-      min_price: '',
-      max_price: ''
+      category_id: ''
     });
 
-    const buildSafeFilters = () => {
-      const payload = {};
-      if (filters.keyword) payload.keyword = SecurityUtils.sanitizeInput(filters.keyword);
-      if (filters.category_id) payload.category_id = filters.category_id;
-      if (filters.min_price) payload.min_price = filters.min_price;
-      if (filters.max_price) payload.max_price = filters.max_price;
-      payload.page = currentPage.value;
-      payload.limit = 12;
-      return payload;
-    };
+    const form = reactive({
+      sku: '',
+      product_name: '',
+      description: '',
+      sale_price: 0,
+      stock_quantity: 0,
+      category_id: '',
+      image_urls_text: ''
+    });
 
-    const syncQueryToFilters = () => {
-      const { keyword, category_id, min_price, max_price } = route.query;
-      filters.keyword = keyword ? SecurityUtils.sanitizeInput(String(keyword)) : '';
-      filters.category_id = category_id ? String(category_id) : '';
-      filters.min_price = min_price ? String(min_price) : '';
-      filters.max_price = max_price ? String(max_price) : '';
-    };
+    const isAuthenticated = computed(() => store.getters['auth/isAuthenticated']);
+    const currentUser = computed(() => store.getters['auth/currentUser'] || {});
+    const isAdmin = computed(() => ['admin', 'ADMIN'].includes(currentUser.value?.user_role) || currentUser.value?.role === 'admin');
+    const displayedProducts = computed(() => {
+      if (!showMineOnly.value) return products.value;
+      const uid = Number(currentUser.value?.user_id);
+      if (!uid) return products.value;
+      return products.value.filter((product) => Number(product?.seller_id) === uid);
+    });
 
-    const fetchProducts = async (reset = false) => {
-      if (loading.value) return;
-
-      try {
-        loading.value = true;
-        error.value = '';
-
-        if (reset) {
-          products.value = [];
-          currentPage.value = 1;
-          hasMore.value = true;
-        }
-
-        console.log('请求商品列表参数:', buildSafeFilters());
-        const response = await productAPI.getProducts(buildSafeFilters());
-        console.log('商品列表API响应:', response);
-
-        if (response.code === 0) {
-          const newProducts = response.data || [];
-          console.log('商品数据:', newProducts);
-          
-          if (reset) {
-            products.value = newProducts;
-          } else {
-            products.value.push(...newProducts);
+    const flattenCategories = (categoryTree) => {
+      const flattened = [];
+      const walk = (items) => {
+        items.forEach((item) => {
+          flattened.push({ category_id: item.category_id, category_name: item.category_name });
+          if (Array.isArray(item.children) && item.children.length > 0) {
+            walk(item.children);
           }
+        });
+      };
+      walk(categoryTree || []);
+      return flattened;
+    };
 
-          hasMore.value = newProducts.length === 12;
-        } else {
-          error.value = response.message || '获取商品列表失败';
+    const fetchCategories = async () => {
+      try {
+        const response = await productAPI.getCategories();
+        if (response.code === 0) {
+          categories.value = flattenCategories(response.data);
         }
       } catch (err) {
-        console.error('获取商品列表错误:', err);
-        error.value = err.message || '网络错误，请重试';
+        console.warn('获取分类失败:', err.message);
+      }
+    };
+
+    const buildQuery = () => {
+      const params = {};
+      if (filters.keyword) params.keyword = filters.keyword.trim();
+      if (filters.category_id) params.category_id = Number(filters.category_id);
+      return params;
+    };
+
+    const fetchProducts = async () => {
+      loading.value = true;
+      error.value = '';
+      try {
+        const response = await productAPI.getProducts(buildQuery());
+        if (response.code !== 0) {
+          throw new Error(response.message || '获取商品失败');
+        }
+        products.value = response.data || [];
+      } catch (err) {
+        error.value = err.message || '获取商品失败';
       } finally {
         loading.value = false;
       }
     };
 
-    const updateQueryFromFilters = () => {
-      const query = {};
-      if (filters.keyword) query.keyword = filters.keyword;
-      if (filters.category_id) query.category_id = filters.category_id;
-      if (filters.min_price) query.min_price = filters.min_price;
-      if (filters.max_price) query.max_price = filters.max_price;
-
-      router.replace({
-        path: route.path,
-        query
-      });
+    const searchProducts = async () => {
+      await fetchProducts();
     };
 
-    const searchProducts = () => {
-      currentPage.value = 1;
-      updateQueryFromFilters();
-      fetchProducts(true);
-    };
-
-    const clearFilters = () => {
+    const clearFilters = async () => {
       filters.keyword = '';
       filters.category_id = '';
-      filters.min_price = '';
-      filters.max_price = '';
-      currentPage.value = 1;
-      router.replace({ path: route.path });
-      fetchProducts(true);
+      await fetchProducts();
     };
 
-    const loadMore = () => {
-      if (hasMore.value && !loading.value) {
-        currentPage.value++;
-        fetchProducts(false);
-      }
+    const resetForm = () => {
+      form.sku = '';
+      form.product_name = '';
+      form.description = '';
+      form.sale_price = 0;
+      form.stock_quantity = 1;
+      form.category_id = '';
+      form.image_urls_text = '';
+      editingProductId.value = null;
     };
 
-    const handleAddToCart = (product) => {
-      console.log('添加到购物车:', product);
+    const openCreateForm = () => {
+      resetForm();
+      formVisible.value = true;
     };
 
-    const fetchCategories = async () => {
-      try {
-        console.log('开始获取分类数据...');
-        const response = await productAPI.getCategories();
-        console.log('分类API响应:', response);
-
-        if (response.code === 0 && response.data) {
-          console.log('原始分类数据:', response.data);
-          categories.value = flattenCategories(response.data);
-          console.log('处理后的分类数据:', categories.value);
-        } else {
-          console.warn('分类API返回失败:', response.message);
-          categories.value = []; // 不设置默认数据
-        }
-      } catch (err) {
-        console.error('获取分类失败:', err);
-        categories.value = []; // 不设置默认数据
-      }
+    const openEditForm = (product) => {
+      editingProductId.value = product.product_id;
+      form.sku = product.sku || '';
+      form.product_name = product.product_name || '';
+      form.description = product.description || '';
+      form.sale_price = Number(product.sale_price || 0);
+      form.stock_quantity = Number(product.stock_quantity || 0);
+      form.category_id = Number(product.category_id || '');
+      form.image_urls_text = Array.isArray(product.image_urls) ? product.image_urls.join(',') : '';
+      formVisible.value = true;
     };
 
-    const flattenCategories = (categoryTree) => {
-      const flattened = [];
-      
-      const traverse = (categories) => {
-        categories.forEach(category => {
-          flattened.push({
-            category_id: category.category_id,
-            category_name: category.category_name
-          });
-          
-          if (category.children && category.children.length > 0) {
-            traverse(category.children);
-          }
-        });
+    const closeForm = () => {
+      formVisible.value = false;
+      resetForm();
+    };
+
+    const buildProductPayload = () => {
+      const imageUrls = form.image_urls_text
+        .split(',')
+        .map((item) => item.trim())
+        .filter(Boolean);
+      const basePayload = {
+        product_name: form.product_name.trim(),
+        description: form.description.trim(),
+        sale_price: Number(form.sale_price || 0).toFixed(2),
+        stock_quantity: Number(form.stock_quantity || 0),
+        category_id: Number(form.category_id),
+        image_urls: imageUrls,
+        specifications: {}
       };
-      
-      traverse(categoryTree);
-      return flattened;
+      if (!editingProductId.value) {
+        basePayload.sku = form.sku.trim();
+      }
+      return basePayload;
     };
 
-    onMounted(() => {
-      console.log('ProductList 组件挂载');
-      fetchCategories();
-      syncQueryToFilters();
-      fetchProducts(true);
+    const submitProduct = async () => {
+      if (!form.product_name || !form.category_id) {
+        notice.value = '请补全商品名称和分类';
+        return;
+      }
+      if (Number(form.stock_quantity) <= 0) {
+        notice.value = '库存必须大于0';
+        return;
+      }
+      submitting.value = true;
+      try {
+        const payload = buildProductPayload();
+        const response = editingProductId.value
+          ? await productAPI.updateProduct(editingProductId.value, payload)
+          : await productAPI.createProduct(payload);
+        if (response.code !== 0) {
+          throw new Error(response.message || '提交失败');
+        }
+        notice.value = editingProductId.value ? '商品已更新' : '商品已发布';
+        closeForm();
+        await fetchProducts();
+      } catch (err) {
+        notice.value = err.message || '提交失败';
+      } finally {
+        submitting.value = false;
+      }
+    };
+
+    const canManage = (product) => {
+      if (!isAuthenticated.value || !currentUser.value?.user_id) return false;
+      return isAdmin.value || Number(product.seller_id) === Number(currentUser.value.user_id);
+    };
+
+    const removeProduct = async (productId) => {
+      if (!window.confirm('确认删除该商品吗？')) return;
+      try {
+        const response = await productAPI.deleteProduct(productId);
+        if (response.code !== 0) {
+          throw new Error(response.message || '删除失败');
+        }
+        notice.value = '商品已删除';
+        await fetchProducts();
+      } catch (err) {
+        notice.value = err.message || '删除失败';
+      }
+    };
+
+    const handleAddToCart = async (product) => {
+      if (!isAuthenticated.value) {
+        router.push('/login');
+        return;
+      }
+      try {
+        const response = await cartAPI.addToCart({ product_id: product.product_id, quantity: 1 });
+        if (response.code !== 0) {
+          throw new Error(response.message || '加入购物车失败');
+        }
+        notice.value = '已加入购物车';
+      } catch (err) {
+        notice.value = err.message || '加入购物车失败';
+      }
+    };
+
+    onMounted(async () => {
+      if (route.query.keyword) {
+        filters.keyword = String(route.query.keyword);
+      }
+      if (route.query.category_id) {
+        filters.category_id = String(route.query.category_id);
+      }
+      await fetchCategories();
+      await fetchProducts();
     });
 
-    watch(() => route.query, () => {
-      console.log('路由查询参数变化:', route.query);
-      syncQueryToFilters();
-      fetchProducts(true);
+    watch(() => route.query, (query) => {
+      filters.keyword = query.keyword ? String(query.keyword) : '';
+      filters.category_id = query.category_id ? String(query.category_id) : '';
+      fetchProducts();
     });
 
     return {
       products,
       categories,
-      loading,
-      error,
-      hasMore,
       filters,
-      fetchProducts,
+      loading,
+      submitting,
+      error,
+      notice,
+      showMineOnly,
+      displayedProducts,
+      formVisible,
+      editingProductId,
+      form,
+      isAuthenticated,
       searchProducts,
       clearFilters,
-      loadMore,
-      handleAddToCart
+      openCreateForm,
+      openEditForm,
+      closeForm,
+      submitProduct,
+      canManage,
+      removeProduct,
+      handleAddToCart,
+      fetchProducts
     };
   }
 };
@@ -289,7 +383,9 @@ export default {
 }
 
 .page-header {
-  text-align: center;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   margin-bottom: 2rem;
 }
 
@@ -360,9 +456,8 @@ export default {
 
 .filter-options {
   display: flex;
-  gap: 1rem;
+  gap: 0.75rem;
   align-items: center;
-  flex-wrap: wrap;
 }
 
 .filter-options select {
@@ -385,8 +480,7 @@ export default {
   border-radius: 4px;
 }
 
-.loading-section,
-.empty-section {
+.loading-section, .empty-section {
   text-align: center;
   padding: 3rem;
   color: #666;
@@ -403,27 +497,82 @@ export default {
   margin-bottom: 2rem;
 }
 
-.pagination {
-  text-align: center;
+.product-card-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
 }
 
-.load-more-btn {
-  padding: 0.75rem 2rem;
-  background: #007bff;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 1rem;
+.manage-actions {
+  display: flex;
+  gap: 0.5rem;
 }
 
-.load-more-btn:hover:not(:disabled) {
-  background: #0056b3;
+.notice {
+  margin-bottom: 1rem;
+  padding: 0.75rem 1rem;
+  border-radius: 6px;
+  background: #e8f5ff;
+  color: #0b63a5;
 }
 
-.load-more-btn:disabled {
-  background: #6c757d;
-  cursor: not-allowed;
+.form-card {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+
+.form-meta {
+  margin: 0 0 0.8rem;
+  font-size: 0.9rem;
+  color: #6a6a6a;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.field-label {
+  font-size: 0.9rem;
+  color: #333;
+  font-weight: 600;
+}
+
+.field-hint {
+  margin: 0;
+  font-size: 0.82rem;
+  color: #7a7a7a;
+}
+
+.required {
+  color: #d93c3c;
+}
+
+.form-card input,
+.form-card select,
+.form-card textarea {
+  width: 100%;
+  border: 1px solid #d9d9d9;
+  border-radius: 6px;
+  padding: 0.6rem 0.7rem;
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  margin-top: 0.75rem;
 }
 
 @media (max-width: 768px) {
@@ -431,22 +580,15 @@ export default {
     padding: 1rem;
   }
 
-  .filter-options {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .price-range {
-    justify-content: space-between;
-  }
-
-  .price-range input {
-    flex: 1;
-  }
-
   .products-grid {
     grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
     gap: 1rem;
+  }
+
+  .page-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
   }
 }
 </style>

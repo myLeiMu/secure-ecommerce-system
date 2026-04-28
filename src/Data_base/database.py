@@ -1,5 +1,5 @@
 from src.Data_base.config import DB_URI
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, inspect, text
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import QueuePool
@@ -47,8 +47,51 @@ def get_db_session():
 def init_db():
     """初始化数据库表"""
     try:
+        # 确保模型被加载到Base.metadata
+        from src.Data_base.models import user, product, order  # noqa: F401
+
         Base.metadata.create_all(bind=engine)
+        _ensure_schema_updates()
         logging.info("数据库表初始化成功")
     except Exception as e:
         logging.error(f"数据库表初始化失败: {str(e)}")
         raise
+
+
+def _ensure_schema_updates():
+    """
+    对既有数据库执行轻量结构补齐：
+    - products.seller_id
+    - products.status
+    - cart_items表
+    """
+    inspector = inspect(engine)
+    tables = set(inspector.get_table_names())
+
+    with engine.begin() as conn:
+        if 'products' in tables:
+            product_cols = {c['name'] for c in inspector.get_columns('products')}
+            if 'seller_id' not in product_cols:
+                conn.execute(text("ALTER TABLE products ADD COLUMN seller_id BIGINT NULL"))
+                conn.execute(text("CREATE INDEX ix_products_seller_id ON products (seller_id)"))
+            if 'status' not in product_cols:
+                conn.execute(text("ALTER TABLE products ADD COLUMN status VARCHAR(20) DEFAULT 'active'"))
+                conn.execute(text("CREATE INDEX ix_products_status ON products (status)"))
+
+        if 'cart_items' not in tables:
+            conn.execute(text("""
+                CREATE TABLE cart_items (
+                    cart_item_id BIGINT PRIMARY KEY AUTO_INCREMENT,
+                    user_id BIGINT NOT NULL,
+                    product_id BIGINT NOT NULL,
+                    quantity INT NOT NULL DEFAULT 1,
+                    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                    CONSTRAINT uq_cart_user_product UNIQUE (user_id, product_id),
+                    CONSTRAINT check_cart_quantity_positive CHECK (quantity > 0),
+                    INDEX ix_cart_items_user_id (user_id),
+                    INDEX ix_cart_items_product_id (product_id),
+                    CONSTRAINT fk_cart_user FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
+                    CONSTRAINT fk_cart_product FOREIGN KEY (product_id) REFERENCES products(product_id) ON DELETE CASCADE
+                )
+            """))

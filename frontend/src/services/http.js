@@ -95,6 +95,7 @@ class APIClient {
     this.token = null;
     delete this.client.defaults.headers.common.Authorization;
     localStorage.removeItem('access_token');
+    localStorage.removeItem('current_user');
   }
 }
 

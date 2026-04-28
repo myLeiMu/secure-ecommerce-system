@@ -15,6 +15,8 @@
             控制台
           </router-link>
           <router-link to="/products" class="nav-link">商品</router-link>
+          <router-link v-if="isAuthenticated" to="/cart" class="nav-link">购物车</router-link>
+          <router-link v-if="isAuthenticated" to="/orders" class="nav-link">订单</router-link>
         </nav>
       </div>
 
@@ -38,6 +40,12 @@
           <div v-if="showUserMenu" class="user-dropdown">
             <router-link to="/profile" class="dropdown-item">
               <i class="icon">👤</i>个人中心
+            </router-link>
+            <router-link to="/cart" class="dropdown-item">
+              <i class="icon">🛒</i>购物车
+            </router-link>
+            <router-link to="/orders" class="dropdown-item">
+              <i class="icon">📦</i>我的订单
             </router-link>
             <div class="dropdown-divider"></div>
             <button @click="handleLogout" class="dropdown-item logout">
@@ -74,7 +82,8 @@ export default {
     const currentUser = computed(() => store.getters['auth/currentUser']);
 
     const isAdmin = computed(() => {
-      return currentUser.value?.role === 'admin';
+      const role = currentUser.value?.role || currentUser.value?.user_role;
+      return role === 'admin' || role === 'ADMIN';
     });
 
     const getInitials = (username) => {

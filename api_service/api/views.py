@@ -7,6 +7,7 @@ from rest_framework.views import exception_handler
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 from datetime import datetime, timezone
+from decimal import Decimal
 import time
 import secrets
 from typing import Optional
@@ -19,8 +20,11 @@ from api_service.utils.cache_utils import ProductCache, UserCache
 from api_service.utils.redis_client import redis_client
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 from src.unified_service import UnifiedEcommerceService
+from sqlalchemy.orm import joinedload
 from gmssl import sm2
 from src.algorithm.ca_center import parse_certificate_pem, verify_certificate_with_root
+from src.Data_base.models.product import Product
+from src.Data_base.models.order import Order, OrderItem, OrderStatus, CartItem
 
 
 # 统一响应格式
@@ -145,6 +149,42 @@ class ProductListQuerySerializer(serializers.Serializer):
     max_price = serializers.FloatField(required=False, help_text="最高价格")
 
 
+class ProductCreateSerializer(serializers.Serializer):
+    sku = serializers.CharField(max_length=50, required=True, help_text="SKU")
+    product_name = serializers.CharField(max_length=200, required=True, help_text="商品名")
+    description = serializers.CharField(required=False, allow_blank=True, help_text="商品描述")
+    sale_price = serializers.DecimalField(max_digits=10, decimal_places=2, required=True, help_text="售价")
+    stock_quantity = serializers.IntegerField(required=True, min_value=0, help_text="库存")
+    category_id = serializers.IntegerField(required=True, help_text="分类ID")
+    image_urls = serializers.ListField(required=False, child=serializers.CharField(), help_text="图片URL列表")
+    specifications = serializers.JSONField(required=False, help_text="规格")
+
+
+class ProductUpdateSerializer(serializers.Serializer):
+    product_name = serializers.CharField(max_length=200, required=False, help_text="商品名")
+    description = serializers.CharField(required=False, allow_blank=True, help_text="商品描述")
+    sale_price = serializers.DecimalField(max_digits=10, decimal_places=2, required=False, help_text="售价")
+    stock_quantity = serializers.IntegerField(required=False, min_value=0, help_text="库存")
+    category_id = serializers.IntegerField(required=False, help_text="分类ID")
+    image_urls = serializers.ListField(required=False, child=serializers.CharField(), help_text="图片URL列表")
+    specifications = serializers.JSONField(required=False, help_text="规格")
+    is_available = serializers.BooleanField(required=False, help_text="是否上架")
+
+
+class CartUpsertSerializer(serializers.Serializer):
+    product_id = serializers.IntegerField(required=True, help_text="商品ID")
+    quantity = serializers.IntegerField(required=True, min_value=1, help_text="数量")
+
+
+class CartQuantitySerializer(serializers.Serializer):
+    quantity = serializers.IntegerField(required=True, min_value=1, help_text="数量")
+
+
+class OrderCreateFromCartSerializer(serializers.Serializer):
+    shipping_amount = serializers.DecimalField(max_digits=10, decimal_places=2, required=False, default=Decimal("0.00"))
+    discount_amount = serializers.DecimalField(max_digits=10, decimal_places=2, required=False, default=Decimal("0.00"))
+
+
 class PasswordChangeSerializer(serializers.Serializer):
     old_password = serializers.CharField(max_length=128, required=True, help_text="原密码", write_only=True)
     new_password = serializers.CharField(max_length=128, required=True, help_text="新密码", write_only=True)
@@ -204,8 +244,11 @@ def _verify_certificate_chain_no_crl(certificate_pem: str, expected_username: Op
         root_cert_pem = f.read()
     cert_ok = verify_certificate_with_root(certificate_pem, root_cert_pem)
     if not cert_ok:
-        return False, "证书验签失败", None
-    cert_info = parse_certificate_pem(certificate_pem)
+        return False, "证书无效", None
+    try:
+        cert_info = parse_certificate_pem(certificate_pem)
+    except Exception:
+        return False, "证书无效", None
     now = datetime.now(timezone.utc)
     if cert_info.get("not_after") and now > cert_info["not_after"]:
         return False, "证书已过期", None
@@ -213,8 +256,34 @@ def _verify_certificate_chain_no_crl(certificate_pem: str, expected_username: Op
         return False, "证书尚未生效", None
     cert_cn = cert_info.get("subject_common_name", "")
     if expected_username and cert_cn and cert_cn != expected_username:
-        return False, "证书主体与用户名不一致", None
+        return False, "证书与用户名不匹配", None
     return True, "", cert_info
+
+
+def _get_user_info(request):
+    user_info = getattr(request, 'user_info', None)
+    if not user_info:
+        return None
+    if not user_info.get("user_id"):
+        return None
+    return user_info
+
+
+def _serialize_product(product: Product):
+    return {
+        'product_id': product.product_id,
+        'sku': product.sku,
+        'product_name': product.product_name,
+        'description': product.description or '',
+        'sale_price': float(product.sale_price),
+        'stock_quantity': product.stock_quantity,
+        'image_urls': product.image_urls or [],
+        'category_id': product.category_id,
+        'seller_id': getattr(product, 'seller_id', None),
+        'is_available': bool(product.is_available),
+        'created_at': product.created_at,
+        'updated_at': product.updated_at,
+    }
 
 
 @method_decorator(csrf_exempt, name='dispatch')
@@ -1256,22 +1325,22 @@ class ProductListView(APIView):
                 for product in products:
                     # 检查 product 是否是字典，如果不是则转换为字典
                     if isinstance(product, dict):
-                        serialized_products.append(product)
+                        serialized_products.append({
+                            'product_id': product.get('product_id'),
+                            'sku': product.get('sku', ''),
+                            'product_name': product.get('product_name', ''),
+                            'description': product.get('description', ''),
+                            'sale_price': float(product.get('sale_price', 0)),
+                            'stock_quantity': product.get('stock_quantity', 0),
+                            'image_urls': product.get('image_urls', []),
+                            'category_id': product.get('category_id'),
+                            'seller_id': product.get('seller_id'),
+                            'is_available': bool(product.get('is_available', True)),
+                            'created_at': product.get('created_at'),
+                            'updated_at': product.get('updated_at'),
+                        })
                     else:
-                        # 假设 Product 对象有这些属性
-                        product_dict = {
-                            'product_id': getattr(product, 'product_id', None),
-                            'product_name': getattr(product, 'product_name', ''),
-                            'sale_price': float(getattr(product, 'sale_price', 0)),
-                            'stock_quantity': getattr(product, 'stock_quantity', 0),
-                            'image_urls': getattr(product, 'image_urls', []),
-                            'description': getattr(product, 'description', ''),
-                            'category_id': getattr(product, 'category_id', None),
-                            'category_name': getattr(product, 'category_name', ''),
-                        }
-                        # 移除空值
-                        product_dict = {k: v for k, v in product_dict.items() if v is not None}
-                        serialized_products.append(product_dict)
+                        serialized_products.append(_serialize_product(product))
 
             return Response({
                 "code": 0,
@@ -1291,6 +1360,54 @@ class ProductListView(APIView):
                 "data": None,
                 "timestamp": datetime.now().isoformat()
             }, status=500)
+
+    @swagger_auto_schema(
+        operation_summary="发布商品",
+        operation_description="卖家发布商品（需要JWT）",
+        request_body=ProductCreateSerializer,
+        tags=['商品管理'],
+        security=[{'Bearer': []}]
+    )
+    def post(self, request):
+        user_info = _get_user_info(request)
+        if not user_info:
+            return Response(APIResponse.error("用户未认证", 401), status=401)
+
+        serializer = ProductCreateSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(APIResponse.error(serializer.errors, 400), status=400)
+
+        service = UnifiedEcommerceService()
+        db = service.db_session
+        try:
+            data = serializer.validated_data
+            exists = db.query(Product).filter(Product.sku == data["sku"]).first()
+            if exists:
+                return Response(APIResponse.error("SKU已存在", 400), status=400)
+
+            product = Product(
+                sku=data["sku"],
+                product_name=data["product_name"],
+                description=data.get("description", ""),
+                sale_price=data["sale_price"],
+                stock_quantity=data["stock_quantity"],
+                category_id=data["category_id"],
+                image_urls=data.get("image_urls", []),
+                specifications=data.get("specifications", {}),
+                seller_id=user_info["user_id"],
+                status='active',
+                is_active=True,
+                is_available=True,
+                track_inventory=True,
+            )
+            db.add(product)
+            db.commit()
+            db.refresh(product)
+            ProductCache.invalidate_product_caches()
+            return Response(APIResponse.success(_serialize_product(product), "发布成功"))
+        except Exception as e:
+            db.rollback()
+            return Response(APIResponse.error(f"发布失败: {str(e)}", 500), status=500)
 
 
 class CategoryListView(APIView):
@@ -1506,6 +1623,452 @@ class ProductDetailView(APIView):
                 "data": None,
                 "timestamp": datetime.now().isoformat()
             }, status=500)
+
+    @swagger_auto_schema(
+        operation_summary="编辑商品",
+        operation_description="仅商品所属卖家或管理员可编辑（seller_id校验）",
+        request_body=ProductUpdateSerializer,
+        tags=['商品管理'],
+        security=[{'Bearer': []}]
+    )
+    def put(self, request, product_id):
+        user_info = _get_user_info(request)
+        if not user_info:
+            return Response(APIResponse.error("用户未认证", 401), status=401)
+
+        serializer = ProductUpdateSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(APIResponse.error(serializer.errors, 400), status=400)
+
+        service = UnifiedEcommerceService()
+        db = service.db_session
+        try:
+            product = db.query(Product).filter(
+                Product.product_id == product_id,
+                Product.is_active == True
+            ).first()
+            if not product:
+                return Response(APIResponse.error("商品不存在", 404), status=404)
+
+            role = user_info.get("role", "normal")
+            if role != "admin" and product.seller_id != user_info["user_id"]:
+                return Response(APIResponse.error("无权限编辑该商品", 403), status=403)
+
+            update_data = serializer.validated_data
+            for key, value in update_data.items():
+                setattr(product, key, value)
+            db.commit()
+            db.refresh(product)
+            ProductCache.invalidate_product_caches(product_id)
+            return Response(APIResponse.success(_serialize_product(product), "编辑成功"))
+        except Exception as e:
+            db.rollback()
+            return Response(APIResponse.error(f"编辑失败: {str(e)}", 500), status=500)
+
+    @swagger_auto_schema(
+        operation_summary="删除商品",
+        operation_description="软删除商品（seller_id校验）",
+        tags=['商品管理'],
+        security=[{'Bearer': []}]
+    )
+    def delete(self, request, product_id):
+        user_info = _get_user_info(request)
+        if not user_info:
+            return Response(APIResponse.error("用户未认证", 401), status=401)
+
+        service = UnifiedEcommerceService()
+        db = service.db_session
+        try:
+            product = db.query(Product).filter(
+                Product.product_id == product_id,
+                Product.is_active == True
+            ).first()
+            if not product:
+                return Response(APIResponse.error("商品不存在", 404), status=404)
+
+            role = user_info.get("role", "normal")
+            if role != "admin" and product.seller_id != user_info["user_id"]:
+                return Response(APIResponse.error("无权限删除该商品", 403), status=403)
+
+            product.is_active = False
+            product.is_available = False
+            if hasattr(product, "status"):
+                product.status = "inactive"
+            db.commit()
+            ProductCache.invalidate_product_caches(product_id)
+            return Response(APIResponse.success(message="删除成功"))
+        except Exception as e:
+            db.rollback()
+            return Response(APIResponse.error(f"删除失败: {str(e)}", 500), status=500)
+
+
+class CartView(APIView):
+    @swagger_auto_schema(
+        operation_summary="查看购物车",
+        tags=['购物车'],
+        security=[{'Bearer': []}]
+    )
+    def get(self, request):
+        user_info = _get_user_info(request)
+        if not user_info:
+            return Response(APIResponse.error("用户未认证", 401), status=401)
+
+        service = UnifiedEcommerceService()
+        db = service.db_session
+        try:
+            items = db.query(CartItem).options(
+                joinedload(CartItem.product)
+            ).filter(CartItem.user_id == user_info["user_id"]).all()
+            data = []
+            for item in items:
+                product = item.product
+                if not product or not product.is_active:
+                    continue
+                data.append({
+                    "product_id": product.product_id,
+                    "product_name": product.product_name,
+                    "sale_price": float(product.sale_price),
+                    "stock_quantity": product.stock_quantity,
+                    "quantity": item.quantity,
+                    "line_total": float(product.sale_price) * item.quantity,
+                })
+            return Response(APIResponse.success(data))
+        except Exception as e:
+            return Response(APIResponse.error(f"获取购物车失败: {str(e)}", 500), status=500)
+
+    @swagger_auto_schema(
+        operation_summary="添加购物车",
+        request_body=CartUpsertSerializer,
+        tags=['购物车'],
+        security=[{'Bearer': []}]
+    )
+    def post(self, request):
+        user_info = _get_user_info(request)
+        if not user_info:
+            return Response(APIResponse.error("用户未认证", 401), status=401)
+
+        serializer = CartUpsertSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(APIResponse.error(serializer.errors, 400), status=400)
+
+        service = UnifiedEcommerceService()
+        db = service.db_session
+        try:
+            product_id = serializer.validated_data["product_id"]
+            quantity = serializer.validated_data["quantity"]
+            product = db.query(Product).filter(
+                Product.product_id == product_id,
+                Product.is_active == True,
+                Product.is_available == True
+            ).first()
+            if not product:
+                return Response(APIResponse.error("商品不存在或已下架", 404), status=404)
+
+            cart_item = db.query(CartItem).filter(
+                CartItem.user_id == user_info["user_id"],
+                CartItem.product_id == product_id
+            ).first()
+            if cart_item:
+                cart_item.quantity += quantity
+            else:
+                cart_item = CartItem(
+                    user_id=user_info["user_id"],
+                    product_id=product_id,
+                    quantity=quantity
+                )
+                db.add(cart_item)
+            db.commit()
+            return Response(APIResponse.success(message="添加成功"))
+        except Exception as e:
+            db.rollback()
+            return Response(APIResponse.error(f"添加失败: {str(e)}", 500), status=500)
+
+
+class CartItemDetailView(APIView):
+    @swagger_auto_schema(
+        operation_summary="修改购物车数量",
+        request_body=CartQuantitySerializer,
+        tags=['购物车'],
+        security=[{'Bearer': []}]
+    )
+    def put(self, request, product_id):
+        user_info = _get_user_info(request)
+        if not user_info:
+            return Response(APIResponse.error("用户未认证", 401), status=401)
+
+        serializer = CartQuantitySerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(APIResponse.error(serializer.errors, 400), status=400)
+
+        service = UnifiedEcommerceService()
+        db = service.db_session
+        try:
+            cart_item = db.query(CartItem).filter(
+                CartItem.user_id == user_info["user_id"],
+                CartItem.product_id == product_id
+            ).first()
+            if not cart_item:
+                exists = db.query(CartItem.cart_item_id).filter(CartItem.product_id == product_id).first()
+                if exists:
+                    return Response(APIResponse.error("无权限修改该购物车项", 403), status=403)
+                return Response(APIResponse.error("购物车项不存在", 404), status=404)
+
+            cart_item.quantity = serializer.validated_data["quantity"]
+            db.commit()
+            return Response(APIResponse.success(message="修改成功"))
+        except Exception as e:
+            db.rollback()
+            return Response(APIResponse.error(f"修改失败: {str(e)}", 500), status=500)
+
+    @swagger_auto_schema(
+        operation_summary="删除购物车项",
+        tags=['购物车'],
+        security=[{'Bearer': []}]
+    )
+    def delete(self, request, product_id):
+        user_info = _get_user_info(request)
+        if not user_info:
+            return Response(APIResponse.error("用户未认证", 401), status=401)
+
+        service = UnifiedEcommerceService()
+        db = service.db_session
+        try:
+            cart_item = db.query(CartItem).filter(
+                CartItem.user_id == user_info["user_id"],
+                CartItem.product_id == product_id
+            ).first()
+            if not cart_item:
+                exists = db.query(CartItem.cart_item_id).filter(CartItem.product_id == product_id).first()
+                if exists:
+                    return Response(APIResponse.error("无权限删除该购物车项", 403), status=403)
+                return Response(APIResponse.error("购物车项不存在", 404), status=404)
+            db.delete(cart_item)
+            db.commit()
+            return Response(APIResponse.success(message="删除成功"))
+        except Exception as e:
+            db.rollback()
+            return Response(APIResponse.error(f"删除失败: {str(e)}", 500), status=500)
+
+
+class OrderView(APIView):
+    @swagger_auto_schema(
+        operation_summary="从购物车生成订单",
+        request_body=OrderCreateFromCartSerializer,
+        tags=['订单'],
+        security=[{'Bearer': []}]
+    )
+    def post(self, request):
+        user_info = _get_user_info(request)
+        if not user_info:
+            return Response(APIResponse.error("用户未认证", 401), status=401)
+
+        serializer = OrderCreateFromCartSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(APIResponse.error(serializer.errors, 400), status=400)
+
+        shipping_amount = serializer.validated_data.get("shipping_amount", Decimal("0.00"))
+        discount_amount = serializer.validated_data.get("discount_amount", Decimal("0.00"))
+
+        service = UnifiedEcommerceService()
+        db = service.db_session
+        try:
+            affected_product_ids = set()
+            cart_items = db.query(CartItem).options(
+                joinedload(CartItem.product)
+            ).filter(CartItem.user_id == user_info["user_id"]).all()
+            if not cart_items:
+                return Response(APIResponse.error("购物车为空", 400), status=400)
+
+            subtotal = Decimal("0.00")
+            normalized_items = []
+            for cart_item in cart_items:
+                product = cart_item.product
+                if not product or not product.is_active or not product.is_available:
+                    return Response(APIResponse.error(f"商品不可用: {cart_item.product_id}", 400), status=400)
+                if product.stock_quantity < cart_item.quantity:
+                    return Response(APIResponse.error(f"库存不足: {product.product_name}", 400), status=400)
+
+                unit_price = Decimal(str(product.sale_price))
+                line_total = unit_price * cart_item.quantity
+                subtotal += line_total
+                normalized_items.append({
+                    "product": product,
+                    "quantity": cart_item.quantity,
+                    "unit_price": unit_price,
+                    "line_total": line_total,
+                    "cart_item": cart_item,
+                })
+
+            total = subtotal + shipping_amount - discount_amount
+            if total < Decimal("0.00"):
+                total = Decimal("0.00")
+
+            order_number = f"ORD{int(time.time() * 1000)}{secrets.randbelow(1000):03d}"
+            order = Order(
+                order_number=order_number,
+                user_id=user_info["user_id"],
+                subtotal_amount=subtotal,
+                shipping_amount=shipping_amount,
+                discount_amount=discount_amount,
+                total_amount=total,
+                order_status=OrderStatus.PENDING,
+            )
+            db.add(order)
+            db.flush()
+
+            for item in normalized_items:
+                db.add(OrderItem(
+                    order_id=order.order_id,
+                    product_id=item["product"].product_id,
+                    quantity=item["quantity"],
+                    unit_price=item["unit_price"],
+                    total_price=item["line_total"],
+                ))
+                # 关键一致性：只在库存足够时扣减
+                item["product"].stock_quantity -= item["quantity"]
+                affected_product_ids.add(item["product"].product_id)
+                db.delete(item["cart_item"])
+
+            db.commit()
+            for pid in affected_product_ids:
+                ProductCache.invalidate_product_caches(pid)
+            return Response(APIResponse.success({
+                "order_id": order.order_id,
+                "order_number": order.order_number,
+                "total_amount": float(order.total_amount),
+                "order_status": order.order_status.value
+            }, "下单成功"))
+        except Exception as e:
+            db.rollback()
+            return Response(APIResponse.error(f"下单失败: {str(e)}", 500), status=500)
+
+    @swagger_auto_schema(
+        operation_summary="我的订单列表",
+        tags=['订单'],
+        security=[{'Bearer': []}]
+    )
+    def get(self, request):
+        user_info = _get_user_info(request)
+        if not user_info:
+            return Response(APIResponse.error("用户未认证", 401), status=401)
+
+        service = UnifiedEcommerceService()
+        db = service.db_session
+        try:
+            orders = db.query(Order).options(
+                joinedload(Order.order_items).joinedload(OrderItem.product)
+            ).filter(Order.user_id == user_info["user_id"]).order_by(Order.created_at.desc()).all()
+            data = []
+            for order in orders:
+                data.append({
+                    "order_id": order.order_id,
+                    "order_number": order.order_number,
+                    "total_amount": float(order.total_amount),
+                    "order_status": order.order_status.value,
+                    "created_at": order.created_at,
+                    "items": [
+                        {
+                            "product_id": it.product_id,
+                            "product_name": it.product.product_name if it.product else "",
+                            "quantity": it.quantity,
+                            "unit_price": float(it.unit_price),
+                            "total_price": float(it.total_price),
+                        } for it in order.order_items
+                    ]
+                })
+            return Response(APIResponse.success(data))
+        except Exception as e:
+            return Response(APIResponse.error(f"获取订单失败: {str(e)}", 500), status=500)
+
+
+class OrderDetailView(APIView):
+    @swagger_auto_schema(
+        operation_summary="订单详情",
+        operation_description="仅订单所属用户可查看，用于IDOR防护验证",
+        tags=['订单'],
+        security=[{'Bearer': []}]
+    )
+    def get(self, request, order_id):
+        user_info = _get_user_info(request)
+        if not user_info:
+            return Response(APIResponse.error("用户未认证", 401), status=401)
+
+        service = UnifiedEcommerceService()
+        db = service.db_session
+        try:
+            order = db.query(Order).options(
+                joinedload(Order.order_items).joinedload(OrderItem.product)
+            ).filter(Order.order_id == order_id).first()
+            if not order:
+                return Response(APIResponse.error("订单不存在", 404), status=404)
+
+            if order.user_id != user_info["user_id"]:
+                return Response(APIResponse.error("无权限查看该订单", 403), status=403)
+
+            data = {
+                "order_id": order.order_id,
+                "order_number": order.order_number,
+                "total_amount": float(order.total_amount),
+                "order_status": order.order_status.value,
+                "created_at": order.created_at,
+                "items": [
+                    {
+                        "product_id": it.product_id,
+                        "product_name": it.product.product_name if it.product else "",
+                        "quantity": it.quantity,
+                        "unit_price": float(it.unit_price),
+                        "total_price": float(it.total_price),
+                    } for it in order.order_items
+                ]
+            }
+            return Response(APIResponse.success(data))
+        except Exception as e:
+            return Response(APIResponse.error(f"获取订单详情失败: {str(e)}", 500), status=500)
+
+
+class OrderCancelView(APIView):
+    @swagger_auto_schema(
+        operation_summary="取消订单",
+        tags=['订单'],
+        security=[{'Bearer': []}]
+    )
+    def post(self, request, order_id):
+        user_info = _get_user_info(request)
+        if not user_info:
+            return Response(APIResponse.error("用户未认证", 401), status=401)
+
+        service = UnifiedEcommerceService()
+        db = service.db_session
+        try:
+            affected_product_ids = set()
+            # IDOR防护：必须附加当前用户条件
+            order = db.query(Order).options(
+                joinedload(Order.order_items).joinedload(OrderItem.product)
+            ).filter(
+                Order.order_id == order_id,
+                Order.user_id == user_info["user_id"]
+            ).first()
+            if not order:
+                exists = db.query(Order.order_id).filter(Order.order_id == order_id).first()
+                if exists:
+                    return Response(APIResponse.error("无权限取消该订单", 403), status=403)
+                return Response(APIResponse.error("订单不存在", 404), status=404)
+            if order.order_status == OrderStatus.CANCELLED:
+                return Response(APIResponse.success(message="订单已取消"))
+
+            order.order_status = OrderStatus.CANCELLED
+            order.cancelled_date = datetime.now()
+            for item in order.order_items:
+                if item.product:
+                    item.product.stock_quantity += item.quantity
+                    affected_product_ids.add(item.product.product_id)
+            db.commit()
+            for pid in affected_product_ids:
+                ProductCache.invalidate_product_caches(pid)
+            return Response(APIResponse.success(message="取消成功"))
+        except Exception as e:
+            db.rollback()
+            return Response(APIResponse.error(f"取消失败: {str(e)}", 500), status=500)
 
 
 class HealthCheckView(APIView):

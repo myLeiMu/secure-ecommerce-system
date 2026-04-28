@@ -3,7 +3,8 @@ from .views import (
     UserRegistrationView, UserLoginView, UserLogoutView, UserProfileView,
     PasswordChangeView, PasswordResetCodeView, PasswordResetView,
     ProductListView, ProductDetailView, HealthCheckView, CacheStatusView,
-    CategoryListView, CertChallengeView, CertLoginView, CertFileLoginView, CertMTLSLoginView
+    CategoryListView, CertChallengeView, CertLoginView, CertFileLoginView, CertMTLSLoginView,
+    CartView, CartItemDetailView, OrderView, OrderDetailView, OrderCancelView
 )
 
 urlpatterns = [
@@ -28,6 +29,15 @@ urlpatterns = [
 
     # 分类管理
     path('categories', CategoryListView.as_view(), name='category-list'),
+
+    # 购物车
+    path('cart', CartView.as_view(), name='cart'),
+    path('cart/items/<int:product_id>', CartItemDetailView.as_view(), name='cart-item-detail'),
+
+    # 订单
+    path('orders', OrderView.as_view(), name='orders'),
+    path('orders/<int:order_id>', OrderDetailView.as_view(), name='order-detail'),
+    path('orders/<int:order_id>/cancel', OrderCancelView.as_view(), name='order-cancel'),
 
     # 健康检查和缓存状态
     path('health/', HealthCheckView.as_view(), name='health-check'),

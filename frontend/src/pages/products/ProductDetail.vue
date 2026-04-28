@@ -74,10 +74,11 @@
               <label>数量:</label>
               <div class="quantity-controls">
                 <button @click="decreaseQuantity" :disabled="quantity <= 1">-</button>
-                <input v-model.number="quantity" type="number" min="1" :max="product.stock_quantity" />
+                <input v-model.number="quantity" type="number" min="1" :max="product.stock_quantity" @change="validateQuantity" />
                 <button @click="increaseQuantity" :disabled="quantity >= product.stock_quantity">+</button>
               </div>
             </div>
+            <p v-if="notice" class="action-notice">{{ notice }}</p>
 
             <div class="action-buttons">
               <button 
@@ -125,8 +126,10 @@
 import { ref, computed, onMounted, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { productAPI } from '../../services/api/productAPI';
+import { cartAPI } from '../../services/api/cartAPI';
 import LoadingSpinner from '../../components/common/LoadingSpinner.vue';
 import ErrorMessage from '../../components/common/ErrorMessage.vue';
+import { useStore } from 'vuex';
 
 export default {
   name: 'ProductDetail',
@@ -135,12 +138,14 @@ export default {
     ErrorMessage
   },
   setup() {
+    const store = useStore();
     const route = useRoute();
     const router = useRouter();
     
     const product = ref(null);
     const loading = ref(false);
     const error = ref('');
+    const notice = ref('');
     const quantity = ref(1);
     const currentImageIndex = ref(0);
 
@@ -221,25 +226,28 @@ export default {
     };
 
     const addToCart = () => {
-      if (!product.value) return;
-      
-      console.log('添加到购物车:', {
+      if (!product.value) return Promise.resolve();
+      if (!store.getters['auth/isAuthenticated']) {
+        router.push('/login');
+        return Promise.resolve();
+      }
+      return cartAPI.addToCart({
         product_id: product.value.product_id,
-        product_name: product.value.product_name,
-        quantity: quantity.value,
-        price: product.value.sale_price
+        quantity: quantity.value
+      }).then((response) => {
+        if (response.code !== 0) {
+          throw new Error(response.message || '加入购物车失败');
+        }
+        notice.value = '已加入购物车';
+      }).catch((err) => {
+        notice.value = err.message || '加入购物车失败';
       });
     };
 
-    const buyNow = () => {
+    const buyNow = async () => {
       if (!product.value) return;
-      
-      console.log('立即购买:', {
-        product_id: product.value.product_id,
-        product_name: product.value.product_name,
-        quantity: quantity.value,
-        price: product.value.sale_price
-      });
+      await addToCart();
+      router.push('/cart');
     };
 
     onMounted(() => {
@@ -254,6 +262,7 @@ export default {
       product,
       loading,
       error,
+      notice,
       quantity,
       currentImageIndex,
       currentImage,
@@ -428,6 +437,11 @@ export default {
   background: #f8f9fa;
   padding: 1.5rem;
   border-radius: 8px;
+}
+
+.action-notice {
+  margin: 0.5rem 0 0.75rem;
+  color: #0b63a5;
 }
 
 .quantity-selector {

@@ -11,8 +11,8 @@ class JWTAuthenticationMiddleware(MiddlewareMixin):
     def process_request(self, request):
         print(f"[JWT DEBUG] 请求路径: {request.path}")
 
-        # 不需要认证的路径
-        excluded_paths = [
+        # 永久公开路径
+        public_paths = [
             '/api/auth/login',
             '/api/auth/cert/challenge',
             '/api/auth/cert/login',
@@ -24,15 +24,23 @@ class JWTAuthenticationMiddleware(MiddlewareMixin):
             '/api/docs/',
             '/api/swagger/',
             '/admin/',
-            '/api/products',
-            '/api/categories',
-            '/api/products',
-            '/api/health',
             '/api/v1/api/login',
             '/api/v1/api/register',
         ]
 
-        if any(request.path.startswith(path) for path in excluded_paths):
+        # 仅GET公开路径（写接口必须鉴权）
+        public_get_paths = [
+            '/api/products',
+            '/api/categories',
+            '/api/health',
+        ]
+
+        if any(request.path.startswith(path) for path in public_paths):
+            print(f"[JWT DEBUG] 路径 {request.path} 被排除，跳过认证")
+            request.user = None
+            return None
+
+        if request.method == 'GET' and any(request.path.startswith(path) for path in public_get_paths):
             print(f"[JWT DEBUG] 路径 {request.path} 被排除，跳过认证")
             request.user = None
             return None

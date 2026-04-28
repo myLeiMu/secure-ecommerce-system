@@ -22,8 +22,14 @@
         <span class="icon" aria-hidden="true">🛍️</span>
         <span class="text">商品模块</span>
       </router-link>
-      
-      
+      <router-link to="/cart" class="nav-item">
+        <span class="icon" aria-hidden="true">🛒</span>
+        <span class="text">购物车</span>
+      </router-link>
+      <router-link to="/orders" class="nav-item">
+        <span class="icon" aria-hidden="true">📦</span>
+        <span class="text">我的订单</span>
+      </router-link>
       <router-link to="/profile" class="nav-item">
         <span class="icon" aria-hidden="true">👤</span>
         <span class="text">个人中心</span>
@@ -45,7 +51,8 @@ export default {
     // 检查是否是管理员
     const isAdmin = computed(() => {
       const currentUser = store.getters['auth/currentUser'];
-      return currentUser?.role === 'admin';
+      const role = currentUser?.role || currentUser?.user_role;
+      return role === 'admin' || role === 'ADMIN';
     });
     
     const toggleSidebar = () => {

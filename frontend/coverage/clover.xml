@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<coverage generated="1775532414484" clover="3.2.0">
-  <project timestamp="1775532414484" name="All files">
+<coverage generated="1775701588164" clover="3.2.0">
+  <project timestamp="1775701588165" name="All files">
     <metrics statements="46" coveredstatements="43" conditionals="28" coveredconditionals="20" methods="12" coveredmethods="12" elements="86" coveredelements="75" complexity="0" loc="46" ncloc="46" packages="1" files="2" classes="2"/>
     <file name="security.js" path="D:\Coding\secure-ecommerce-project\frontend\src\utils\security.js">
       <metrics statements="16" coveredstatements="16" conditionals="2" coveredconditionals="2" methods="6" coveredmethods="6"/>

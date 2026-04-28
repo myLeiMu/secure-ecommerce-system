@@ -1,5 +1,5 @@
 from sqlalchemy import Column, BigInteger, String, Boolean, DateTime, Text, Integer, DECIMAL, Enum, JSON, ForeignKey, \
-    Index, CheckConstraint
+    Index, CheckConstraint, UniqueConstraint
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from src.Data_base.database import Base
@@ -42,6 +42,10 @@ class RiskLevel(enum.Enum):
     HIGH = 'high'
 
 
+def _enum_values(enum_cls):
+    return [item.value for item in enum_cls]
+
+
 class Order(Base):
     __tablename__ = 'orders'
 
@@ -53,9 +57,20 @@ class Order(Base):
     shipping_amount = Column(DECIMAL(10, 2), default=0)
     discount_amount = Column(DECIMAL(10, 2), default=0)
     total_amount = Column(DECIMAL(10, 2), nullable=False)
-    order_status = Column(Enum(OrderStatus), default=OrderStatus.PENDING, index=True)
-    payment_status = Column(Enum(PaymentStatus), default=PaymentStatus.PENDING, index=True)
-    fulfillment_status = Column(Enum(FulfillmentStatus), default=FulfillmentStatus.UNFULFILLED)
+    order_status = Column(
+        Enum(OrderStatus, values_callable=_enum_values, validate_strings=True),
+        default=OrderStatus.PENDING,
+        index=True
+    )
+    payment_status = Column(
+        Enum(PaymentStatus, values_callable=_enum_values, validate_strings=True),
+        default=PaymentStatus.PENDING,
+        index=True
+    )
+    fulfillment_status = Column(
+        Enum(FulfillmentStatus, values_callable=_enum_values, validate_strings=True),
+        default=FulfillmentStatus.UNFULFILLED
+    )
     shipping_address_id = Column(BigInteger, ForeignKey('user_addresses.address_id'))
     shipping_method = Column(String(50))
     tracking_number = Column(String(100))
@@ -103,14 +118,18 @@ class Payment(Base):
     transaction_id = Column(String(100), unique=True, index=True)
     order_id = Column(BigInteger, ForeignKey('orders.order_id'), unique=True, nullable=False, index=True)
     amount = Column(DECIMAL(10, 2), nullable=False)
-    payment_method = Column(Enum(PaymentMethod))
+    payment_method = Column(Enum(PaymentMethod, values_callable=_enum_values, validate_strings=True))
     payment_gateway = Column(String(50))
     gateway_transaction_id = Column(String(100))
     payment_token = Column(String(255))
     card_last_four = Column(String(4))
     card_brand = Column(String(20))
-    payment_status = Column(Enum(PaymentStatus), default=PaymentStatus.PENDING, index=True)
-    risk_level = Column(Enum(RiskLevel), default=RiskLevel.LOW)
+    payment_status = Column(
+        Enum(PaymentStatus, values_callable=_enum_values, validate_strings=True),
+        default=PaymentStatus.PENDING,
+        index=True
+    )
+    risk_level = Column(Enum(RiskLevel, values_callable=_enum_values, validate_strings=True), default=RiskLevel.LOW)
     fraud_score = Column(Integer, default=0)
     payment_date = Column(DateTime, index=True)
     refund_date = Column(DateTime)
@@ -123,6 +142,29 @@ class Payment(Base):
 
     def __repr__(self):
         return f"<Payment(payment_id={self.payment_id}, amount={self.amount}, status='{self.payment_status}')>"
+
+
+class CartItem(Base):
+    __tablename__ = 'cart_items'
+
+    cart_item_id = Column(BigInteger, primary_key=True, autoincrement=True)
+    user_id = Column(BigInteger, ForeignKey('users.user_id', ondelete='CASCADE'), nullable=False, index=True)
+    product_id = Column(BigInteger, ForeignKey('products.product_id', ondelete='CASCADE'), nullable=False, index=True)
+    quantity = Column(Integer, nullable=False, default=1)
+    created_at = Column(DateTime, default=func.now())
+    updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
+
+    # 关系
+    user = relationship("User")
+    product = relationship("Product")
+
+    __table_args__ = (
+        UniqueConstraint('user_id', 'product_id', name='uq_cart_user_product'),
+        CheckConstraint('quantity > 0', name='check_cart_quantity_positive'),
+    )
+
+    def __repr__(self):
+        return f"<CartItem(user_id={self.user_id}, product_id={self.product_id}, quantity={self.quantity})>"
 
 
 # 添加检查约束

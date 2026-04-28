@@ -40,20 +40,19 @@ class CacheUtils:
             def wrapper(*args, **kwargs):
                 # 生成缓存键
                 cache_key = CacheUtils.generate_cache_key(key_prefix, *args, **kwargs)
-
-                # 尝试从缓存获取
-                result = cache.get(cache_key)
-
-                if result is None:
-                    # 缓存未命中，执行函数
-                    result = func(*args, **kwargs)
-                    # 存储到缓存
-                    cache.set(cache_key, result, expire)
-                    print(f"[缓存] 缓存未命中，设置缓存: {cache_key}")
-                else:
-                    print(f"[缓存] 缓存命中: {cache_key}")
-
-                return result
+                try:
+                    # 尝试从缓存获取
+                    result = cache.get(cache_key)
+                    if result is None:
+                        result = func(*args, **kwargs)
+                        cache.set(cache_key, result, expire)
+                        print(f"[缓存] 缓存未命中，设置缓存: {cache_key}")
+                    else:
+                        print(f"[缓存] 缓存命中: {cache_key}")
+                    return result
+                except Exception as e:
+                    print(f"[缓存错误] 读取缓存失败，降级直连: {e}")
+                    return func(*args, **kwargs)
 
             return wrapper
 
@@ -74,19 +73,30 @@ class CacheUtils:
             return 0
         except Exception as e:
             print(f"[缓存错误] 清除缓存失败: {e}")
-            return 0
+            # Redis 不可用时回退到本地缓存，无法按 pattern 删除，直接清空避免脏读
+            try:
+                cache.clear()
+                print("[缓存] Redis不可用，已执行本地缓存清空")
+                return 1
+            except Exception as clear_error:
+                print(f"[缓存错误] 本地缓存清空失败: {clear_error}")
+                return 0
 
     @staticmethod
     def get_cached_or_set(key, default_func, expire=300, *args, **kwargs):
         """获取缓存或设置默认值"""
-        result = cache.get(key)
-        if result is None:
-            result = default_func(*args, **kwargs)
-            cache.set(key, result, expire)
-            print(f"[缓存] 设置缓存: {key}")
-        else:
-            print(f"[缓存] 获取缓存: {key}")
-        return result
+        try:
+            result = cache.get(key)
+            if result is None:
+                result = default_func(*args, **kwargs)
+                cache.set(key, result, expire)
+                print(f"[缓存] 设置缓存: {key}")
+            else:
+                print(f"[缓存] 获取缓存: {key}")
+            return result
+        except Exception as e:
+            print(f"[缓存错误] 缓存不可用，降级直连: {e}")
+            return default_func(*args, **kwargs)
 
     @staticmethod
     def delete_key(key):

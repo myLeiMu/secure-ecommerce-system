@@ -11,6 +11,7 @@ import ProductDetail from '../pages/products/ProductDetail.vue';
 import Dashboard from '../pages/dashboard/Dashboard.vue';
 import CartPage from '../pages/orders/Cart.vue';
 import OrderListPage from '../pages/orders/OrderList.vue';
+import PaymentResultPage from '../pages/orders/PaymentResult.vue';
 
 const routes = [
   {
@@ -70,6 +71,12 @@ const routes = [
     path: '/orders',
     name: 'OrderList',
     component: OrderListPage,
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/payment/result',
+    name: 'PaymentResult',
+    component: PaymentResultPage,
     meta: { requiresAuth: true }
   },
   {

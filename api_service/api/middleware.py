@@ -23,6 +23,7 @@ class JWTAuthenticationMiddleware(MiddlewareMixin):
             '/api/users/reset-password',
             '/api/docs/',
             '/api/swagger/',
+            '/api/pay/callback',
             '/admin/',
             '/api/v1/api/login',
             '/api/v1/api/register',
@@ -193,6 +194,7 @@ class RateLimitMiddleware(MiddlewareMixin):
         excluded_paths = [
             '/api/docs/',
             '/api/swagger/',
+            '/api/pay/callback',
             '/api/products',  # 商品列表公开，不限流
         ]
 

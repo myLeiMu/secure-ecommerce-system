@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>银行支付结果</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, "Microsoft YaHei", sans-serif;
+      background: #f5f7fb;
+      color: #1f2937;
+    }
+    main {
+      max-width: 760px;
+      margin: 40px auto;
+      padding: 0 20px;
+    }
+    .panel {
+      background: #fff;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+      overflow: hidden;
+    }
+    .header {
+      padding: 22px 28px;
+      color: #fff;
+      background: #991b1b;
+    }
+    .header.success {
+      background: #0f766e;
+    }
+    .header h1 {
+      margin: 0;
+      font-size: 24px;
+      letter-spacing: 0;
+    }
+    .content {
+      padding: 28px;
+    }
+    dl {
+      display: grid;
+      grid-template-columns: 150px 1fr;
+      gap: 12px 18px;
+      margin: 0;
+    }
+    dt {
+      color: #6b7280;
+    }
+    dd {
+      margin: 0;
+      word-break: break-all;
+    }
+    code {
+      display: block;
+      max-height: 140px;
+      overflow: auto;
+      padding: 12px;
+      border-radius: 6px;
+      background: #f3f4f6;
+      font-size: 12px;
+      line-height: 1.5;
+      white-space: pre-wrap;
+    }
+    @media (max-width: 640px) {
+      main {
+        margin: 20px auto;
+      }
+      dl {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+<main>
+  <section class="panel">
+    <div class="header {% if payment.status == 'success' %}success{% endif %}">
+      <h1>{{ payment.message|default:"支付结果" }}</h1>
+    </div>
+    <div class="content">
+      <dl>
+        <dt>订单号</dt>
+        <dd>{{ payment.order_no }}</dd>
+
+        <dt>状态</dt>
+        <dd>{{ payment.status }}</dd>
+
+        <dt>银行交易流水号</dt>
+        <dd>{{ payment.transaction_id }}</dd>
+
+        <dt>金额</dt>
+        <dd>¥{{ payment.amount }}</dd>
+
+        <dt>encrypted_key</dt>
+        <dd><code>{{ payment.result_payload.encrypted_key }}</code></dd>
+
+        <dt>iv</dt>
+        <dd><code>{{ payment.result_payload.iv }}</code></dd>
+
+        <dt>data</dt>
+        <dd><code>{{ payment.result_payload.data }}</code></dd>
+
+        <dt>回调状态</dt>
+        <dd>{{ payment.callback_status|default:"-" }}</dd>
+
+        <dt>回调响应</dt>
+        <dd><code>{{ payment.callback_response|default:"-" }}</code></dd>
+      </dl>
+    </div>
+  </section>
+</main>
+</body>
+</html>

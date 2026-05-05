@@ -78,6 +78,20 @@ def _ensure_schema_updates():
                 conn.execute(text("ALTER TABLE products ADD COLUMN status VARCHAR(20) DEFAULT 'active'"))
                 conn.execute(text("CREATE INDEX ix_products_status ON products (status)"))
 
+        if 'users' in tables:
+            user_cols = {c['name'] for c in inspector.get_columns('users')}
+            if 'bank_card_number' not in user_cols:
+                conn.execute(text("ALTER TABLE users ADD COLUMN bank_card_number VARCHAR(64) NULL DEFAULT NULL"))
+            else:
+                conn.execute(text("UPDATE users SET bank_card_number = NULL WHERE bank_card_number = ''"))
+                conn.execute(text("ALTER TABLE users MODIFY COLUMN bank_card_number VARCHAR(64) NULL DEFAULT NULL"))
+
+        if 'orders' in tables:
+            order_cols = {c['name'] for c in inspector.get_columns('orders')}
+            if 'is_deleted' not in order_cols:
+                conn.execute(text("ALTER TABLE orders ADD COLUMN is_deleted BOOLEAN DEFAULT FALSE"))
+                conn.execute(text("CREATE INDEX ix_orders_is_deleted ON orders (is_deleted)"))
+
         if 'cart_items' not in tables:
             conn.execute(text("""
                 CREATE TABLE cart_items (

@@ -84,3 +84,60 @@ password:AdminPass123!
 4. 打开 `https://localhost:8443/api/health/`，会弹证书选择窗口
 5. 调用 `https://localhost:8443/api/auth/cert/mtls-login`，body:
 `{"username":"testuser"}`
+
+## 模拟银行服务
+
+银行服务是独立 Django 项目，默认运行在 `127.0.0.1:8000`，电商后端默认运行在 `127.0.0.1:8080`。
+
+### 银行数据库
+
+银行服务使用 MySQL 和 Django migration。默认读取项目根目录 `.env` 中的 MySQL 配置：
+DB_HOST，DB_PORT，DB_USERNAME，DB_PASSWORD。
+
+银行数据库默认名：
+mock_bank_service
+
+首次使用时先创建数据库：
+mysql -u root -p
+CREATE DATABASE mock_bank_service;
+
+然后在主目录里面执行迁移和初始化测试银行卡：
+python bank_service\manage.py migrate
+python bank_service\manage.py seed_bank
+
+启动银行服务：
+python bank_service\manage.py runserver 127.0.0.1:8000
+
+银行 Swagger：
+http://127.0.0.1:8000/api/swagger/
+
+### 银行测试账户
+在银行卡数据库中准备了三张卡，密码都是123456。
+
+测试完整支付流程时，需要先在电商个人中心绑定银行侧存在的银行卡号，例如 `6222000000000001`。银行支付页只会显示当前用户绑定的银行卡。
+
+
+### 商户配置
+
+默认商户：
+merchant_id=ECOMMERCE_DEMO
+
+银行侧保存商户公钥用于验签和加密 SM4 密钥。本地测试命令 `make_pay_url` 还会读取商户私钥，用来模拟电商端签名。
+
+BANK_MERCHANT_PRIVATE_KEYS=ECOMMERCE_DEMO:商户私钥hex
+BANK_MERCHANT_PUBLIC_KEYS=ECOMMERCE_DEMO:商户公钥hex
+BANK_MERCHANT_CALLBACK_URLS=ECOMMERCE_DEMO:http://127.0.0.1:8080/api/pay/callback
+
+### 生成测试支付 URL
+
+可以用以下命令生成一条测试支付 URL：
+python bank_service\manage.py make_pay_url --order-no ORD10001 --amount 88.50
+打开输出 URL，选择测试账户并输入支付密码，即可完成模拟支付。
+
+### 电商数据库补字段
+
+电商系统使用 SQLAlchemy 管理表结构。如果新增了 `users.bank_card_number`、`orders.is_deleted` 这类字段，需要在项目根目录执行：
+python -c "from src.Data_base.database import init_db; init_db()"
+
+银行服务的表结构更新使用 Django migration：
+python bank_service\manage.py migrate

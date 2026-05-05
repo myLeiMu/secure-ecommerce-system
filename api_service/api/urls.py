@@ -4,7 +4,8 @@ from .views import (
     PasswordChangeView, PasswordResetCodeView, PasswordResetView,
     ProductListView, ProductDetailView, HealthCheckView, CacheStatusView,
     CategoryListView, CertChallengeView, CertLoginView, CertFileLoginView, CertMTLSLoginView,
-    CartView, CartItemDetailView, OrderView, OrderDetailView, OrderCancelView
+    CartView, CartItemDetailView, OrderView, OrderDetailView, OrderCancelView,
+    BankCardBindView, OrderDeleteView, OrderBankPayView, BankPaymentSyncResultView, BankPaymentCallbackView
 )
 
 urlpatterns = [
@@ -19,6 +20,7 @@ urlpatterns = [
     # 用户管理
     path('users/register', UserRegistrationView.as_view(), name='user-register'),
     path('users/profile', UserProfileView.as_view(), name='user-profile'),
+    path('users/bank-card', BankCardBindView.as_view(), name='user-bank-card'),
     path('users/change-password', PasswordChangeView.as_view(), name='user-change-password'),
     path('users/send-reset-code', PasswordResetCodeView.as_view(), name='user-send-reset-code'),
     path('users/reset-password', PasswordResetView.as_view(), name='user-reset-password'),
@@ -38,6 +40,10 @@ urlpatterns = [
     path('orders', OrderView.as_view(), name='orders'),
     path('orders/<int:order_id>', OrderDetailView.as_view(), name='order-detail'),
     path('orders/<int:order_id>/cancel', OrderCancelView.as_view(), name='order-cancel'),
+    path('orders/<int:order_id>/delete', OrderDeleteView.as_view(), name='order-delete'),
+    path('orders/<int:order_id>/pay', OrderBankPayView.as_view(), name='order-bank-pay'),
+    path('pay/sync-result', BankPaymentSyncResultView.as_view(), name='bank-pay-sync-result'),
+    path('pay/callback', BankPaymentCallbackView.as_view(), name='bank-pay-callback'),
 
     # 健康检查和缓存状态
     path('health/', HealthCheckView.as_view(), name='health-check'),

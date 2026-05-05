@@ -138,6 +138,24 @@ JWT_CONFIG = {
     'REFRESH_TOKEN_EXPIRE_DAYS': int(os.getenv('JWT_REFRESH_TOKEN_EXPIRE_DAYS', 7)),
     'BLACKLIST_PREFIX': 'jwt_blacklist',
 }
+
+# Mock bank merchant private key. The bank encrypts callback envelopes with the
+# matching merchant public key; ecommerce uses this private key to decrypt them.
+ECOMMERCE_MERCHANT_PRIVATE_KEY = os.getenv(
+    "ECOMMERCE_MERCHANT_PRIVATE_KEY",
+    "a96e3fd619a89a6c239d84435c4c174f35439f8fb1f3d0b773d505c4aa75265c",
+)
+BANK_PAY_BASE_URL = os.getenv("BANK_PAY_BASE_URL", "http://127.0.0.1:8000")
+BANK_REFUND_URL = os.getenv("BANK_REFUND_URL", "http://127.0.0.1:8000/api/refund")
+ECOMMERCE_MERCHANT_ID = os.getenv("ECOMMERCE_MERCHANT_ID", "ECOMMERCE_DEMO")
+ECOMMERCE_PAYMENT_RETURN_URL = os.getenv(
+    "ECOMMERCE_PAYMENT_RETURN_URL",
+    "http://127.0.0.1:3000/payment/result",
+)
+ECOMMERCE_BANK_CALLBACK_URL = os.getenv(
+    "ECOMMERCE_BANK_CALLBACK_URL",
+    "http://127.0.0.1:8080/api/pay/callback",
+)
 # 日志配置
 LOGGING = {
     'version': 1,

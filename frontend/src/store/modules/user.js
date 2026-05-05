@@ -78,6 +78,27 @@ const actions = {
       commit('SET_LOADING', false);
     }
   },
+  async bindBankCard({ commit }, bankCardNumber) {
+    commit('SET_LOADING', true);
+    commit('CLEAR_FEEDBACK');
+    try {
+      const payload = {
+        bank_card_number: SecurityUtils.sanitizeInput(bankCardNumber)
+      };
+      const response = await userAPI.bindBankCard(payload);
+      if (response.code !== 0) {
+        throw new Error(response.message || '绑定银行卡失败');
+      }
+      commit('UPDATE_PROFILE', { bank_card_number: payload.bank_card_number });
+      commit('SET_SUCCESS', '银行卡绑定成功');
+      return { success: true };
+    } catch (error) {
+      commit('SET_ERROR', error.message);
+      return { success: false, error: error.message };
+    } finally {
+      commit('SET_LOADING', false);
+    }
+  },
   clearFeedback({ commit }) {
     commit('CLEAR_FEEDBACK');
   }

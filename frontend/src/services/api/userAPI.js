@@ -5,6 +5,10 @@ export const userAPI = {
     return await apiClient.request('PUT', '/users/profile', profileData);
   },
 
+  async bindBankCard(payload) {
+    return await apiClient.request('POST', '/users/bank-card', payload);
+  },
+
   async changePassword(passwordData) {
     return await apiClient.request('POST', '/users/change-password', passwordData);
   },

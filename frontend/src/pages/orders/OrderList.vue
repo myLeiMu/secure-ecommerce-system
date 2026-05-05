@@ -14,6 +14,7 @@
           <div>
             <div>订单号：{{ order.order_number }}</div>
             <div>状态：{{ order.order_status }}</div>
+            <div>支付状态：{{ paymentStatusText(order.payment_status) }}</div>
           </div>
           <div class="amount">¥{{ money(order.total_amount) }}</div>
         </div>
@@ -24,11 +25,27 @@
         </ul>
         <div class="actions">
           <button
+            v-if="canPay(order)"
+            class="btn btn-primary"
+            @click="goPay(order.order_id)"
+            :disabled="payingId === order.order_id"
+          >
+            {{ payingId === order.order_id ? '跳转中...' : '去支付' }}
+          </button>
+          <button
             class="btn btn-danger"
             @click="cancelOrder(order.order_id)"
             :disabled="order.order_status === 'cancelled' || cancellingId === order.order_id"
           >
             {{ cancellingId === order.order_id ? '取消中...' : '取消订单' }}
+          </button>
+          <button
+            v-if="order.order_status === 'cancelled'"
+            class="btn btn-danger"
+            @click="deleteOrder(order.order_id)"
+            :disabled="deletingId === order.order_id"
+          >
+            {{ deletingId === order.order_id ? '删除中...' : '删除订单' }}
           </button>
         </div>
       </div>
@@ -47,8 +64,21 @@ export default {
     const loading = ref(false);
     const notice = ref('');
     const cancellingId = ref(null);
+    const payingId = ref(null);
+    const deletingId = ref(null);
 
     const money = (value) => Number(value || 0).toFixed(2);
+    const paymentStatusText = (status) => ({
+      pending: '待支付',
+      paid: '已支付',
+      failed: '支付失败',
+      refunded: '已退款'
+    }[status] || status || '未知');
+
+    const canPay = (order) => (
+      order.payment_status !== 'paid'
+      && !['cancelled', 'refunded'].includes(order.order_status)
+    );
 
     const fetchOrders = async () => {
       loading.value = true;
@@ -83,6 +113,39 @@ export default {
       }
     };
 
+    const deleteOrder = async (orderId) => {
+      deletingId.value = orderId;
+      notice.value = '';
+      try {
+        const response = await orderAPI.deleteOrder(orderId);
+        if (response.code !== 0) {
+          throw new Error(response.message || '删除失败');
+        }
+        notice.value = '订单已删除';
+        orders.value = orders.value.filter((order) => order.order_id !== orderId);
+      } catch (err) {
+        notice.value = err.message || '删除失败';
+      } finally {
+        deletingId.value = null;
+      }
+    };
+
+    const goPay = async (orderId) => {
+      payingId.value = orderId;
+      notice.value = '';
+      try {
+        const response = await orderAPI.startBankPay(orderId);
+        if (response.code !== 0) {
+          throw new Error(response.message || '发起支付失败');
+        }
+        window.location.href = response.data.pay_url;
+      } catch (err) {
+        notice.value = err.message || '发起支付失败';
+      } finally {
+        payingId.value = null;
+      }
+    };
+
     onMounted(() => {
       fetchOrders();
     });
@@ -92,8 +155,14 @@ export default {
       loading,
       notice,
       cancellingId,
+      payingId,
+      deletingId,
       money,
-      cancelOrder
+      paymentStatusText,
+      canPay,
+      cancelOrder,
+      deleteOrder,
+      goPay
     };
   }
 };
@@ -155,5 +224,8 @@ export default {
 
 .actions {
   margin-top: 0.75rem;
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
 }
 </style>

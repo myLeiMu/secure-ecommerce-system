@@ -1,5 +1,6 @@
 from rest_framework.views import APIView
 from rest_framework.permissions import AllowAny
+from django.conf import settings
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 from rest_framework.response import Response
@@ -10,21 +11,32 @@ from datetime import datetime, timezone
 from decimal import Decimal
 import time
 import secrets
+import requests
 from typing import Optional
-from urllib.parse import unquote
+from urllib.parse import urlencode, unquote
 import sys
 import os
 from django.http import JsonResponse
 from api_service.utils.jwt_balcklist import jwt_blacklist
 from api_service.utils.cache_utils import ProductCache, UserCache
 from api_service.utils.redis_client import redis_client
+from api_service.api.payment_crypto import open_result_envelope, sign_payment_params
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 from src.unified_service import UnifiedEcommerceService
 from sqlalchemy.orm import joinedload
 from gmssl import sm2
 from src.algorithm.ca_center import parse_certificate_pem, verify_certificate_with_root
 from src.Data_base.models.product import Product
-from src.Data_base.models.order import Order, OrderItem, OrderStatus, CartItem
+from src.Data_base.models.user import User
+from src.Data_base.models.order import (
+    Order,
+    OrderItem,
+    OrderStatus,
+    CartItem,
+    Payment,
+    PaymentStatus,
+    PaymentMethod,
+)
 
 
 # 统一响应格式
@@ -136,10 +148,15 @@ class UserProfileSerializer(serializers.Serializer):
     username = serializers.CharField(read_only=True, help_text="用户名")
     email = serializers.EmailField(read_only=True, help_text="邮箱")
     phone = serializers.CharField(read_only=True, help_text="手机号")
+    bank_card_number = serializers.CharField(read_only=True, help_text="银行卡号")
     user_role = serializers.CharField(read_only=True, help_text="用户角色")
     is_verified = serializers.BooleanField(read_only=True, help_text="是否验证")
     last_login = serializers.DateTimeField(read_only=True, help_text="最后登录时间")
     created_at = serializers.DateTimeField(read_only=True, help_text="创建时间")
+
+
+class BankCardBindSerializer(serializers.Serializer):
+    bank_card_number = serializers.CharField(max_length=64, required=True, help_text="银行卡号")
 
 
 class ProductListQuerySerializer(serializers.Serializer):
@@ -1100,8 +1117,8 @@ class UserProfileView(APIView):
                 else:
                     # 如果是对象，手动转换为字典
                     user_data = {}
-                    for field in ['user_id', 'username', 'email', 'phone', 'user_role', 'is_verified', 'last_login',
-                                  'created_at']:
+                    for field in ['user_id', 'username', 'email', 'phone', 'bank_card_number', 'user_role',
+                                  'is_verified', 'last_login', 'created_at']:
                         if hasattr(user_info, field):
                             value = getattr(user_info, field)
                             # 处理日期时间对象
@@ -1239,6 +1256,44 @@ class UserProfileView(APIView):
                 "data": None,
                 "timestamp": datetime.now().isoformat()
             }, status=500)
+
+
+class BankCardBindView(APIView):
+    @swagger_auto_schema(
+        operation_summary="绑定银行卡",
+        request_body=BankCardBindSerializer,
+        tags=['用户管理'],
+        security=[{'Bearer': []}]
+    )
+    def post(self, request):
+        user_info = _get_user_info(request)
+        if not user_info:
+            return Response(APIResponse.error("用户未认证", 401), status=401)
+
+        serializer = BankCardBindSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(APIResponse.error(serializer.errors, 400), status=400)
+
+        card_no = serializer.validated_data["bank_card_number"].replace(" ", "")
+        if not card_no.isdigit() or not (12 <= len(card_no) <= 32):
+            return Response(APIResponse.error("银行卡号格式不正确", 400), status=400)
+
+        service = UnifiedEcommerceService()
+        db = service.db_session
+        try:
+            user = db.query(User).filter(User.user_id == user_info["user_id"]).first()
+            if not user:
+                return Response(APIResponse.error("用户不存在", 404), status=404)
+            user.bank_card_number = card_no
+            db.commit()
+            UserCache.invalidate_user_caches(user.username)
+            return Response(APIResponse.success({
+                "bank_card_number": card_no,
+                "bank_card_last_four": card_no[-4:],
+            }, "银行卡绑定成功"))
+        except Exception as e:
+            db.rollback()
+            return Response(APIResponse.error(f"绑定银行卡失败: {str(e)}", 500), status=500)
 
 
 # 商品相关视图
@@ -1936,7 +1991,8 @@ class OrderView(APIView):
                 "order_id": order.order_id,
                 "order_number": order.order_number,
                 "total_amount": float(order.total_amount),
-                "order_status": order.order_status.value
+                "order_status": order.order_status.value,
+                "payment_status": order.payment_status.value
             }, "下单成功"))
         except Exception as e:
             db.rollback()
@@ -1957,7 +2013,10 @@ class OrderView(APIView):
         try:
             orders = db.query(Order).options(
                 joinedload(Order.order_items).joinedload(OrderItem.product)
-            ).filter(Order.user_id == user_info["user_id"]).order_by(Order.created_at.desc()).all()
+            ).filter(
+                Order.user_id == user_info["user_id"],
+                Order.is_deleted == False
+            ).order_by(Order.created_at.desc()).all()
             data = []
             for order in orders:
                 data.append({
@@ -1965,6 +2024,7 @@ class OrderView(APIView):
                     "order_number": order.order_number,
                     "total_amount": float(order.total_amount),
                     "order_status": order.order_status.value,
+                    "payment_status": order.payment_status.value,
                     "created_at": order.created_at,
                     "items": [
                         {
@@ -1998,7 +2058,7 @@ class OrderDetailView(APIView):
         try:
             order = db.query(Order).options(
                 joinedload(Order.order_items).joinedload(OrderItem.product)
-            ).filter(Order.order_id == order_id).first()
+            ).filter(Order.order_id == order_id, Order.is_deleted == False).first()
             if not order:
                 return Response(APIResponse.error("订单不存在", 404), status=404)
 
@@ -2010,6 +2070,7 @@ class OrderDetailView(APIView):
                 "order_number": order.order_number,
                 "total_amount": float(order.total_amount),
                 "order_status": order.order_status.value,
+                "payment_status": order.payment_status.value,
                 "created_at": order.created_at,
                 "items": [
                     {
@@ -2056,6 +2117,33 @@ class OrderCancelView(APIView):
             if order.order_status == OrderStatus.CANCELLED:
                 return Response(APIResponse.success(message="订单已取消"))
 
+            refund_data = None
+            if order.payment_status == PaymentStatus.PAID:
+                payment = db.query(Payment).filter(Payment.order_id == order.order_id).first()
+                if not payment or not payment.gateway_transaction_id:
+                    return Response(APIResponse.error("已支付订单缺少银行交易流水，无法退款", 400), status=400)
+                try:
+                    response = requests.post(
+                        settings.BANK_REFUND_URL,
+                        json={
+                            "transaction_id": payment.gateway_transaction_id,
+                            "order_no": order.order_number,
+                            "amount": str(order.total_amount),
+                        },
+                        timeout=5,
+                    )
+                    refund_body = response.json()
+                except requests.RequestException as exc:
+                    return Response(APIResponse.error(f"银行退款请求失败: {str(exc)}", 502), status=502)
+                except ValueError:
+                    return Response(APIResponse.error("银行退款响应格式不正确", 502), status=502)
+                if response.status_code >= 400 or refund_body.get("code") != 0:
+                    return Response(APIResponse.error(f"银行退款失败: {refund_body.get('message', response.text)}", 400), status=400)
+                payment.payment_status = PaymentStatus.REFUNDED
+                payment.refund_date = datetime.now()
+                order.payment_status = PaymentStatus.REFUNDED
+                refund_data = refund_body.get("data")
+
             order.order_status = OrderStatus.CANCELLED
             order.cancelled_date = datetime.now()
             for item in order.order_items:
@@ -2065,10 +2153,233 @@ class OrderCancelView(APIView):
             db.commit()
             for pid in affected_product_ids:
                 ProductCache.invalidate_product_caches(pid)
-            return Response(APIResponse.success(message="取消成功"))
+            return Response(APIResponse.success({"refund": refund_data}, "取消成功"))
         except Exception as e:
             db.rollback()
             return Response(APIResponse.error(f"取消失败: {str(e)}", 500), status=500)
+
+
+class OrderDeleteView(APIView):
+    @swagger_auto_schema(
+        operation_summary="删除已取消订单",
+        operation_description="仅隐藏当前用户自己的已取消订单，保留数据库中的订单和支付流水记录。",
+        tags=['订单'],
+        security=[{'Bearer': []}]
+    )
+    def delete(self, request, order_id):
+        user_info = _get_user_info(request)
+        if not user_info:
+            return Response(APIResponse.error("用户未认证", 401), status=401)
+
+        service = UnifiedEcommerceService()
+        db = service.db_session
+        try:
+            order = db.query(Order).filter(
+                Order.order_id == order_id,
+                Order.user_id == user_info["user_id"],
+                Order.is_deleted == False
+            ).first()
+            if not order:
+                exists = db.query(Order.order_id).filter(Order.order_id == order_id).first()
+                if exists:
+                    return Response(APIResponse.error("无权限删除该订单", 403), status=403)
+                return Response(APIResponse.error("订单不存在", 404), status=404)
+            if order.order_status != OrderStatus.CANCELLED:
+                return Response(APIResponse.error("只有已取消订单可以删除", 400), status=400)
+
+            order.is_deleted = True
+            db.commit()
+            return Response(APIResponse.success(message="删除成功"))
+        except Exception as e:
+            db.rollback()
+            return Response(APIResponse.error(f"删除失败: {str(e)}", 500), status=500)
+
+
+class OrderBankPayView(APIView):
+    @swagger_auto_schema(
+        operation_summary="发起银行支付",
+        operation_description="为当前用户的待支付订单生成银行支付页面跳转 URL。",
+        tags=['支付'],
+        security=[{'Bearer': []}]
+    )
+    def post(self, request, order_id):
+        user_info = _get_user_info(request)
+        if not user_info:
+            return Response(APIResponse.error("用户未认证", 401), status=401)
+
+        service = UnifiedEcommerceService()
+        db = service.db_session
+        try:
+            user = db.query(User).filter(User.user_id == user_info["user_id"]).first()
+            if not user:
+                return Response(APIResponse.error("用户不存在", 404), status=404)
+            if not (user.bank_card_number or "").strip():
+                return Response(APIResponse.error("请先在个人中心绑定银行卡", 400), status=400)
+
+            order = db.query(Order).filter(
+                Order.order_id == order_id,
+                Order.user_id == user_info["user_id"]
+            ).first()
+            if not order:
+                exists = db.query(Order.order_id).filter(Order.order_id == order_id).first()
+                if exists:
+                    return Response(APIResponse.error("无权限支付该订单", 403), status=403)
+                return Response(APIResponse.error("订单不存在", 404), status=404)
+            if order.order_status in [OrderStatus.CANCELLED, OrderStatus.REFUNDED]:
+                return Response(APIResponse.error("该订单不可支付", 400), status=400)
+            if order.payment_status == PaymentStatus.PAID:
+                return Response(APIResponse.error("订单已支付", 400), status=400)
+
+            amount = f"{Decimal(str(order.total_amount)):.2f}"
+            params = {
+                "order_no": order.order_number,
+                "amount": amount,
+                "merchant_id": settings.ECOMMERCE_MERCHANT_ID,
+                "timestamp": str(int(time.time())),
+                "return_url": settings.ECOMMERCE_PAYMENT_RETURN_URL,
+                "callback_url": settings.ECOMMERCE_BANK_CALLBACK_URL,
+                "account_number": user.bank_card_number,
+            }
+            params["signature"] = sign_payment_params(params, settings.ECOMMERCE_MERCHANT_PRIVATE_KEY)
+            pay_url = f"{settings.BANK_PAY_BASE_URL.rstrip('/')}/pay?{urlencode(params)}"
+            return Response(APIResponse.success({
+                "pay_url": pay_url,
+                "order_no": order.order_number,
+                "amount": amount,
+            }))
+        except Exception as e:
+            return Response(APIResponse.error(f"发起支付失败: {str(e)}", 500), status=500)
+
+
+class BankPaymentSyncResultView(APIView):
+    @swagger_auto_schema(
+        operation_summary="解析银行同步支付结果",
+        operation_description="前端同步跳转回电商结果页后，将 encrypted_key、iv、data 提交到后端解密展示。",
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            required=["encrypted_key", "iv", "data"],
+            properties={
+                "transaction_id": openapi.Schema(type=openapi.TYPE_STRING, description="银行交易流水号，可选"),
+                "encrypted_key": openapi.Schema(type=openapi.TYPE_STRING, description="SM2 加密后的 SM4 密钥"),
+                "iv": openapi.Schema(type=openapi.TYPE_STRING, description="SM4-CBC IV"),
+                "data": openapi.Schema(type=openapi.TYPE_STRING, description="SM4 加密后的支付结果正文"),
+            },
+        ),
+        tags=["支付"],
+        security=[{'Bearer': []}]
+    )
+    def post(self, request):
+        encrypted_key = request.data.get("encrypted_key")
+        iv = request.data.get("iv")
+        data = request.data.get("data")
+        if not encrypted_key or not iv or not data:
+            return Response(APIResponse.error("缺少 encrypted_key、iv 或 data", 400), status=400)
+
+        try:
+            result = open_result_envelope(encrypted_key, iv, data, settings.ECOMMERCE_MERCHANT_PRIVATE_KEY)
+        except Exception as exc:
+            return Response(APIResponse.error(f"支付结果解密失败: {str(exc)}", 400), status=400)
+
+        return Response(APIResponse.success({
+            "order_no": result.get("order_no"),
+            "status": result.get("status"),
+            "reason": result.get("reason", ""),
+            "bank_transaction_id": result.get("bank_transaction_id") or request.data.get("transaction_id"),
+            "timestamp": result.get("timestamp"),
+        }))
+
+
+@method_decorator(csrf_exempt, name='dispatch')
+class BankPaymentCallbackView(APIView):
+    permission_classes = [AllowAny]
+
+    @swagger_auto_schema(
+        operation_summary="银行支付异步回调",
+        operation_description="接收银行发送的 encrypted_key、iv、data，使用电商 SM2 私钥解密后幂等更新订单支付状态。",
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            required=["encrypted_key", "iv", "data"],
+            properties={
+                "transaction_id": openapi.Schema(type=openapi.TYPE_STRING, description="银行交易流水号，可选"),
+                "encrypted_key": openapi.Schema(type=openapi.TYPE_STRING, description="SM2 加密后的 SM4 密钥"),
+                "iv": openapi.Schema(type=openapi.TYPE_STRING, description="SM4-CBC IV"),
+                "data": openapi.Schema(type=openapi.TYPE_STRING, description="SM4 加密后的支付结果正文"),
+            },
+        ),
+        tags=["支付"],
+    )
+    def post(self, request):
+        encrypted_key = request.data.get("encrypted_key")
+        iv = request.data.get("iv")
+        data = request.data.get("data")
+        if not encrypted_key or not iv or not data:
+            return Response(APIResponse.error("缺少 encrypted_key、iv 或 data", 400), status=400)
+
+        merchant_private_key = settings.ECOMMERCE_MERCHANT_PRIVATE_KEY
+
+        try:
+            result = open_result_envelope(encrypted_key, iv, data, merchant_private_key)
+        except Exception as exc:
+            return Response(APIResponse.error(f"支付结果解密失败: {str(exc)}", 400), status=400)
+
+        order_no = result.get("order_no")
+        pay_status = result.get("status")
+        bank_transaction_id = result.get("bank_transaction_id") or request.data.get("transaction_id")
+        if not order_no or not pay_status or not bank_transaction_id:
+            return Response(APIResponse.error("支付结果正文缺少必要字段", 400, result), status=400)
+
+        service = UnifiedEcommerceService()
+        db = service.db_session
+        try:
+            order = db.query(Order).filter(Order.order_number == order_no).first()
+            if not order:
+                return Response(APIResponse.error("订单不存在", 404, result), status=404)
+
+            existing_payment = db.query(Payment).filter(Payment.order_id == order.order_id).first()
+            target_status = PaymentStatus.PAID if pay_status == "success" else PaymentStatus.FAILED
+            if (
+                existing_payment
+                and existing_payment.gateway_transaction_id == bank_transaction_id
+                and existing_payment.payment_status == target_status
+            ):
+                return Response(APIResponse.success({
+                    "order_no": order_no,
+                    "payment_status": existing_payment.payment_status.value,
+                    "idempotent": True,
+                }, "回调已处理"))
+
+            if not existing_payment:
+                existing_payment = Payment(
+                    transaction_id=f"PAY{int(time.time() * 1000)}{secrets.randbelow(1000):03d}",
+                    order_id=order.order_id,
+                    amount=order.total_amount,
+                    payment_method=PaymentMethod.BANK_TRANSFER,
+                    payment_gateway="mock_bank",
+                )
+                db.add(existing_payment)
+
+            now = datetime.now()
+            existing_payment.gateway_transaction_id = bank_transaction_id
+            existing_payment.payment_status = target_status
+            if target_status == PaymentStatus.PAID:
+                existing_payment.payment_date = existing_payment.payment_date or now
+                existing_payment.captured_date = existing_payment.captured_date or now
+
+            order.payment_status = target_status
+            if target_status == PaymentStatus.PAID and order.order_status == OrderStatus.PENDING:
+                order.order_status = OrderStatus.CONFIRMED
+
+            db.commit()
+            return Response(APIResponse.success({
+                "order_no": order_no,
+                "order_status": order.order_status.value,
+                "payment_status": order.payment_status.value,
+                "bank_transaction_id": bank_transaction_id,
+                "idempotent": False,
+            }, "回调处理成功"))
+        except Exception as e:
+            db.rollback()
+            return Response(APIResponse.error(f"回调处理失败: {str(e)}", 500), status=500)
 
 
 class HealthCheckView(APIView):

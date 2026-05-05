@@ -79,6 +79,7 @@ class Order(Base):
     shipped_date = Column(DateTime)
     delivered_date = Column(DateTime)
     cancelled_date = Column(DateTime)
+    is_deleted = Column(Boolean, default=False, index=True)
     created_at = Column(DateTime, default=func.now())
     updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
 

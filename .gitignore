@@ -12,6 +12,7 @@ pip-delete-this-directory.txt
 *.iws" > .gitignore
 .env
 *.log
+*.sqlite3
 node_modules/
 keys/
 rsa_key_secure.json

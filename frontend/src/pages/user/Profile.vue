@@ -35,6 +35,10 @@
             <span>{{ currentUser.phone || '未设置' }}</span>
           </div>
           <div class="info-row">
+            <label>银行卡</label>
+            <span>{{ maskBankCard(currentUser.bank_card_number) }}</span>
+          </div>
+          <div class="info-row">
             <label>状态</label>
             <span :class="['tag', currentUser.is_verified ? 'success' : 'warning']">
               {{ currentUser.is_verified ? '已验证' : '未验证' }}
@@ -156,6 +160,36 @@
         </form>
       </section>
 
+      <section class="profile-card form-card">
+        <h2>银行卡绑定</h2>
+        <form @submit.prevent="handleBankCardBind" class="profile-form">
+          <div class="form-group">
+            <label for="bank-card-number">银行卡号</label>
+            <input
+              id="bank-card-number"
+              v-model="bankCardForm.bankCardNumber"
+              type="text"
+              inputmode="numeric"
+              autocomplete="off"
+              :class="['form-control', { error: bankCardError }]"
+              placeholder="请输入银行卡号"
+            />
+            <p v-if="bankCardError" class="form-error">{{ bankCardError }}</p>
+          </div>
+
+          <div class="form-feedback">
+            <p v-if="bankCardFeedback" :class="['status-text', bankCardFeedbackType]">
+              {{ bankCardFeedback }}
+            </p>
+          </div>
+
+          <button class="btn primary" type="submit" :disabled="userLoading">
+            <LoadingSpinner v-if="userLoading" small />
+            绑定银行卡
+          </button>
+        </form>
+      </section>
+
       <section class="profile-card security-card">
         <h2>最近安全事件</h2>
         <ul class="security-list">
@@ -206,6 +240,12 @@ export default {
     const passwordErrors = reactive({});
     const passwordFeedback = ref('');
     const passwordFeedbackType = ref('success');
+    const bankCardForm = reactive({
+      bankCardNumber: ''
+    });
+    const bankCardError = ref('');
+    const bankCardFeedback = ref('');
+    const bankCardFeedbackType = ref('success');
 
     const currentUser = computed(() => store.getters['auth/currentUser']);
     const userLoading = computed(() => store.getters['user/userLoading']);
@@ -223,6 +263,14 @@ export default {
       profileForm.username = profile.username || '';
       profileForm.email = profile.email || '';
       profileForm.phone = profile.phone || '';
+      bankCardForm.bankCardNumber = profile.bank_card_number || '';
+    };
+
+    const maskBankCard = (value) => {
+      if (!value) return '未绑定';
+      const card = String(value);
+      if (card.length <= 8) return card;
+      return `${card.slice(0, 4)} **** **** ${card.slice(-4)}`;
     };
 
     watch(currentUser, (value) => {
@@ -291,6 +339,23 @@ export default {
       }
     };
 
+    const handleBankCardBind = async () => {
+      const cardNo = bankCardForm.bankCardNumber.replace(/\s/g, '');
+      bankCardError.value = '';
+      bankCardFeedback.value = '';
+      if (!/^\d{12,32}$/.test(cardNo)) {
+        bankCardError.value = '银行卡号需为 12-32 位数字';
+        return;
+      }
+
+      const result = await store.dispatch('user/bindBankCard', cardNo);
+      bankCardFeedbackType.value = result.success ? 'success' : 'error';
+      bankCardFeedback.value = result.success ? '银行卡绑定成功' : result.error;
+      if (result.success) {
+        await fetchUserProfile();
+      }
+    };
+
     const fetchUserProfile = async () => {
       loading.value = true;
       try {
@@ -318,6 +383,10 @@ export default {
       passwordErrors,
       passwordFeedback,
       passwordFeedbackType,
+      bankCardForm,
+      bankCardError,
+      bankCardFeedback,
+      bankCardFeedbackType,
       securityLogs,
       userLoading,
       userError,
@@ -325,7 +394,9 @@ export default {
       fetchUserProfile,
       handleProfileUpdate,
       handlePasswordChange,
+      handleBankCardBind,
       handleLogout,
+      maskBankCard,
       formatDate: (date) => {
         if (!date) return '未知';
         return new Date(date).toLocaleString('zh-CN');

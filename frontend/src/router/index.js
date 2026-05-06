@@ -76,8 +76,7 @@ const routes = [
   {
     path: '/payment/result',
     name: 'PaymentResult',
-    component: PaymentResultPage,
-    meta: { requiresAuth: true }
+    component: PaymentResultPage
   },
   {
     path: '/:pathMatch(.*)*',

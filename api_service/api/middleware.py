@@ -24,6 +24,7 @@ class JWTAuthenticationMiddleware(MiddlewareMixin):
             '/api/docs/',
             '/api/swagger/',
             '/api/pay/callback',
+            '/api/pay/sync-result',
             '/admin/',
             '/api/v1/api/login',
             '/api/v1/api/register',
@@ -195,6 +196,7 @@ class RateLimitMiddleware(MiddlewareMixin):
             '/api/docs/',
             '/api/swagger/',
             '/api/pay/callback',
+            '/api/pay/sync-result',
             '/api/products',  # 商品列表公开，不限流
         ]
 

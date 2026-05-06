@@ -89,6 +89,14 @@ password:AdminPass123!
 
 银行服务是独立 Django 项目，默认运行在 `127.0.0.1:8000`，电商后端默认运行在 `127.0.0.1:8080`。
 
+前端登录和银行支付回跳必须使用同一个浏览器来源。默认回跳到：
+
+```text
+http://localhost:3000/payment/result
+```
+
+所以测试时建议始终从 `http://localhost:3000` 进入前端，不要一会儿用 `localhost`、一会儿用 `127.0.0.1`，否则浏览器 localStorage 中的登录 token 不共享，支付成功后点“查看我的订单”会被当成未登录并跳到登录页。
+
 ### 银行数据库
 
 银行服务使用 MySQL 和 Django migration。默认读取项目根目录 `.env` 中的 MySQL 配置：

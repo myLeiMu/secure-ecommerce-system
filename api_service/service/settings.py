@@ -150,7 +150,7 @@ BANK_REFUND_URL = os.getenv("BANK_REFUND_URL", "http://127.0.0.1:8000/api/refund
 ECOMMERCE_MERCHANT_ID = os.getenv("ECOMMERCE_MERCHANT_ID", "ECOMMERCE_DEMO")
 ECOMMERCE_PAYMENT_RETURN_URL = os.getenv(
     "ECOMMERCE_PAYMENT_RETURN_URL",
-    "http://127.0.0.1:3000/payment/result",
+    "http://localhost:3000/payment/result",
 )
 ECOMMERCE_BANK_CALLBACK_URL = os.getenv(
     "ECOMMERCE_BANK_CALLBACK_URL",

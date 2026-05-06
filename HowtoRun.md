@@ -116,6 +116,10 @@ python bank_service\manage.py seed_bank
 启动银行服务：
 python bank_service\manage.py runserver 127.0.0.1:8000
 
+这里如果端口被占用可以直接在.env中配置，添加新项如：
+BANK_PAY_BASE_URL=http://127.0.0.1:8001
+BANK_REFUND_URL=http://127.0.0.1:8001/api/refund
+然后将所有的请求都指向这个端口
 银行 Swagger：
 http://127.0.0.1:8000/api/swagger/
 

@@ -15,6 +15,7 @@
             <div>订单号：{{ order.order_number }}</div>
             <div>状态：{{ order.order_status }}</div>
             <div>支付状态：{{ paymentStatusText(order.payment_status) }}</div>
+            <div>下单时间：{{ formatTime(order.created_at) }}</div>
           </div>
           <div class="amount">¥{{ money(order.total_amount) }}</div>
         </div>
@@ -68,6 +69,12 @@ export default {
     const deletingId = ref(null);
 
     const money = (value) => Number(value || 0).toFixed(2);
+    const formatTime = (value) => {
+      if (!value) return '-';
+      const date = new Date(value);
+      if (Number.isNaN(date.getTime())) return String(value);
+      return date.toLocaleString('zh-CN', { hour12: false });
+    };
     const paymentStatusText = (status) => ({
       pending: '待支付',
       paid: '已支付',
@@ -158,6 +165,7 @@ export default {
       payingId,
       deletingId,
       money,
+      formatTime,
       paymentStatusText,
       canPay,
       cancelOrder,

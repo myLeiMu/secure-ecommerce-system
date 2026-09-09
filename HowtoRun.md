@@ -68,7 +68,7 @@ password:AdminPass123!
 
 我们这里是用的mysql，这里我们是使用的root用户，需要自行在.env中更改你自己的root账户密码，不然连接不上数据库
 
-## mTLS证书弹窗演示（最简）
+## mTLS证书弹窗演示
 
 先在项目根目录执行：
 `python -m api_service.tests.prepare_mtls_popup_demo`

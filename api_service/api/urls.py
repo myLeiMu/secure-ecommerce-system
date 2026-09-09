@@ -1,4 +1,6 @@
 from django.urls import path
+from .admin_views import (MFAVerifyView, MFARebindView, OverviewView, UsersView, ProductsView,
+                         CategoriesView, OrdersView, AuditView, PermissionsView)
 from .views import (
     UserRegistrationView, UserLoginView, UserLogoutView, UserProfileView,
     PasswordChangeView, PasswordResetCodeView, PasswordResetView,
@@ -9,6 +11,23 @@ from .views import (
 )
 
 urlpatterns = [
+    path('auth/mfa/verify', MFAVerifyView.as_view()),
+    path('auth/mfa/rebind', MFARebindView.as_view()),
+    path('admin/overview', OverviewView.as_view()),
+    path('admin/users', UsersView.as_view()),
+    path('admin/users/<int:user_id>', UsersView.as_view()),
+    path('admin/products', ProductsView.as_view()),
+    path('admin/products/<int:product_id>', ProductsView.as_view()),
+    path('admin/categories', CategoriesView.as_view()),
+    path('admin/categories/<int:category_id>', CategoriesView.as_view()),
+    path('admin/orders', OrdersView.as_view()),
+    path('admin/orders/<int:order_id>/ship', OrdersView.as_view()),
+    path('admin/permissions', PermissionsView.as_view()),
+    path('merchant/products', ProductsView.as_view()),
+    path('merchant/products/<int:product_id>', ProductsView.as_view()),
+    path('audit/events', AuditView.as_view()),
+    path('audit/export', AuditView.as_view()),
+    path('audit/permissions', PermissionsView.as_view()),
     # 用户认证
     path('auth/login', UserLoginView.as_view(), name='user-login'),
     path('auth/cert/challenge', CertChallengeView.as_view(), name='cert-challenge'),

@@ -103,6 +103,7 @@ const actions = {
       if (response.code !== 0) {
         throw new Error(response.message || '登录失败');
       }
+      if (response.data?.mfa_required) return { success: false, mfa: response.data };
       commit('SET_AUTH_DATA', {
         user: response.data.user,
         token: response.data.token
@@ -124,6 +125,7 @@ const actions = {
       if (response.code !== 0) {
         throw new Error(response.message || '证书登录失败');
       }
+      if (response.data?.mfa_required) return { success: false, mfa: response.data };
       commit('SET_AUTH_DATA', {
         user: response.data.user,
         token: response.data.token
@@ -145,6 +147,7 @@ const actions = {
       if (response.code !== 0) {
         throw new Error(response.message || '证书登录失败');
       }
+      if (response.data?.mfa_required) return { success: false, mfa: response.data };
       commit('SET_AUTH_DATA', {
         user: response.data.user,
         token: response.data.token

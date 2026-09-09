@@ -526,8 +526,12 @@ class CertMTLSLoginView(APIView):
                 "timestamp": datetime.now().isoformat()
             }, status=400)
 
+        proxy_secret = os.environ.get('MTLS_PROXY_SECRET', '')
+        provided_secret = request.META.get('HTTP_X_MTLS_PROXY_SECRET', '')
+        if not proxy_secret or not secrets.compare_digest(proxy_secret, provided_secret):
+            return Response(APIResponse.error('证书登录必须经过受信任的 mTLS 网关', 403), status=403)
         verify_header = request.META.get("HTTP_X_SSL_CLIENT_VERIFY", "")
-        if verify_header and verify_header.upper() != "SUCCESS":
+        if verify_header.upper() != "SUCCESS":
             return Response({
                 "code": 401,
                 "message": "客户端证书握手未通过",
@@ -570,7 +574,7 @@ class CertMTLSLoginView(APIView):
             input_username = serializer.validated_data.get("username")
             login_username = input_username or cert_cn
 
-            if input_username and cert_cn and input_username != cert_cn:
+            if not cert_cn or (input_username and input_username != cert_cn):
                 return Response({
                     "code": 401,
                     "message": "证书主体与用户名不一致",
@@ -1091,11 +1095,9 @@ class UserProfileView(APIView):
         security=[{'Bearer': []}]
     )
     def get(self, request):
-        print(f"[Profile DEBUG] request.user_info: {getattr(request, 'user_info', 'NOT SET')}")
 
         # 检查用户认证状态
         if not hasattr(request, 'user_info') or not request.user_info:
-            print("[Profile DEBUG] 用户未认证")
             return JsonResponse({
                 "code": 401,
                 "message": "用户未认证",
@@ -1108,7 +1110,6 @@ class UserProfileView(APIView):
             username = request.user_info['username']
             user_info = UserCache.get_user_profile(username)
 
-            print(f"[Profile DEBUG] 获取的用户信息: {user_info}")
 
             if user_info:
                 # 直接构建响应数据
@@ -1143,8 +1144,6 @@ class UserProfileView(APIView):
 
         except Exception as e:
             import traceback
-            print(f"[Profile DEBUG] 获取用户信息错误: {str(e)}")
-            print(f"[Profile DEBUG] 异常详情: {traceback.format_exc()}")
 
             return JsonResponse({
                 "code": 500,

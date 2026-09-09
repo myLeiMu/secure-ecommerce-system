@@ -260,6 +260,8 @@ class UserSystem:
         ).first()
 
         if user:
+            if user.user_role.lower() in ('admin', 'auditor'):
+                return False, '特权账号不能通过演示短信验证码重置密码，请登录后在个人中心修改密码'
             pwd_hash, salt = self.hash_password(new_password)
             user.pass_word = pwd_hash
             user.salt = salt

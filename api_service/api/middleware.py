@@ -8,112 +8,102 @@ from src.unified_service import UnifiedEcommerceService
 from api_service.utils.jwt_balcklist import jwt_blacklist
 
 class JWTAuthenticationMiddleware(MiddlewareMixin):
+    PUBLIC = {'/api/auth/login', '/api/auth/cert/challenge', '/api/auth/cert/login',
+              '/api/auth/cert/mtls-login', '/api/auth/mfa/verify',
+              '/api/users/register', '/api/users/send-reset-code', '/api/users/reset-password',
+              '/api/pay/callback', '/api/pay/sync-result', '/api/health'}
+
     def process_request(self, request):
-        print(f"[JWT DEBUG] 请求路径: {request.path}")
-
-        # 永久公开路径
-        public_paths = [
-            '/api/auth/login',
-            '/api/auth/cert/challenge',
-            '/api/auth/cert/login',
-            '/api/auth/cert/file-login',
-            '/api/auth/cert/mtls-login',
-            '/api/users/register',
-            '/api/users/send-reset-code',
-            '/api/users/reset-password',
-            '/api/docs/',
-            '/api/swagger/',
-            '/api/pay/callback',
-            '/api/pay/sync-result',
-            '/admin/',
-            '/api/v1/api/login',
-            '/api/v1/api/register',
-        ]
-
-        # 仅GET公开路径（写接口必须鉴权）
-        public_get_paths = [
-            '/api/products',
-            '/api/categories',
-            '/api/health',
-        ]
-
-        if any(request.path.startswith(path) for path in public_paths):
-            print(f"[JWT DEBUG] 路径 {request.path} 被排除，跳过认证")
-            request.user = None
+        from src.Data_base.database import SessionLocal
+        from src.Data_base.models.user import User
+        from .security_core import jwt, state_for, audit
+        path = request.path.rstrip('/')
+        if not path.startswith('/api/') or request.method == 'OPTIONS':
             return None
-
-        if request.method == 'GET' and any(request.path.startswith(path) for path in public_get_paths):
-            print(f"[JWT DEBUG] 路径 {request.path} 被排除，跳过认证")
-            request.user = None
+        if path == '/api/auth/cert/file-login':
+            return JsonResponse({'code': 403, 'message': '证书文件不能证明私钥持有，请使用密码或浏览器双向证书登录', 'data': None}, status=403)
+        if path in self.PUBLIC or path.startswith('/api/docs') or path.startswith('/api/swagger'):
             return None
+        if request.method == 'GET' and (path in ('/api/products', '/api/categories') or re.fullmatch(r'/api/products/\d+', path)):
+            return None
+        token = request.META.get('HTTP_AUTHORIZATION', '')
+        payload = None
+        if token.startswith('Bearer ') and not jwt_blacklist.is_blacklisted(token[7:]):
+            try:
+                payload = jwt().verify_token(token[7:])
+            except (ValueError, TypeError, KeyError):
+                pass
+        with SessionLocal.begin() as db:
+            user = db.get(User, payload.get('user_id')) if payload else None
+            if not user or not user.is_active:
+                audit(db, request, 'auth.denied', result='denied')
+                return JsonResponse({'code': 401, 'message': '请重新登录', 'data': None}, status=401)
+            state = state_for(db, user.user_id)
+            role = user.user_role.lower()
+            request.user_info = {'user_id': user.user_id, 'username': user.username, 'role': role}
+            if payload.get('security_version', 0) != state.version or (role in ('admin', 'auditor') and (not payload.get('mfa') or not state.enabled)):
+                audit(db, request, 'auth.session.revoked', result='denied')
+                return JsonResponse({'code': 401, 'message': '会话已失效或尚未完成双因素验证，请重新登录', 'data': None}, status=401)
+            allowed = role in ('normal', 'merchant', 'admin', 'auditor')
+            if path.startswith('/api/admin/'):
+                allowed = role == 'admin'
+            elif path.startswith('/api/audit/'):
+                allowed = role in ('admin', 'auditor') and request.method == 'GET'
+            elif path.startswith('/api/merchant/'):
+                allowed = role in ('admin', 'normal', 'merchant')
+            elif path.startswith('/api/products') and request.method != 'GET':
+                allowed = role in ('admin', 'normal', 'merchant')
+            elif path.startswith('/api/categories') and request.method != 'GET':
+                allowed = role == 'admin'
+            elif path.startswith('/api/cache/'):
+                allowed = role == 'admin'
+            elif role == 'auditor' and not (path == '/api/users/profile' and request.method == 'GET' or path in ('/api/auth/logout', '/api/auth/mfa/rebind', '/api/users/change-password')):
+                allowed = False
+            if not allowed:
+                audit(db, request, 'rbac.denied', result='denied')
+                return JsonResponse({'code': 403, 'message': '当前角色无权执行此操作', 'data': None}, status=403)
+        return None
 
-        # 从Header获取token
-        auth_header = request.META.get('HTTP_AUTHORIZATION', '')
-        print(f"[JWT DEBUG] Authorization Header: {auth_header}")
-
-        if not auth_header.startswith('Bearer '):
-            print("[JWT DEBUG] 未提供Bearer token")
-            return JsonResponse({
-                "code": 401,
-                "message": "未提供认证令牌",
-                "data": None,
-                "timestamp": time.strftime('%Y-%m-%dT%H:%M:%S')
-            }, status=401)
-
-        token = auth_header[7:]
-        print(f"[JWT DEBUG] 提取的token: {token[:20]}...")
-
-        # 检查令牌是否在黑名单中
-        if jwt_blacklist.is_blacklisted(token):
-            print("[JWT DEBUG] 令牌已在黑名单中")
-            return JsonResponse({
-                "code": 401,
-                "message": "令牌已失效",
-                "data": None,
-                "timestamp": time.strftime('%Y-%m-%dT%H:%M:%S')
-            }, status=401)
-
-        try:
-            service = UnifiedEcommerceService()
-            payload = service.verify_token(token)
-            print(f"[JWT DEBUG] Token验证结果: {payload}")
-
-            if payload:
-                # 创建一个简单的用户对象，避免 AnonymousUser 问题
-                from django.contrib.auth.models import AnonymousUser
-                request.user = AnonymousUser()
-                # 同时将用户信息存储在自定义属性中
-                request.user_info = {
-                    'user_id': payload.get('user_id'),
-                    'username': payload.get('username'),
-                    'role': payload.get('role', 'normal')
-                }
-                print(f"[JWT DEBUG] 用户认证成功: {request.user_info}")
-                return None  # 认证成功，继续处理
-            else:
-                print("[JWT DEBUG] Token无效或验证失败")
-                return JsonResponse({
-                    "code": 401,
-                    "message": "令牌无效或已过期",
-                    "data": None,
-                    "timestamp": time.strftime('%Y-%m-%dT%H:%M:%S')
-                }, status=401)
-
-        except Exception as e:
-            print(f"[JWT DEBUG] 认证异常: {str(e)}")
-            import traceback
-            print(f"[JWT DEBUG] 异常详情: {traceback.format_exc()}")
-            return JsonResponse({
-                "code": 401,
-                "message": f"认证失败: {str(e)}",
-                "data": None,
-                "timestamp": time.strftime('%Y-%m-%dT%H:%M:%S')
-            }, status=401)
+    def process_response(self, request, response):
+        from src.Data_base.database import SessionLocal
+        from src.Data_base.models.user import User
+        from .security_core import begin_login, audit
+        path = request.path.rstrip('/')
+        login_paths = {'/api/auth/login', '/api/auth/cert/login', '/api/auth/cert/mtls-login'}
+        if path in login_paths and hasattr(response, 'data'):
+            data = response.data.get('data') or {}
+            if response.status_code == 200 and data.get('token'):
+                with SessionLocal.begin() as db:
+                    user = db.get(User, data.get('user', {}).get('user_id'))
+                    try:
+                        response.data['data'] = begin_login(db, user, request)
+                        response.data['message'] = '请完成双因素验证' if response.data['data'].get('mfa_required') else '登录成功'
+                    except ValueError as exc:
+                        response.status_code = 403
+                        response.data = {'code': 403, 'message': str(exc), 'data': None}
+                response.content = response.rendered_content
+            elif response.status_code >= 400:
+                with SessionLocal.begin() as db:
+                    audit(db, request, 'auth.login.failed', result='denied')
+        if path.startswith('/api/') and getattr(request, 'user_info', None):
+            if path in ('/api/auth/logout', '/api/users/change-password') and response.status_code == 200:
+                from .security_core import state_for
+                with SessionLocal.begin() as db:
+                    state_for(db, request.user_info['user_id']).version += 1
+            if request.method != 'GET' or response.status_code == 403:
+                with SessionLocal.begin() as db:
+                    audit(db, request, request.method.lower() + ' ' + path,
+                          result='success' if response.status_code < 400 else 'denied')
+        if path.startswith('/api/') and response.status_code >= 500:
+            return JsonResponse({'code': 500, 'message': '服务暂时不可用，请稍后重试', 'data': None}, status=response.status_code)
+        return response
 
 
 class SecurityMiddleware(MiddlewareMixin):
     def process_request(self, request):
         skip_paths = [
+            '/api/auth/login',
+            '/api/auth/mfa/',
             '/api/auth/cert/challenge',
             '/api/auth/cert/login',
             '/api/auth/cert/file-login',

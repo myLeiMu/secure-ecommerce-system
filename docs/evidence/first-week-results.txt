@@ -1,0 +1,167 @@
+test_auditor_mfa_failure_limit_persists_across_requests (api_service.tests.test_course_security.CourseSecurityTests.test_auditor_mfa_failure_limit_persists_across_requests) ... D:\Anaconda\envs\WAF\Lib\site-packages\drf_yasg\views.py:100: DeprecationWarning: SwaggerJSONRenderer & SwaggerYAMLRenderer's `format` has changed to not include a `.` prefix, please silence this warning by setting `SWAGGER_USE_COMPAT_RENDERERS = False` in your Django settings and ensure your application works (check your URLCONF and swagger/redoc URLs).
+  warnings.warn(
+D:\Anaconda\envs\WAF\Lib\site-packages\sqlalchemy\sql\schema.py:3624: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+  return util.wrap_callable(lambda ctx: fn(), fn)  # type: ignore
+Bad Request: /api/auth/mfa/verify
+Bad Request: /api/auth/mfa/verify
+Bad Request: /api/auth/mfa/verify
+Bad Request: /api/auth/mfa/verify
+Bad Request: /api/auth/mfa/verify
+Too Many Requests: /api/auth/mfa/verify
+Forbidden: /api/auth/login
+ok
+test_demo_sms_code_cannot_reset_privileged_password (api_service.tests.test_course_security.CourseSecurityTests.test_demo_sms_code_cannot_reset_privileged_password) ... Bad Request: /api/users/reset-password
+ok
+test_login_requires_mfa_and_enrollment_returns_one_time_codes (api_service.tests.test_course_security.CourseSecurityTests.test_login_requires_mfa_and_enrollment_returns_one_time_codes) ... Bad Request: /api/auth/mfa/verify
+ok
+test_logout_invalidates_token_without_redis (api_service.tests.test_course_security.CourseSecurityTests.test_logout_invalidates_token_without_redis) ... Unauthorized: /api/users/profile
+ok
+test_management_validation_shipping_and_audit_export (api_service.tests.test_course_security.CourseSecurityTests.test_management_validation_shipping_and_audit_export) ... Bad Request: /api/admin/products/1
+Bad Request: /api/admin/users/3
+D:\Coding\secure-ecommerce-project\api_service\api\admin_views.py:321: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+  order.shipped_date = datetime.utcnow()
+Conflict: /api/admin/orders/1/ship
+ok
+test_merchant_ownership_and_normal_product_creation_denied (api_service.tests.test_course_security.CourseSecurityTests.test_merchant_ownership_and_normal_product_creation_denied) ... Forbidden: /api/products
+Forbidden: /api/merchant/products/1
+ok
+test_orders_are_scoped_to_the_owner (api_service.tests.test_course_security.CourseSecurityTests.test_orders_are_scoped_to_the_owner) ... Forbidden: /api/orders/1
+ok
+test_public_certificate_file_is_not_authentication (api_service.tests.test_course_security.CourseSecurityTests.test_public_certificate_file_is_not_authentication) ... Forbidden: /api/auth/cert/file-login
+ok
+test_rebind_requires_old_factor_and_revokes_old_session (api_service.tests.test_course_security.CourseSecurityTests.test_rebind_requires_old_factor_and_revokes_old_session) ... Unauthorized: /api/admin/users
+ok
+test_role_guards_auditor_scope_and_stale_session (api_service.tests.test_course_security.CourseSecurityTests.test_role_guards_auditor_scope_and_stale_session) ... Forbidden: /api/admin/users
+Forbidden: /api/admin/users
+Forbidden: /api/admin/users
+Unauthorized: /api/admin/users
+Forbidden: /api/orders
+Unauthorized: /api/merchant/products
+ok
+test_spoofed_mtls_headers_are_rejected (api_service.tests.test_course_security.CourseSecurityTests.test_spoofed_mtls_headers_are_rejected) ... Forbidden: /api/auth/cert/mtls-login
+ok
+test_totp_rfc6238_replay_skew_lock_and_recovery (api_service.tests.test_course_security.CourseSecurityTests.test_totp_rfc6238_replay_skew_lock_and_recovery) ... ok
+
+----------------------------------------------------------------------
+Ran 12 tests in 5.108s
+
+OK
+
+Redis连接失败: Error 10061 connecting to 127.0.0.1:1. 由于目标计算机积极拒绝，无法连接。.，将使用内存缓存
+JWT密钥初始化完成，长度: 62
+[+] 已生成SM2密钥对。
+[+] 公钥已保存到 public_key.json。
+[+] 已自动生成随机密码
+[+] 密码已保存到 keys\auto_password.txt
+[+] 已安全保存加密的私钥到 keys\sm2_key_secure.json
+[+] 私钥已加密保存为 sm2_key_secure.json。
+统一电商服务初始化完成！
+JWT密钥初始化完成，长度: 62
+[+] 已生成SM2密钥对。
+[+] 公钥已保存到 public_key.json。
+[+] 已自动生成随机密码
+[+] 密码已保存到 keys\auto_password.txt
+[+] 已安全保存加密的私钥到 keys\sm2_key_secure.json
+[+] 私钥已加密保存为 sm2_key_secure.json。
+统一电商服务初始化完成！
+JWT密钥初始化完成，长度: 62
+[+] 已生成SM2密钥对。
+[+] 公钥已保存到 public_key.json。
+[+] 已自动生成随机密码
+[+] 密码已保存到 keys\auto_password.txt
+[+] 已安全保存加密的私钥到 keys\sm2_key_secure.json
+[+] 私钥已加密保存为 sm2_key_secure.json。
+统一电商服务初始化完成！
+[DEV] 开发环境验证码通过: 13800000003
+JWT密钥初始化完成，长度: 62
+[+] 已生成SM2密钥对。
+[+] 公钥已保存到 public_key.json。
+[+] 已自动生成随机密码
+[+] 密码已保存到 keys\auto_password.txt
+[+] 已安全保存加密的私钥到 keys\sm2_key_secure.json
+[+] 私钥已加密保存为 sm2_key_secure.json。
+统一电商服务初始化完成！
+JWT密钥初始化完成，长度: 62
+[+] 已生成SM2密钥对。
+[+] 公钥已保存到 public_key.json。
+[+] 已自动生成随机密码
+[+] 密码已保存到 keys\auto_password.txt
+[+] 已安全保存加密的私钥到 keys\sm2_key_secure.json
+[+] 私钥已加密保存为 sm2_key_secure.json。
+统一电商服务初始化完成！
+JWT密钥初始化完成，长度: 62
+JWT密钥初始化完成，长度: 62
+JWT密钥初始化完成，长度: 62
+[JWT黑名单] 令牌已加入黑名单，过期时间: 60分钟
+JWT密钥初始化完成，长度: 62
+[+] 已生成SM2密钥对。
+[+] 公钥已保存到 public_key.json。
+[+] 已自动生成随机密码
+[+] 密码已保存到 keys\auto_password.txt
+[+] 已安全保存加密的私钥到 keys\sm2_key_secure.json
+[+] 私钥已加密保存为 sm2_key_secure.json。
+统一电商服务初始化完成！
+用户登出: user1
+[LOGOUT] 用户登出，令牌已加入Redis黑名单
+JWT密钥初始化完成，长度: 62
+JWT密钥初始化完成，长度: 62
+JWT密钥初始化完成，长度: 62
+JWT密钥初始化完成，长度: 62
+JWT密钥初始化完成，长度: 62
+JWT密钥初始化完成，长度: 62
+JWT密钥初始化完成，长度: 62
+JWT密钥初始化完成，长度: 62
+JWT密钥初始化完成，长度: 62
+JWT密钥初始化完成，长度: 62
+JWT密钥初始化完成，长度: 62
+JWT密钥初始化完成，长度: 62
+JWT密钥初始化完成，长度: 62
+JWT密钥初始化完成，长度: 62
+JWT密钥初始化完成，长度: 62
+JWT密钥初始化完成，长度: 62
+[缓存错误] 清除缓存失败: This backend does not support this feature
+[缓存] Redis不可用，已执行本地缓存清空
+[缓存错误] 清除缓存失败: This backend does not support this feature
+[缓存] Redis不可用，已执行本地缓存清空
+[商品缓存] 已清除 2 个缓存
+JWT密钥初始化完成，长度: 62
+JWT密钥初始化完成，长度: 62
+JWT密钥初始化完成，长度: 62
+[+] 已生成SM2密钥对。
+[+] 公钥已保存到 public_key.json。
+[+] 已自动生成随机密码
+[+] 密码已保存到 keys\auto_password.txt
+[+] 已安全保存加密的私钥到 keys\sm2_key_secure.json
+[+] 私钥已加密保存为 sm2_key_secure.json。
+统一电商服务初始化完成！
+JWT密钥初始化完成，长度: 62
+JWT密钥初始化完成，长度: 62
+JWT密钥初始化完成，长度: 62
+[+] 已生成SM2密钥对。
+[+] 公钥已保存到 public_key.json。
+[+] 已自动生成随机密码
+[+] 密码已保存到 keys\auto_password.txt
+[+] 已安全保存加密的私钥到 keys\sm2_key_secure.json
+[+] 私钥已加密保存为 sm2_key_secure.json。
+统一电商服务初始化完成！
+JWT密钥初始化完成，长度: 62
+JWT密钥初始化完成，长度: 62
+JWT密钥初始化完成，长度: 62
+JWT密钥初始化完成，长度: 62
+JWT密钥初始化完成，长度: 62
+JWT密钥初始化完成，长度: 62
+JWT密钥初始化完成，长度: 62
+JWT密钥初始化完成，长度: 62
+JWT密钥初始化完成，长度: 62
+JWT密钥初始化完成，长度: 62
+JWT密钥初始化完成，长度: 62
+JWT密钥初始化完成，长度: 62
+JWT密钥初始化完成，长度: 62
+JWT密钥初始化完成，长度: 62
+JWT密钥初始化完成，长度: 62
+JWT密钥初始化完成，长度: 62
+JWT密钥初始化完成，长度: 62
+JWT密钥初始化完成，长度: 62
+JWT密钥初始化完成，长度: 62
+[用户缓存] 已清除 0 个缓存
+JWT密钥初始化完成，长度: 62

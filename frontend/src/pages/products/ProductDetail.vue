@@ -23,7 +23,7 @@
         <!-- 商品图片 -->
         <div class="product-gallery">
           <div class="main-image">
-            <img 
+            <img referrerpolicy="no-referrer" 
               :src="currentImage" 
               :alt="product.product_name"
               @error="handleImageError"
@@ -36,7 +36,7 @@
               :class="['thumbnail', { active: currentImageIndex === index }]"
               @click="currentImageIndex = index"
             >
-              <img :src="image" :alt="`${product.product_name} ${index + 1}`" />
+              <img referrerpolicy="no-referrer" :src="image" :alt="`${product.product_name} ${index + 1}`" />
             </div>
           </div>
         </div>

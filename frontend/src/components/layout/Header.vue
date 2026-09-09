@@ -6,13 +6,13 @@
           <h1>电商系统</h1>
         </router-link>
         <nav class="main-nav" aria-label="主导航">
-          <!-- 只有管理员能看到控制台链接 -->
+          <!-- 有工作台权限的角色共用唯一的控制台入口 -->
           <router-link 
-            v-if="isAdmin"
-            to="/" 
+            v-if="canAccessDashboard"
+            to="/dashboard"
             class="nav-link"
           >
-            控制台
+            {{ ['normal', 'merchant'].includes(String(currentUser?.role || currentUser?.user_role).toLowerCase()) ? '我的发布' : '控制台' }}
           </router-link>
           <router-link to="/products" class="nav-link">商品</router-link>
           <router-link v-if="isAuthenticated" to="/cart" class="nav-link">购物车</router-link>
@@ -81,9 +81,9 @@ export default {
     const isAuthenticated = computed(() => store.getters['auth/isAuthenticated']);
     const currentUser = computed(() => store.getters['auth/currentUser']);
 
-    const isAdmin = computed(() => {
+    const canAccessDashboard = computed(() => {
       const role = currentUser.value?.role || currentUser.value?.user_role;
-      return role === 'admin' || role === 'ADMIN';
+      return ['admin', 'auditor', 'normal', 'merchant'].includes(String(role).toLowerCase());
     });
 
     const getInitials = (username) => {
@@ -130,7 +130,7 @@ export default {
       showUserMenu,
       isAuthenticated,
       currentUser,
-      isAdmin,
+      canAccessDashboard,
       getInitials,
       handleSearch,
       toggleUserMenu,
@@ -372,6 +372,9 @@ export default {
   }
 
   .main-nav {
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 0.75rem;
     justify-content: center;
   }
 
@@ -387,6 +390,11 @@ export default {
 
   .search-box input {
     width: 100%;
+    min-width: 0;
+  }
+
+  .search-btn {
+    white-space: nowrap;
   }
 }
 </style>

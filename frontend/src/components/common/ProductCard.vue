@@ -1,7 +1,7 @@
 <template>
   <div class="product-card">
     <div class="product-image">
-      <img 
+      <img referrerpolicy="no-referrer" 
         :src="product.image_urls && product.image_urls[0] ? product.image_urls[0] : '/placeholder-image.jpg'" 
         :alt="product.product_name"
         @error="handleImageError"

@@ -32,6 +32,8 @@ class JWTUtils:
             'user_id': user_data['user_id'],
             'username': user_data['username'],
             'role': user_data.get('role', 'normal'),
+            'mfa': bool(user_data.get('mfa', False)),
+            'security_version': user_data.get('security_version', 0),
             'iat': int(now.timestamp()),  # 使用整数时间戳
             'exp': int(expires.timestamp()),
             'iss': 'ecommerce-system',

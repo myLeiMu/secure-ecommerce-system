@@ -8,7 +8,7 @@ import ForgotPassword from '../pages/auth/ForgotPassword.vue';
 import Profile from '../pages/user/Profile.vue';
 import ProductList from '../pages/products/ProductList.vue';
 import ProductDetail from '../pages/products/ProductDetail.vue';
-import Dashboard from '../pages/dashboard/Dashboard.vue';
+const Dashboard = () => import('../pages/dashboard/Dashboard.vue');
 import CartPage from '../pages/orders/Cart.vue';
 import OrderListPage from '../pages/orders/OrderList.vue';
 import PaymentResultPage from '../pages/orders/PaymentResult.vue';
@@ -24,7 +24,7 @@ const routes = [
     component: Dashboard,
     meta: {
       requiresAuth: true,
-      requiresAdmin: true
+      roles: ['admin', 'auditor', 'normal', 'merchant']
     }
   },
   {
@@ -91,8 +91,8 @@ const router = createRouter({
 
 // 路由守卫 - 添加管理员权限检查
 router.beforeEach(async (to, from, next) => {
-  const isAuthenticated = store.getters['auth/isAuthenticated'];
-  const currentUser = store.getters['auth/currentUser'];
+  let isAuthenticated = store.getters['auth/isAuthenticated'];
+  let currentUser = store.getters['auth/currentUser'];
 
   // 刷新后如果有token但还未拉取用户信息，则自动同步一次
   if (isAuthenticated && !currentUser) {
@@ -101,6 +101,13 @@ router.beforeEach(async (to, from, next) => {
     } catch (error) {
       await store.dispatch('auth/logout');
     }
+  }
+
+  isAuthenticated = store.getters['auth/isAuthenticated'];
+  currentUser = store.getters['auth/currentUser'];
+  const requiredRoles = to.meta.roles;
+  if (requiredRoles && isAuthenticated && !requiredRoles.includes(String(currentUser?.role || currentUser?.user_role || '').toLowerCase())) {
+    return next('/products');
   }
 
   // 检查是否需要管理员权限

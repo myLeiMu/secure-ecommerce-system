@@ -56,7 +56,7 @@ async function submit() {
     }
   } catch (e) { error.value = e.message; } finally { loading.value = false; }
 }
-async function certLogin() { error.value = ''; loading.value = true; try { accept(await store.dispatch('auth/certMtlsLogin', username.value)); } catch (e) { error.value = e.message; } finally { loading.value = false; } }
+async function certLogin() { if (window.location.protocol === 'http:' && ['localhost', '127.0.0.1'].includes(window.location.hostname)) { window.location.assign('https://localhost:8443/login'); return; } error.value = ''; loading.value = true; try { accept(await store.dispatch('auth/certMtlsLogin', username.value)); } catch (e) { error.value = e.message; } finally { loading.value = false; } }
 async function copySecret() { try { await navigator.clipboard.writeText(mfa.value.secret); notice.value = '已复制，请粘贴到身份验证器中'; } catch { error.value = '无法访问剪贴板，请手动复制密钥'; } }
 function downloadCodes() { const url = URL.createObjectURL(new Blob([recoveryCodes.value.join('\n')], { type: 'text/plain' })); const a = document.createElement('a'); a.href = url; a.download = 'recovery-codes.txt'; a.click(); setTimeout(() => URL.revokeObjectURL(url), 1000); }
 </script>

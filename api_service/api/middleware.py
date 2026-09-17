@@ -11,12 +11,12 @@ class JWTAuthenticationMiddleware(MiddlewareMixin):
     PUBLIC = {'/api/auth/login', '/api/auth/cert/challenge', '/api/auth/cert/login',
               '/api/auth/cert/mtls-login', '/api/auth/mfa/verify',
               '/api/users/register', '/api/users/send-reset-code', '/api/users/reset-password',
-              '/api/pay/callback', '/api/pay/sync-result', '/api/health'}
+              '/api/pay/callback', '/api/pay/sync-result', '/api/health', '/api/tunnel/key'}
 
     def process_request(self, request):
         from src.Data_base.database import SessionLocal
         from src.Data_base.models.user import User
-        from .security_core import jwt, state_for, audit
+        from .security_core import jwt, state_for, audit, has_permission
         path = request.path.rstrip('/')
         if not path.startswith('/api/') or request.method == 'OPTIONS':
             return None
@@ -48,13 +48,14 @@ class JWTAuthenticationMiddleware(MiddlewareMixin):
             if path.startswith('/api/admin/'):
                 allowed = role == 'admin'
             elif path.startswith('/api/audit/'):
-                allowed = role in ('admin', 'auditor') and request.method == 'GET'
+                permission = 'audit.export' if path == '/api/audit/export' else 'audit.read'
+                allowed = has_permission(role, permission) and request.method == 'GET'
             elif path.startswith('/api/merchant/'):
-                allowed = role in ('admin', 'normal', 'merchant')
+                allowed = has_permission(role, 'products.own') or has_permission(role, 'products.manage')
             elif path.startswith('/api/products') and request.method != 'GET':
-                allowed = role in ('admin', 'normal', 'merchant')
+                allowed = has_permission(role, 'products.own') or has_permission(role, 'products.manage')
             elif path.startswith('/api/categories') and request.method != 'GET':
-                allowed = role == 'admin'
+                allowed = has_permission(role, 'categories.manage')
             elif path.startswith('/api/cache/'):
                 allowed = role == 'admin'
             elif role == 'auditor' and not (path == '/api/users/profile' and request.method == 'GET' or path in ('/api/auth/logout', '/api/auth/mfa/rebind', '/api/users/change-password')):

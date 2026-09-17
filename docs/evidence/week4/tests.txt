@@ -1,0 +1,24 @@
+test_authorization_route_binding_and_three_roles (api_service.tests.test_tunnel.TunnelTests.test_authorization_route_binding_and_three_roles) ... ok
+test_bank_card_only_mutates_after_valid_tunnel (api_service.tests.test_tunnel.TunnelTests.test_bank_card_only_mutates_after_valid_tunnel) ... ok
+test_browser_interop_and_replay_audit (api_service.tests.test_tunnel.TunnelTests.test_browser_interop_and_replay_audit) ... ok
+test_expiry_future_plaintext_and_size (api_service.tests.test_tunnel.TunnelTests.test_expiry_future_plaintext_and_size) ... ok
+test_missing_key_fails_closed (api_service.tests.test_tunnel.TunnelTests.test_missing_key_fails_closed) ... ok
+test_rfc8998_vector_and_tag_integrity (api_service.tests.test_tunnel.TunnelTests.test_rfc8998_vector_and_tag_integrity) ... ok
+test_tamper_ciphertext_tag_c3_point_and_metadata (api_service.tests.test_tunnel.TunnelTests.test_tamper_ciphertext_tag_c3_point_and_metadata) ... ok
+test_auditor_mfa_failure_limit_persists_across_requests (api_service.tests.test_course_security.CourseSecurityTests.test_auditor_mfa_failure_limit_persists_across_requests) ... ok
+test_demo_sms_code_cannot_reset_privileged_password (api_service.tests.test_course_security.CourseSecurityTests.test_demo_sms_code_cannot_reset_privileged_password) ... ok
+test_login_requires_mfa_and_enrollment_returns_one_time_codes (api_service.tests.test_course_security.CourseSecurityTests.test_login_requires_mfa_and_enrollment_returns_one_time_codes) ... ok
+test_logout_invalidates_token_without_redis (api_service.tests.test_course_security.CourseSecurityTests.test_logout_invalidates_token_without_redis) ... ok
+test_management_validation_shipping_and_audit_export (api_service.tests.test_course_security.CourseSecurityTests.test_management_validation_shipping_and_audit_export) ... ok
+test_orders_are_scoped_to_the_owner (api_service.tests.test_course_security.CourseSecurityTests.test_orders_are_scoped_to_the_owner) ... ok
+test_public_certificate_file_is_not_authentication (api_service.tests.test_course_security.CourseSecurityTests.test_public_certificate_file_is_not_authentication) ... ok
+test_rebind_requires_old_factor_and_revokes_old_session (api_service.tests.test_course_security.CourseSecurityTests.test_rebind_requires_old_factor_and_revokes_old_session) ... ok
+test_role_guards_auditor_scope_and_stale_session (api_service.tests.test_course_security.CourseSecurityTests.test_role_guards_auditor_scope_and_stale_session) ... ok
+test_spoofed_mtls_headers_are_rejected (api_service.tests.test_course_security.CourseSecurityTests.test_spoofed_mtls_headers_are_rejected) ... ok
+test_totp_rfc6238_replay_skew_lock_and_recovery (api_service.tests.test_course_security.CourseSecurityTests.test_totp_rfc6238_replay_skew_lock_and_recovery) ... ok
+test_trading_user_can_publish_only_manage_own_products (api_service.tests.test_course_security.CourseSecurityTests.test_trading_user_can_publish_only_manage_own_products) ... ok
+
+----------------------------------------------------------------------
+Ran 19 tests in 7.929s
+
+OK

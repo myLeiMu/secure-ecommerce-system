@@ -16,7 +16,7 @@ from src.Data_base.models.order import Order, OrderStatus, PaymentStatus
 from src.Data_base.models.security import LoginChallenge, AuditEvent
 from api_service.utils.cache_utils import ProductCache, UserCache
 from .security_core import (ROLES, PERMISSIONS, state_for, digest, verify_factor, cipher,
-                            login_data, audit)
+                            login_data, audit, has_permission, factor_is_replay)
 
 
 def ok(data=None, message='操作成功'):
@@ -52,12 +52,15 @@ def page(query, request, serialize):
 
 class ProtectedView(APIView):
     roles = ('admin',)
+    required_permission = None
 
     def initial(self, request, *args, **kwargs):
         super().initial(request, *args, **kwargs)
         from rest_framework.exceptions import PermissionDenied
         if getattr(request, 'user_info', {}).get('role') not in self.roles:
             raise PermissionDenied('当前角色无权执行此操作')
+        if self.required_permission and not has_permission(request.user_info['role'], self.required_permission):
+            raise PermissionDenied('当前角色缺少所需权限')
 
 
 class MFAVerifyView(APIView):
@@ -76,17 +79,24 @@ class MFAVerifyView(APIView):
             pending = db.query(LoginChallenge).filter_by(challenge_hash=digest(challenge)).populate_existing().with_for_update().first()
             if not pending:
                 return fail('验证会话已使用，请重新登录', 400)
+            info = {'user_id': user.user_id, 'username': user.username, 'role': user.user_role.lower()} if user else {}
+            if pending.version == -1:
+                audit(db, request, 'MFA_REPLAY', result='denied', user=info)
+                return fail('验证会话已使用，请重新登录', 400)
             if not user or not user.is_active or state.version != pending.version:
                 return fail('验证会话失效，请重新登录', 400)
             info = {'user_id': user.user_id, 'username': user.username, 'role': user.user_role.lower()}
             if state.locked_until > int(time.time()):
+                audit(db, request, 'MFA_FAILED', result='denied', user=info)
                 return fail('验证失败次数过多，请15分钟后重试', 429)
+            replay = not pending.pending_secret and factor_is_replay(state, code)
             previous_step = state.last_step
             if pending.pending_secret:
                 state.last_step = -1
             if not verify_factor(state, code, pending.pending_secret):
                 state.last_step = previous_step
                 audit(db, request, 'auth.mfa.failed', result='denied', user=info)
+                audit(db, request, 'MFA_REPLAY' if replay else 'MFA_FAILED', result='denied', user=info)
                 return fail('验证码无效、已使用或超出时间窗口', 400)
             recovery_codes = None
             if pending.pending_secret:
@@ -95,8 +105,11 @@ class MFAVerifyView(APIView):
                 recovery_codes = [secrets.token_hex(10) for _ in range(8)]
                 state.recovery_hashes = json.dumps([digest(c) for c in recovery_codes])
                 audit(db, request, 'auth.mfa.enroll', user=info)
-            db.delete(pending)
+            # Retain only a consumed marker until expiry to audit a repeated submission.
+            pending.version = -1
+            pending.pending_secret = None
             audit(db, request, 'auth.mfa.verify', user=info)
+            audit(db, request, 'MFA_SUCCESS', user=info)
             data = login_data(user, state, mfa=True)
             if recovery_codes:
                 data['recovery_codes'] = recovery_codes
@@ -325,6 +338,7 @@ class OrdersView(ProtectedView):
 
 class AuditView(ProtectedView):
     roles = ('admin', 'auditor')
+    required_permission = 'audit.read'
 
     def get(self, request):
         with SessionLocal.begin() as db:

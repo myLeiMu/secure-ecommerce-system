@@ -42,6 +42,10 @@ class CourseSecurityTests(unittest.TestCase):
             mock = patch('src.unified_service.UnifiedEcommerceService.' + method)
             mock.start()
             self.addCleanup(mock.stop)
+        # Auth/catalog tests never need to generate or overwrite application key files.
+        key_mock = patch('src.unified_service.SM2Service.generate_keys')
+        key_mock.start()
+        self.addCleanup(key_mock.stop)
         from src.registration import UserSystem
         password_hash, salt = UserSystem(None).hash_password('TestPass123!')
         with SessionLocal.begin() as db:

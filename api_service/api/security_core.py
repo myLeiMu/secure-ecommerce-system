@@ -27,6 +27,21 @@ def cipher():
     return Fernet(key.encode())
 
 
+def has_permission(role, permission):
+    """Shared role-to-permission check; ownership remains a resource-level check."""
+    return permission in PERMISSIONS.get(str(role).lower(), ())
+
+
+def factor_is_replay(state, code):
+    """Recognize an already consumed TOTP inside the accepted clock window."""
+    if not state.secret or not isinstance(code, str) or len(code) != 6 or not code.isascii() or not code.isdigit():
+        return False
+    secret = cipher().decrypt(state.secret.encode()).decode()
+    step = int(time.time()) // 30
+    return any(candidate <= state.last_step and hmac.compare_digest(totp(secret, candidate), code)
+               for candidate in (step - 1, step, step + 1))
+
+
 def jwt():
     key = os.environ.get('JWT_SECRET_KEY')
     if not key or len(key) < 32:

@@ -1,0 +1,47 @@
+[
+  {
+    "case": "No certificate cannot fake nginx verification",
+    "status": 401,
+    "expected": 401,
+    "token_returned": false,
+    "mfa_required": false
+  },
+  {
+    "case": "Buyer certificate login",
+    "status": 200,
+    "expected": 200,
+    "token_returned": true,
+    "mfa_required": false
+  },
+  {
+    "case": "Buyer cannot impersonate admin",
+    "status": 401,
+    "expected": 401,
+    "token_returned": false,
+    "mfa_required": false
+  },
+  {
+    "case": "Buyer forbidden platform admin",
+    "status": 403,
+    "expected": 403
+  },
+  {
+    "case": "Buyer own listings",
+    "status": 200,
+    "expected": 200
+  },
+  {
+    "case": "week1_admin waits for TOTP",
+    "status": 200,
+    "expected": 200,
+    "token_returned": false,
+    "mfa_required": true
+  },
+  {
+    "case": "week1_auditor waits for TOTP",
+    "status": 200,
+    "expected": 200,
+    "token_returned": false,
+    "mfa_required": true
+  }
+]

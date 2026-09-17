@@ -15,6 +15,12 @@ import PaymentResultPage from '../pages/orders/PaymentResult.vue';
 
 const routes = [
   {
+    path: '/tunnel-demo',
+    name: 'TunnelDemo',
+    component: () => import('../pages/security/TunnelDemo.vue'),
+    meta: { requiresAuth: true, roles: ['normal', 'merchant', 'admin'] }
+  },
+  {
     path: '/',
     redirect: '/products'
   },

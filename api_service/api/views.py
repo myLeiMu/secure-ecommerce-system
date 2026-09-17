@@ -569,7 +569,12 @@ class CertMTLSLoginView(APIView):
                     cert_info = parse_certificate_pem(certificate_pem)
                     cert_cn = cert_info.get("subject_common_name", "")
                 except Exception:
-                    cert_cn = _extract_cn_from_dn(request.META.get("HTTP_X_SSL_CLIENT_S_DN", ""))
+                    # Standard browser TLS certificates are RSA/ECDSA X.509, not application SM2 certificates.
+                    from cryptography import x509
+                    from cryptography.x509.oid import NameOID
+                    certificate = x509.load_pem_x509_certificate(certificate_pem.encode('utf-8'))
+                    names = certificate.subject.get_attributes_for_oid(NameOID.COMMON_NAME)
+                    cert_cn = names[0].value if len(names) == 1 else ""
 
             input_username = serializer.validated_data.get("username")
             login_username = input_username or cert_cn

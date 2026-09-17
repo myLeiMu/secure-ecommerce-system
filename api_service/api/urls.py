@@ -1,4 +1,5 @@
 from django.urls import path
+from .tunnel import TunnelKeyView, TunnelDemoView
 from .admin_views import (MFAVerifyView, MFARebindView, OverviewView, UsersView, ProductsView,
                          CategoriesView, OrdersView, AuditView, PermissionsView)
 from .views import (
@@ -11,6 +12,8 @@ from .views import (
 )
 
 urlpatterns = [
+    path('tunnel/key', TunnelKeyView.as_view()),
+    path('tunnel/demo', TunnelDemoView.as_view()),
     path('auth/mfa/verify', MFAVerifyView.as_view()),
     path('auth/mfa/rebind', MFARebindView.as_view()),
     path('admin/overview', OverviewView.as_view()),

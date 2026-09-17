@@ -25,6 +25,12 @@ class LoginChallenge(Base):
     pending_secret = Column(Text)
 
 
+class TunnelNonce(Base):
+    __tablename__ = 'tunnel_nonces'
+    nonce_hash = Column(String(64), primary_key=True)
+    expires_at = Column(BigInteger, nullable=False, index=True)
+
+
 class AuditEvent(Base):
     __tablename__ = 'audit_events'
     event_id = Column(Integer, primary_key=True, autoincrement=True)

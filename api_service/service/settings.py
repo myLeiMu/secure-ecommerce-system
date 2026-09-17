@@ -40,8 +40,9 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'api.middleware.JWTAuthenticationMiddleware',
-    'api.middleware.SecurityMiddleware',
     'api.middleware.RateLimitMiddleware',
+    'api.tunnel.TunnelMiddleware',
+    'api.middleware.SecurityMiddleware',
 ]
 
 ROOT_URLCONF = 'service.urls'

@@ -1,9 +1,17 @@
 import { authAPI } from '../../services/api/authAPI';
 import { apiClient } from '../../services/http';
 
+function safeUser(user) {
+  if (!user) return user;
+  const card = user.bank_card_number;
+  return { ...user, ...(card ? { bank_card_number: `****${String(card).slice(-4)}` } : {}) };
+}
+
 const storedUser = (() => {
   try {
-    return JSON.parse(localStorage.getItem('current_user')) || null;
+    const user = safeUser(JSON.parse(localStorage.getItem('current_user')) || null);
+    if (user) localStorage.setItem('current_user', JSON.stringify(user));
+    return user;
   } catch {
     return null;
   }
@@ -23,18 +31,18 @@ const state = {
 const mutations = {
   SET_AUTH_DATA(state, { user, token }) {
     state.isAuthenticated = true;
-    state.user = user;
+    state.user = safeUser(user);
     if (token) {
       state.token = token;
       localStorage.setItem('access_token', token);
       apiClient.setToken(token);
     }
-    localStorage.setItem('current_user', JSON.stringify(user || null));
+    localStorage.setItem('current_user', JSON.stringify(state.user || null));
   },
   SET_USER_PROFILE(state, user) {
-    state.user = user;
+    state.user = safeUser(user);
     if (user) {
-      localStorage.setItem('current_user', JSON.stringify(user));
+      localStorage.setItem('current_user', JSON.stringify(state.user));
     }
   },
   CLEAR_AUTH_DATA(state) {

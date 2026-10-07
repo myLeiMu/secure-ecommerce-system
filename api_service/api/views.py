@@ -1119,7 +1119,7 @@ class UserProfileView(APIView):
             if user_info:
                 # 直接构建响应数据
                 if isinstance(user_info, dict):
-                    user_data = user_info
+                    user_data = dict(user_info)
                 else:
                     # 如果是对象，手动转换为字典
                     user_data = {}
@@ -1133,6 +1133,10 @@ class UserProfileView(APIView):
                             else:
                                 user_data[field] = value
 
+                # Cached profiles may predate masking; never send a full PAN.
+                card = user_data.get('bank_card_number')
+                if card:
+                    user_data['bank_card_number'] = '****' + str(card)[-4:]
                 return JsonResponse({
                     "code": 0,
                     "message": "success",
@@ -1292,7 +1296,7 @@ class BankCardBindView(APIView):
             db.commit()
             UserCache.invalidate_user_caches(user.username)
             return Response(APIResponse.success({
-                "bank_card_number": card_no,
+                "bank_card_number": '****' + card_no[-4:],
                 "bank_card_last_four": card_no[-4:],
             }, "银行卡绑定成功"))
         except Exception as e:

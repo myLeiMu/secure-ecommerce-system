@@ -112,6 +112,8 @@ class TunnelTests(unittest.TestCase):
             envelope = self.seal(body=body, path=path)
             status, data = self.send(envelope, path=path)
             self.assertEqual(status, 200, data)
+            self.assertEqual(data['data']['bank_card_number'], '****1234')
+            self.assertNotIn(body['bank_card_number'], json.dumps(data))
             self.assertEqual(self.send(envelope, path=path)[0], 409)
         with course.SessionLocal() as db:
             self.assertEqual(db.get(course.User, 1).bank_card_number, body['bank_card_number'])

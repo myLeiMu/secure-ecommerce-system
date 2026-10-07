@@ -15,6 +15,9 @@ pip-delete-this-directory.txt
 *.sqlite3
 node_modules/
 .venv-tunnel/
+.week7-tools/
+docs/reports/DAST.html
+docs/reports/DAST.html
 keys/
 rsa_key_secure.json
 API测试报告.md

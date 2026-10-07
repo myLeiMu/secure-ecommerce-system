@@ -1,0 +1,12 @@
+{
+  "time_utc": "2026-09-24T01:50:55.563531+00:00",
+  "effective_debug": true,
+  "django_secret_key_configured": true,
+  "allowed_hosts": [
+    "localhost",
+    "127.0.0.1",
+    "0.0.0.0",
+    "172.28.224.1"
+  ],
+  "note": "Boolean configuration check; secret values are never included."
+}

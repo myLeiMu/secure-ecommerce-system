@@ -89,7 +89,7 @@ const actions = {
       if (response.code !== 0) {
         throw new Error(response.message || '绑定银行卡失败');
       }
-      commit('UPDATE_PROFILE', { bank_card_number: payload.bank_card_number });
+      commit('UPDATE_PROFILE', { bank_card_number: response.data?.bank_card_number || null });
       commit('SET_SUCCESS', '银行卡绑定成功');
       return { success: true };
     } catch (error) {

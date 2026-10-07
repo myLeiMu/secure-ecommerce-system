@@ -1,0 +1,15 @@
+{
+  "time_utc": "2026-09-24T02:05:52.477216+00:00",
+  "effective_debug": false,
+  "django_secret_key_configured": true,
+  "django_secret_key_strong": true,
+  "session_cookie_secure": true,
+  "csrf_cookie_secure": true,
+  "allowed_hosts": [
+    "localhost",
+    "127.0.0.1",
+    "0.0.0.0",
+    "172.28.224.1"
+  ],
+  "note": "Boolean configuration check; secret values are never included."
+}

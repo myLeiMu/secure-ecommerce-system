@@ -371,7 +371,7 @@ class UserSystem:
                 'username': user.username,
                 'email': user.email,
                 'phone': user.phone,
-                'bank_card_number': getattr(user, 'bank_card_number', None),
+                'bank_card_number': ('****' + user.bank_card_number[-4:]) if getattr(user, 'bank_card_number', None) else None,
                 'user_role': user.user_role,
                 'is_verified': user.is_verified,
                 'last_login': user.last_login,

@@ -71,6 +71,18 @@ class CourseSecurityTests(unittest.TestCase):
         response = self.client.generic(method, path, json.dumps(body or {}), content_type='application/json', **headers)
         return response.status_code, response.json()
 
+    def test_profile_and_login_do_not_return_full_bank_card(self):
+        with SessionLocal.begin() as db:
+            db.get(User, 1).bank_card_number = '6222000000001234'
+        token = self.token(1)
+        response = self.client.get('/api/users/profile', HTTP_AUTHORIZATION='Bearer ' + token)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()['data']['bank_card_number'], '****1234')
+        self.assertNotIn('6222000000001234', response.content.decode())
+        status, login = self.request('/api/auth/login', {'username': 'user1', 'password': 'TestPass123!'})
+        self.assertEqual(status, 200)
+        self.assertNotIn('6222000000001234', json.dumps(login))
+
 
     def test_totp_rfc6238_replay_skew_lock_and_recovery(self):
         secret = 'GEZDGNBVGY3TQOJQGEZDGNBVGY3TQOJQ'

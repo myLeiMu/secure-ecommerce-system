@@ -1,4 +1,5 @@
 import json
+import os
 import requests
 import time
 
@@ -7,9 +8,9 @@ import time
 python api_service/tests/week7_8_acceptance_demo.py
 """
 
-BASE_URL = "http://127.0.0.1:8080/api"
-TOKEN_A = "eyJhbGciOiJIU00zIiwidHlwIjoiSldUIn0.eyJ1c2VyX2lkIjo4OTAzLCJ1c2VybmFtZSI6InRlc3R1c2VyMyIsInJvbGUiOiJub3JtYWwiLCJpYXQiOjE3NzY5MTQwOTAsImV4cCI6MTc3NzAwMDQ5MCwiaXNzIjoiZWNvbW1lcmNlLXN5c3RlbSIsImp0aSI6InFyWEloMjllRGxCYVdKZ01kb2RWRmcifQ.6rhYrX2jSqmpTW2ThmpNv2gD7HtBvBzaclOVXjpxMVY"  # 用户A JWT
-TOKEN_B = "eyJhbGciOiJIU00zIiwidHlwIjoiSldUIn0.eyJ1c2VyX2lkIjo4OTA4LCJ1c2VybmFtZSI6InRlc3R1c2VyNCIsInJvbGUiOiJub3JtYWwiLCJpYXQiOjE3NzY5MTQ4NjUsImV4cCI6MTc3NzAwMTI2NSwiaXNzIjoiZWNvbW1lcmNlLXN5c3RlbSIsImp0aSI6Ikx6UHJ5WE9tT3BteDVTeS11Y1RCY2cifQ.P7DKQuhqYyEBXwEl5Ovl_uG7Q8tC6VwjjtnWNqlJhPE"  # 用户B JWT
+BASE_URL = os.getenv('WEEK7_BASE_URL', 'http://127.0.0.1:8080/api')
+TOKEN_A = os.getenv('WEEK7_TOKEN_A', '')
+TOKEN_B = os.getenv('WEEK7_TOKEN_B', '')
 
 
 def _banner(title: str):

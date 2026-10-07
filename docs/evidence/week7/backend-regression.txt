@@ -1,0 +1,195 @@
+D:\Anaconda\envs\WAF\Lib\site-packages\drf_yasg\views.py:100: DeprecationWarning: SwaggerJSONRenderer & SwaggerYAMLRenderer's `format` has changed to not include a `.` prefix, please silence this warning by setting `SWAGGER_USE_COMPAT_RENDERERS = False` in your Django settings and ensure your application works (check your URLCONF and swagger/redoc URLs).
+  warnings.warn(
+D:\Anaconda\envs\WAF\Lib\site-packages\sqlalchemy\sql\schema.py:3624: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+  return util.wrap_callable(lambda ctx: fn(), fn)  # type: ignore
+Bad Request: /api/auth/mfa/verify
+Bad Request: /api/auth/mfa/verify
+Bad Request: /api/auth/mfa/verify
+Bad Request: /api/auth/mfa/verify
+Bad Request: /api/auth/mfa/verify
+Too Many Requests: /api/auth/mfa/verify
+Forbidden: /api/auth/login
+Bad Request: /api/users/reset-password
+Bad Request: /api/auth/mfa/verify
+Unauthorized: /api/users/profile
+Bad Request: /api/admin/products/1
+Bad Request: /api/admin/users/3
+D:\Coding\secure-ecommerce-project\api_service\api\admin_views.py:334: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+  order.shipped_date = datetime.utcnow()
+Conflict: /api/admin/orders/1/ship
+Forbidden: /api/orders/1
+Forbidden: /api/auth/cert/file-login
+Unauthorized: /api/admin/users
+Forbidden: /api/admin/users
+Forbidden: /api/admin/users
+Forbidden: /api/admin/users
+Unauthorized: /api/admin/users
+Forbidden: /api/orders
+Unauthorized: /api/merchant/products
+Forbidden: /api/auth/cert/mtls-login
+Forbidden: /api/merchant/products/1
+Forbidden: /api/products/1
+Forbidden: /api/products/1
+Forbidden: /api/merchant/products
+Forbidden: /api/merchant/products/1
+Unauthorized: /api/tunnel/demo
+Bad Request: /api/tunnel/demo
+Forbidden: /api/tunnel/demo
+Bad Request: /api/users/bank-card
+Bad Request: /api/users/bank-card
+Conflict: /api/users/bank-card
+Conflict: /api/tunnel/demo
+Request Timeout: /api/tunnel/demo
+Request Timeout: /api/tunnel/demo
+Bad Request: /api/tunnel/demo
+Content Too Large: /api/tunnel/demo
+Bad Request: /api/tunnel/demo
+Bad Request: /api/tunnel/demo
+Service Unavailable: /api/tunnel/demo
+Bad Request: /api/tunnel/demo
+Bad Request: /api/tunnel/demo
+Bad Request: /api/tunnel/demo
+Bad Request: /api/tunnel/demo
+Bad Request: /api/tunnel/demo
+Bad Request: /api/tunnel/demo
+----------------------------------------------------------------------
+Ran 20 tests in 7.136s
+
+OK
+Redis����ʧ��: Error 10061 connecting to 127.0.0.1:1. ����Ŀ�����������ܾ����޷����ӡ�.����ʹ���ڴ滺��
+JWT��Կ��ʼ����ɣ�����: 62
+ͳһ���̷����ʼ����ɣ�
+JWT��Կ��ʼ����ɣ�����: 62
+ͳһ���̷����ʼ����ɣ�
+JWT��Կ��ʼ����ɣ�����: 62
+ͳһ���̷����ʼ����ɣ�
+[DEV] ����������֤��ͨ��: 13800000003
+JWT��Կ��ʼ����ɣ�����: 62
+ͳһ���̷����ʼ����ɣ�
+JWT��Կ��ʼ����ɣ�����: 62
+ͳһ���̷����ʼ����ɣ�
+JWT��Կ��ʼ����ɣ�����: 62
+JWT��Կ��ʼ����ɣ�����: 62
+JWT��Կ��ʼ����ɣ�����: 62
+[JWT������] �����Ѽ��������������ʱ��: 60����
+JWT��Կ��ʼ����ɣ�����: 62
+ͳһ���̷����ʼ����ɣ�
+�û��ǳ�: user1
+[LOGOUT] �û��ǳ��������Ѽ���Redis������
+JWT��Կ��ʼ����ɣ�����: 62
+JWT��Կ��ʼ����ɣ�����: 62
+JWT��Կ��ʼ����ɣ�����: 62
+JWT��Կ��ʼ����ɣ�����: 62
+JWT��Կ��ʼ����ɣ�����: 62
+JWT��Կ��ʼ����ɣ�����: 62
+JWT��Կ��ʼ����ɣ�����: 62
+JWT��Կ��ʼ����ɣ�����: 62
+JWT��Կ��ʼ����ɣ�����: 62
+JWT��Կ��ʼ����ɣ�����: 62
+JWT��Կ��ʼ����ɣ�����: 62
+JWT��Կ��ʼ����ɣ�����: 62
+JWT��Կ��ʼ����ɣ�����: 62
+ͳһ���̷����ʼ����ɣ�
+JWT��Կ��ʼ����ɣ�����: 62
+JWT��Կ��ʼ����ɣ�����: 62
+JWT��Կ��ʼ����ɣ�����: 62
+ͳһ���̷����ʼ����ɣ�
+JWT��Կ��ʼ����ɣ�����: 62
+JWT��Կ��ʼ����ɣ�����: 62
+JWT��Կ��ʼ����ɣ�����: 62
+ͳһ���̷����ʼ����ɣ�
+[����] ����δ���У����û���: user_profile:user1
+JWT��Կ��ʼ����ɣ�����: 62
+ͳһ���̷����ʼ����ɣ�
+JWT��Կ��ʼ����ɣ�����: 62
+JWT��Կ��ʼ����ɣ�����: 62
+JWT��Կ��ʼ����ɣ�����: 62
+JWT��Կ��ʼ����ɣ�����: 62
+JWT��Կ��ʼ����ɣ�����: 62
+JWT��Կ��ʼ����ɣ�����: 62
+JWT��Կ��ʼ����ɣ�����: 62
+JWT��Կ��ʼ����ɣ�����: 62
+JWT��Կ��ʼ����ɣ�����: 62
+JWT��Կ��ʼ����ɣ�����: 62
+JWT��Կ��ʼ����ɣ�����: 62
+JWT��Կ��ʼ����ɣ�����: 62
+JWT��Կ��ʼ����ɣ�����: 62
+JWT��Կ��ʼ����ɣ�����: 62
+JWT��Կ��ʼ����ɣ�����: 62
+JWT��Կ��ʼ����ɣ�����: 62
+JWT��Կ��ʼ����ɣ�����: 62
+JWT��Կ��ʼ����ɣ�����: 62
+JWT��Կ��ʼ����ɣ�����: 62
+JWT��Կ��ʼ����ɣ�����: 62
+[�û�����] ����� 0 ������
+JWT��Կ��ʼ����ɣ�����: 62
+JWT��Կ��ʼ����ɣ�����: 62
+JWT��Կ��ʼ����ɣ�����: 62
+[�������] �������ʧ��: This backend does not support this feature
+[����] Redis�����ã���ִ�б��ػ������
+[��Ʒ����] ����� 1 ������
+JWT��Կ��ʼ����ɣ�����: 62
+JWT��Կ��ʼ����ɣ�����: 62
+JWT��Կ��ʼ����ɣ�����: 62
+JWT��Կ��ʼ����ɣ�����: 62
+[�������] �������ʧ��: This backend does not support this feature
+[����] Redis�����ã���ִ�б��ػ������
+[�������] �������ʧ��: This backend does not support this feature
+[����] Redis�����ã���ִ�б��ػ������
+[��Ʒ����] ����� 2 ������
+JWT��Կ��ʼ����ɣ�����: 62
+JWT��Կ��ʼ����ɣ�����: 62
+JWT��Կ��ʼ����ɣ�����: 62
+JWT��Կ��ʼ����ɣ�����: 62
+JWT��Կ��ʼ����ɣ�����: 62
+ͳһ���̷����ʼ����ɣ�
+JWT��Կ��ʼ����ɣ�����: 62
+JWT��Կ��ʼ����ɣ�����: 62
+JWT��Կ��ʼ����ɣ�����: 62
+ͳһ���̷����ʼ����ɣ�
+JWT��Կ��ʼ����ɣ�����: 62
+JWT��Կ��ʼ����ɣ�����: 62
+JWT��Կ��ʼ����ɣ�����: 62
+JWT��Կ��ʼ����ɣ�����: 62
+JWT��Կ��ʼ����ɣ�����: 62
+JWT��Կ��ʼ����ɣ�����: 62
+[�������] �������ʧ��: This backend does not support this feature
+[����] Redis�����ã���ִ�б��ػ������
+[�������] �������ʧ��: This backend does not support this feature
+[����] Redis�����ã���ִ�б��ػ������
+[��Ʒ����] ����� 2 ������
+JWT��Կ��ʼ����ɣ�����: 62
+JWT��Կ��ʼ����ɣ�����: 62
+JWT��Կ��ʼ����ɣ�����: 62
+JWT��Կ��ʼ����ɣ�����: 62
+JWT��Կ��ʼ����ɣ�����: 62
+JWT��Կ��ʼ����ɣ�����: 62
+JWT��Կ��ʼ����ɣ�����: 62
+JWT��Կ��ʼ����ɣ�����: 62
+JWT��Կ��ʼ����ɣ�����: 62
+JWT��Կ��ʼ����ɣ�����: 62
+JWT��Կ��ʼ����ɣ�����: 62
+ͳһ���̷����ʼ����ɣ�
+JWT��Կ��ʼ����ɣ�����: 62
+JWT��Կ��ʼ����ɣ�����: 62
+JWT��Կ��ʼ����ɣ�����: 62
+JWT��Կ��ʼ����ɣ�����: 62
+JWT��Կ��ʼ����ɣ�����: 62
+JWT��Կ��ʼ����ɣ�����: 62
+JWT��Կ��ʼ����ɣ�����: 62
+JWT��Կ��ʼ����ɣ�����: 62
+JWT��Կ��ʼ����ɣ�����: 62
+JWT��Կ��ʼ����ɣ�����: 62
+JWT��Կ��ʼ����ɣ�����: 62
+JWT��Կ��ʼ����ɣ�����: 62
+JWT��Կ��ʼ����ɣ�����: 62
+JWT��Կ��ʼ����ɣ�����: 62
+JWT��Կ��ʼ����ɣ�����: 62
+JWT��Կ��ʼ����ɣ�����: 62
+JWT��Կ��ʼ����ɣ�����: 62
+JWT��Կ��ʼ����ɣ�����: 62
+JWT��Կ��ʼ����ɣ�����: 62
+JWT��Կ��ʼ����ɣ�����: 62
+JWT��Կ��ʼ����ɣ�����: 62
+JWT��Կ��ʼ����ɣ�����: 62
+JWT��Կ��ʼ����ɣ�����: 62

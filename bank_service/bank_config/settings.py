@@ -19,6 +19,7 @@ from dotenv import load_dotenv
 BASE_DIR = Path(__file__).resolve().parent.parent
 PROJECT_ROOT = BASE_DIR.parent
 load_dotenv(PROJECT_ROOT / ".env")
+os.makedirs(BASE_DIR / "logs", exist_ok=True)
 
 
 # Quick-start development settings - unsuitable for production
@@ -180,3 +181,29 @@ BANK_USER_PUBLIC_KEYS = _parse_key_map(
         "demo_user:fb0ef592e01b03601165b368385e0624c87aed2be6d361d1ecc88c62ab66597e43646080710a4e7e5b6e16b59615a3248be65a4de82afe9f838b1411980858dc",
     )
 )
+
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {
+        "standard": {
+            "format": "%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+        },
+    },
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+            "formatter": "standard",
+        },
+        "file": {
+            "class": "logging.FileHandler",
+            "filename": BASE_DIR / "logs" / "bank.log",
+            "encoding": "utf-8",
+            "formatter": "standard",
+        },
+    },
+    "root": {
+        "handlers": ["console", "file"],
+        "level": "INFO",
+    },
+}

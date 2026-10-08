@@ -119,3 +119,31 @@ class PaymentFlowTests(TestCase):
         payment = PaymentTransaction.objects.get(order_no="ORD10001")
         self.assertEqual(payment.status, PaymentTransaction.STATUS_FAILED)
         self.assertEqual(payment.message, "账户余额不足")
+
+    @patch("payments.views.requests.post")
+    def test_replayed_successful_payment_does_not_debit_twice(self, mock_post):
+        mock_post.return_value.status_code = 200
+        mock_post.return_value.text = "ok"
+        params = self.signed_params()
+        payload = {
+            **params,
+            "account_number": self.account.account_number,
+            "pay_password": "123456",
+        }
+
+        first_response = self.client.post(reverse("pay-process"), payload)
+        second_response = self.client.post(reverse("pay-process"), payload)
+
+        self.assertEqual(first_response.status_code, 302)
+        self.assertEqual(second_response.status_code, 302)
+        self.account.refresh_from_db()
+        self.assertEqual(self.account.balance, Decimal("74.50"))
+        self.assertEqual(
+            PaymentTransaction.objects.filter(
+                order_no="ORD10001",
+                merchant_id="ECOMMERCE_DEMO",
+                status=PaymentTransaction.STATUS_SUCCESS,
+            ).count(),
+            1,
+        )
+        self.assertEqual(mock_post.call_count, 1)

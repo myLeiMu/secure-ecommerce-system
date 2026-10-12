@@ -48,6 +48,7 @@ class PaymentTransaction(models.Model):
     amount = models.DecimalField(max_digits=12, decimal_places=2)
     account_number = models.CharField(max_length=32, blank=True)
     status = models.CharField(max_length=16, choices=STATUS_CHOICES, default=STATUS_PENDING)
+    successful_order_key = models.CharField(max_length=140, unique=True, null=True, blank=True)
     message = models.CharField(max_length=255, blank=True)
     request_payload = models.JSONField(default=dict)
     result_payload = models.JSONField(default=dict)
@@ -67,6 +68,7 @@ class PaymentTransaction(models.Model):
             models.Index(fields=["transaction_id"], name="ix_bank_txn_id"),
             models.Index(fields=["status"], name="ix_bank_txn_status"),
             models.Index(fields=["created_at"], name="ix_bank_txn_created_at"),
+            models.Index(fields=["merchant_id", "order_no"], name="ix_bank_txn_order"),
         ]
         constraints = [
             models.CheckConstraint(condition=models.Q(amount__gte=0), name="check_bank_payment_amount_positive"),

@@ -9,6 +9,7 @@ from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 from datetime import datetime, timezone
 from decimal import Decimal
+import logging
 import time
 import secrets
 import requests
@@ -38,6 +39,8 @@ from src.Data_base.models.order import (
     PaymentMethod,
 )
 
+
+logger = logging.getLogger(__name__)
 
 # 统一响应格式
 class APIResponse:
@@ -2277,10 +2280,21 @@ class BankPaymentSyncResultView(APIView):
         security=[{'Bearer': []}]
     )
     def post(self, request):
+        logger.info(
+            "bank callback received transaction_id=%s has_encrypted_key=%s has_iv=%s has_data=%s",
+            request.data.get("transaction_id"),
+            bool(request.data.get("encrypted_key")),
+            bool(request.data.get("iv")),
+            bool(request.data.get("data")),
+        )
         encrypted_key = request.data.get("encrypted_key")
         iv = request.data.get("iv")
         data = request.data.get("data")
         if not encrypted_key or not iv or not data:
+            logger.warning(
+                "bank callback rejected transaction_id=%s reason=missing_envelope_fields",
+                request.data.get("transaction_id"),
+            )
             return Response(APIResponse.error("缺少 encrypted_key、iv 或 data", 400), status=400)
 
         try:
@@ -2328,12 +2342,29 @@ class BankPaymentCallbackView(APIView):
         try:
             result = open_result_envelope(encrypted_key, iv, data, merchant_private_key)
         except Exception as exc:
+            logger.warning(
+                "bank callback decrypt failed transaction_id=%s error=%s",
+                request.data.get("transaction_id"),
+                exc,
+            )
             return Response(APIResponse.error(f"支付结果解密失败: {str(exc)}", 400), status=400)
 
         order_no = result.get("order_no")
         pay_status = result.get("status")
         bank_transaction_id = result.get("bank_transaction_id") or request.data.get("transaction_id")
+        logger.info(
+            "bank callback decrypted order_no=%s status=%s bank_transaction_id=%s",
+            order_no,
+            pay_status,
+            bank_transaction_id,
+        )
         if not order_no or not pay_status or not bank_transaction_id:
+            logger.warning(
+                "bank callback rejected order_no=%s status=%s bank_transaction_id=%s reason=missing_plaintext_fields",
+                order_no,
+                pay_status,
+                bank_transaction_id,
+            )
             return Response(APIResponse.error("支付结果正文缺少必要字段", 400, result), status=400)
 
         service = UnifiedEcommerceService()
@@ -2341,6 +2372,11 @@ class BankPaymentCallbackView(APIView):
         try:
             order = db.query(Order).filter(Order.order_number == order_no).first()
             if not order:
+                logger.warning(
+                    "bank callback rejected order_no=%s bank_transaction_id=%s reason=order_not_found",
+                    order_no,
+                    bank_transaction_id,
+                )
                 return Response(APIResponse.error("订单不存在", 404, result), status=404)
 
             existing_payment = db.query(Payment).filter(Payment.order_id == order.order_id).first()
@@ -2350,6 +2386,13 @@ class BankPaymentCallbackView(APIView):
                 and existing_payment.gateway_transaction_id == bank_transaction_id
                 and existing_payment.payment_status == target_status
             ):
+                logger.info(
+                    "bank callback idempotent order_no=%s order_id=%s bank_transaction_id=%s payment_status=%s",
+                    order_no,
+                    order.order_id,
+                    bank_transaction_id,
+                    existing_payment.payment_status.value,
+                )
                 return Response(APIResponse.success({
                     "order_no": order_no,
                     "payment_status": existing_payment.payment_status.value,
@@ -2365,6 +2408,12 @@ class BankPaymentCallbackView(APIView):
                     payment_gateway="mock_bank",
                 )
                 db.add(existing_payment)
+                logger.info(
+                    "bank callback creating payment order_no=%s order_id=%s bank_transaction_id=%s",
+                    order_no,
+                    order.order_id,
+                    bank_transaction_id,
+                )
 
             now = datetime.now()
             existing_payment.gateway_transaction_id = bank_transaction_id
@@ -2378,6 +2427,14 @@ class BankPaymentCallbackView(APIView):
                 order.order_status = OrderStatus.CONFIRMED
 
             db.commit()
+            logger.info(
+                "bank callback updated order_no=%s order_id=%s order_status=%s payment_status=%s bank_transaction_id=%s",
+                order_no,
+                order.order_id,
+                order.order_status.value,
+                order.payment_status.value,
+                bank_transaction_id,
+            )
             return Response(APIResponse.success({
                 "order_no": order_no,
                 "order_status": order.order_status.value,
@@ -2387,6 +2444,11 @@ class BankPaymentCallbackView(APIView):
             }, "回调处理成功"))
         except Exception as e:
             db.rollback()
+            logger.exception(
+                "bank callback processing failed order_no=%s bank_transaction_id=%s",
+                order_no,
+                bank_transaction_id,
+            )
             return Response(APIResponse.error(f"回调处理失败: {str(e)}", 500), status=500)
 
 

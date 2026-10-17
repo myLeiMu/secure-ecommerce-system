@@ -94,10 +94,16 @@ server {
     ssl_session_tickets off;
     root __ROOT__/frontend/dist;
     index index.html;
-    location / { try_files $uri $uri/ /index.html; }
+    add_header X-Frame-Options "DENY" always;
+    add_header Content-Security-Policy "frame-ancestors 'none'; object-src 'none'; base-uri 'self'" always;
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+    location / { try_files $uri /index.html; }
     location /api/ {
         proxy_pass http://__IP__:8080;
         proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-Host "";
+        proxy_set_header Forwarded "";
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $remote_addr;
         proxy_set_header X-Forwarded-Proto $scheme;

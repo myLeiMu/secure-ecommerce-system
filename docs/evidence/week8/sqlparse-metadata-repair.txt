@@ -1,0 +1,14 @@
+Found existing installation: sqlparse 0.5.3
+Uninstalling sqlparse-0.5.3:
+  Successfully uninstalled sqlparse-0.5.3
+Collecting sqlparse==0.6.0
+  Using cached sqlparse-0.6.0-py3-none-any.whl.metadata (6.0 kB)
+Using cached sqlparse-0.6.0-py3-none-any.whl (50 kB)
+Installing collected packages: sqlparse
+  Attempting uninstall: sqlparse
+    Found existing installation: sqlparse 0.6.0
+    Uninstalling sqlparse-0.6.0:
+      Successfully uninstalled sqlparse-0.6.0
+  WARNING: The script sqlformat.exe is installed in 'D:\Anaconda\envs\WAF\Scripts' which is not on PATH.
+  Consider adding this directory to PATH or, if you prefer to suppress this warning, use --no-warn-script-location.
+Successfully installed sqlparse-0.6.0

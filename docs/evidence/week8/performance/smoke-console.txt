@@ -1,0 +1,11 @@
+WARN StatusConsoleListener The use of package scanning to locate plugins is deprecated and will be removed in a future release
+WARN StatusConsoleListener The use of package scanning to locate plugins is deprecated and will be removed in a future release
+WARN StatusConsoleListener The use of package scanning to locate plugins is deprecated and will be removed in a future release
+WARN StatusConsoleListener The use of package scanning to locate plugins is deprecated and will be removed in a future release
+Creating summariser <summary>
+Created the tree successfully using D:\Coding\secure-ecommerce-project\performance\week8-baseline.jmx
+Starting standalone test @ 2026 Oct 17 12:21:07 CST (1792210867003)
+Waiting for possible Shutdown/StopTestNow/HeapDump/ThreadDump message on port 4445
+summary =      3 in 00:00:07 =    0.4/s Avg:   989 Min:    16 Max:  2924 Err:     1 (33.33%)
+Tidying up ...    @ 2026 Oct 17 12:21:14 CST (1792210874231)
+... end of run

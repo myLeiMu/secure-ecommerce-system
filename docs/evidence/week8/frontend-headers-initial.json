@@ -1,0 +1,27 @@
+{
+  "time_utc": "2026-10-17T04:41:17.058846+00:00",
+  "entry": "http://127.0.0.1:3001",
+  "checks": [
+    {
+      "path": "/",
+      "status": 200,
+      "x_frame_options": "DENY",
+      "csp": "frame-ancestors 'none'; object-src 'none'; base-uri 'self'"
+    },
+    {
+      "path": "/login",
+      "status": 404,
+      "x_frame_options": "DENY",
+      "csp": "default-src 'none'"
+    },
+    {
+      "path": "/products/",
+      "status": 200,
+      "x_frame_options": "DENY",
+      "csp": "frame-ancestors 'none'; object-src 'none'; base-uri 'self'"
+    }
+  ],
+  "untrusted_host_status": 200,
+  "passed": false,
+  "scope": "Actual Vue devServer with repository config, alternate test port; no backend or Burp active scan."
+}

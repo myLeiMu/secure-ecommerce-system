@@ -131,7 +131,7 @@ CSRF_TRUSTED_ORIGINS = [
 CORS_ALLOW_CREDENTIALS = True
 
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
-USE_X_FORWARDED_HOST = True
+USE_X_FORWARDED_HOST = False
 
 
 
@@ -148,7 +148,7 @@ JWT_CONFIG = {
 # matching merchant public key; ecommerce uses this private key to decrypt them.
 ECOMMERCE_MERCHANT_PRIVATE_KEY = os.getenv(
     "ECOMMERCE_MERCHANT_PRIVATE_KEY",
-    "a96e3fd619a89a6c239d84435c4c174f35439f8fb1f3d0b773d505c4aa75265c",
+    "",
 )
 BANK_PAY_BASE_URL = os.getenv("BANK_PAY_BASE_URL", "http://127.0.0.1:8000")
 BANK_REFUND_URL = os.getenv("BANK_REFUND_URL", "http://127.0.0.1:8000/api/refund")

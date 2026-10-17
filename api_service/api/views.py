@@ -2214,6 +2214,8 @@ class OrderBankPayView(APIView):
         security=[{'Bearer': []}]
     )
     def post(self, request, order_id):
+        if not settings.ECOMMERCE_MERCHANT_PRIVATE_KEY:
+            return Response(APIResponse.error("支付密钥未配置", 503), status=503)
         user_info = _get_user_info(request)
         if not user_info:
             return Response(APIResponse.error("用户未认证", 401), status=401)
@@ -2287,6 +2289,8 @@ class BankPaymentSyncResultView(APIView):
             bool(request.data.get("iv")),
             bool(request.data.get("data")),
         )
+        if not settings.ECOMMERCE_MERCHANT_PRIVATE_KEY:
+            return Response(APIResponse.error("支付密钥未配置", 503), status=503)
         encrypted_key = request.data.get("encrypted_key")
         iv = request.data.get("iv")
         data = request.data.get("data")
@@ -2331,6 +2335,8 @@ class BankPaymentCallbackView(APIView):
         tags=["支付"],
     )
     def post(self, request):
+        if not settings.ECOMMERCE_MERCHANT_PRIVATE_KEY:
+            return Response(APIResponse.error("支付密钥未配置", 503), status=503)
         encrypted_key = request.data.get("encrypted_key")
         iv = request.data.get("iv")
         data = request.data.get("data")

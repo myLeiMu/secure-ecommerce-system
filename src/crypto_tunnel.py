@@ -7,8 +7,8 @@ import secrets
 from pathlib import Path
 
 from cryptography.fernet import Fernet
+from cryptography.exceptions import InvalidTag
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
-from Crypto.Cipher import _mode_gcm
 from gmssl import sm2, sm3
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -17,40 +17,36 @@ MAX_PLAINTEXT = 32768
 PROTECTED = {('POST', '/api/tunnel/demo'), ('POST', '/api/users/bank-card')}
 
 
-class _SM4Factory:
-    """Adapter for PyCryptodome 3.21 GCM's 128-bit block cipher interface."""
-    block_size = 16
-    MODE_ECB, MODE_CTR = 1, 6
+class _SM4GCM:
+    """Public cryptography API; plaintext is returned only after tag validation.
 
-    @staticmethod
-    def new(key, mode, nonce=b'', initial_value=0):
-        if mode == _SM4Factory.MODE_ECB:
-            operation = modes.ECB()
-        elif mode == _SM4Factory.MODE_CTR:
-            counter = initial_value if isinstance(initial_value, bytes) else initial_value.to_bytes(16 - len(nonce), 'big')
-            operation = modes.CTR(nonce + counter)
-        else:
-            raise ValueError('Unsupported SM4 mode')
-        encryptor = Cipher(algorithms.SM4(key), operation).encryptor()
+    cryptography 50/OpenSSL supports SM4-GCM natively. Older unsupported builds
+    fail closed; there is no weaker cipher or unauthenticated fallback.
+    """
+    def __init__(self, key, nonce, aad):
+        self.key, self.nonce, self.aad = key, nonce, aad
 
-        class Stream:
-            def encrypt(self, data, output=None):
-                result = encryptor.update(data)
-                if output is not None:
-                    output[:] = result
-                    return None
-                return result
+    def encrypt_and_digest(self, plaintext):
+        encryptor = Cipher(algorithms.SM4(self.key), modes.GCM(self.nonce)).encryptor()
+        encryptor.authenticate_additional_data(self.aad)
+        ciphertext = encryptor.update(plaintext) + encryptor.finalize()
+        return ciphertext, encryptor.tag
 
-            decrypt = encrypt
-        return Stream()
+    def decrypt_and_verify(self, ciphertext, tag):
+        if len(tag) != 16:
+            raise ValueError('Invalid GCM tag length')
+        decryptor = Cipher(algorithms.SM4(self.key), modes.GCM(self.nonce, tag)).decryptor()
+        decryptor.authenticate_additional_data(self.aad)
+        try:
+            return decryptor.update(ciphertext) + decryptor.finalize()
+        except InvalidTag as exc:
+            raise ValueError('Invalid GCM tag') from exc
 
 
 def gcm(key, nonce, aad):
     if len(key) != 16 or len(nonce) != 12:
         raise ValueError('Invalid key/nonce size')
-    cipher = _mode_gcm._create_gcm_cipher(_SM4Factory, key=key, nonce=nonce, mac_len=16)
-    cipher.update(aad)
-    return cipher
+    return _SM4GCM(key, nonce, aad)
 
 
 def key_path():

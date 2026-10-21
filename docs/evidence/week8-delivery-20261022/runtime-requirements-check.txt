@@ -1,0 +1,41 @@
+Defaulting to user installation because normal site-packages is not writeable
+Requirement already satisfied: Django==5.2.18 in D:\Anaconda\envs\WAF\Lib\site-packages (from -r docs/requirements/runtime-week8.txt (line 4)) (5.2.18)
+Requirement already satisfied: djangorestframework==3.17.2 in D:\Anaconda\envs\WAF\Lib\site-packages (from -r docs/requirements/runtime-week8.txt (line 5)) (3.17.2)
+Requirement already satisfied: django-cors-headers==4.9.0 in D:\Anaconda\envs\WAF\Lib\site-packages (from -r docs/requirements/runtime-week8.txt (line 6)) (4.9.0)
+Requirement already satisfied: django-redis==6.0.0 in D:\Anaconda\envs\WAF\Lib\site-packages (from -r docs/requirements/runtime-week8.txt (line 7)) (6.0.0)
+Requirement already satisfied: drf-yasg==1.21.11 in D:\Anaconda\envs\WAF\Lib\site-packages (from -r docs/requirements/runtime-week8.txt (line 8)) (1.21.11)
+Requirement already satisfied: SQLAlchemy==2.0.44 in D:\Anaconda\envs\WAF\Lib\site-packages (from -r docs/requirements/runtime-week8.txt (line 9)) (2.0.44)
+Requirement already satisfied: PyMySQL==1.1.2 in D:\Anaconda\envs\WAF\Lib\site-packages (from -r docs/requirements/runtime-week8.txt (line 10)) (1.1.2)
+Requirement already satisfied: mysqlclient==2.2.7 in D:\Anaconda\envs\WAF\Lib\site-packages (from -r docs/requirements/runtime-week8.txt (line 11)) (2.2.7)
+Requirement already satisfied: cryptography==50.0.2 in D:\Anaconda\envs\WAF\Lib\site-packages (from -r docs/requirements/runtime-week8.txt (line 12)) (50.0.2)
+Requirement already satisfied: gmssl==3.2.2 in D:\Anaconda\envs\WAF\Lib\site-packages (from -r docs/requirements/runtime-week8.txt (line 13)) (3.2.2)
+Requirement already satisfied: gmpy2==2.2.1 in D:\Anaconda\envs\WAF\Lib\site-packages (from -r docs/requirements/runtime-week8.txt (line 14)) (2.2.1)
+Requirement already satisfied: pycryptodome==3.21.0 in D:\Anaconda\envs\WAF\Lib\site-packages (from -r docs/requirements/runtime-week8.txt (line 15)) (3.21.0)
+Requirement already satisfied: PyJWT==2.15.1 in D:\Anaconda\envs\WAF\Lib\site-packages (from -r docs/requirements/runtime-week8.txt (line 16)) (2.15.1)
+Requirement already satisfied: python-dotenv==1.2.4 in D:\Anaconda\envs\WAF\Lib\site-packages (from -r docs/requirements/runtime-week8.txt (line 17)) (1.2.4)
+Requirement already satisfied: redis==7.0.1 in D:\Anaconda\envs\WAF\Lib\site-packages (from -r docs/requirements/runtime-week8.txt (line 18)) (7.0.1)
+Requirement already satisfied: requests==2.34.2 in D:\Anaconda\envs\WAF\Lib\site-packages (from -r docs/requirements/runtime-week8.txt (line 19)) (2.34.2)
+Requirement already satisfied: waitress==3.0.2 in D:\Anaconda\envs\WAF\Lib\site-packages (from -r docs/requirements/runtime-week8.txt (line 20)) (3.0.2)
+Requirement already satisfied: certifi==2026.10.19 in D:\Anaconda\envs\WAF\Lib\site-packages (from -r docs/requirements/runtime-week8.txt (line 21)) (2026.10.19)
+Requirement already satisfied: sqlparse==0.6.0 in D:\Anaconda\envs\WAF\Lib\site-packages (from -r docs/requirements/runtime-week8.txt (line 22)) (0.6.0)
+Requirement already satisfied: asgiref>=3.8.1 in D:\Anaconda\envs\WAF\Lib\site-packages (from Django==5.2.18->-r docs/requirements/runtime-week8.txt (line 4)) (3.10.0)
+Requirement already satisfied: tzdata in D:\Anaconda\envs\WAF\Lib\site-packages (from Django==5.2.18->-r docs/requirements/runtime-week8.txt (line 4)) (2025.2)
+Requirement already satisfied: inflection>=0.3.1 in D:\Anaconda\envs\WAF\Lib\site-packages (from drf-yasg==1.21.11->-r docs/requirements/runtime-week8.txt (line 8)) (0.5.1)
+Requirement already satisfied: packaging>=21.0 in D:\Anaconda\envs\WAF\Lib\site-packages (from drf-yasg==1.21.11->-r docs/requirements/runtime-week8.txt (line 8)) (25.0)
+Requirement already satisfied: pytz>=2021.1 in D:\Anaconda\envs\WAF\Lib\site-packages (from drf-yasg==1.21.11->-r docs/requirements/runtime-week8.txt (line 8)) (2025.2)
+Requirement already satisfied: pyyaml>=5.1 in D:\Anaconda\envs\WAF\Lib\site-packages (from drf-yasg==1.21.11->-r docs/requirements/runtime-week8.txt (line 8)) (6.0.3)
+Requirement already satisfied: uritemplate>=3.0.0 in D:\Anaconda\envs\WAF\Lib\site-packages (from drf-yasg==1.21.11->-r docs/requirements/runtime-week8.txt (line 8)) (4.2.0)
+Requirement already satisfied: greenlet>=1 in D:\Anaconda\envs\WAF\Lib\site-packages (from SQLAlchemy==2.0.44->-r docs/requirements/runtime-week8.txt (line 9)) (3.2.4)
+Requirement already satisfied: typing-extensions>=4.6.0 in D:\Anaconda\envs\WAF\Lib\site-packages (from SQLAlchemy==2.0.44->-r docs/requirements/runtime-week8.txt (line 9)) (4.15.0)
+Requirement already satisfied: cffi>=2.0.0 in D:\Anaconda\envs\WAF\Lib\site-packages (from cryptography==50.0.2->-r docs/requirements/runtime-week8.txt (line 12)) (2.1.1)
+Requirement already satisfied: pycryptodomex in D:\Anaconda\envs\WAF\Lib\site-packages (from gmssl==3.2.2->-r docs/requirements/runtime-week8.txt (line 13)) (3.23.0)
+Requirement already satisfied: charset_normalizer<4,>=2 in D:\Anaconda\envs\WAF\Lib\site-packages (from requests==2.34.2->-r docs/requirements/runtime-week8.txt (line 19)) (3.3.2)
+Requirement already satisfied: idna<4,>=2.5 in D:\Anaconda\envs\WAF\Lib\site-packages (from requests==2.34.2->-r docs/requirements/runtime-week8.txt (line 19)) (3.20)
+Requirement already satisfied: urllib3<3,>=1.26 in D:\Anaconda\envs\WAF\Lib\site-packages (from requests==2.34.2->-r docs/requirements/runtime-week8.txt (line 19)) (2.8.0)
+Requirement already satisfied: pycparser in D:\Anaconda\envs\WAF\Lib\site-packages (from cffi>=2.0.0->cryptography==50.0.2->-r docs/requirements/runtime-week8.txt (line 12)) (2.21)
+WARNING: Failed to remove contents in a temporary directory 'C:\Users\66476\AppData\Local\Packages\sandbox.{17b78e90-8e72-4fad-ab33-bde0a77d4c50}\AC\Temp\pip-build-tracker-ku_jeb1e'.
+You can safely remove it manually.
+WARNING: Failed to remove contents in a temporary directory 'C:\Users\66476\AppData\Local\Packages\sandbox.{17b78e90-8e72-4fad-ab33-bde0a77d4c50}\AC\Temp\pip-ephem-wheel-cache-jab9_3hj'.
+You can safely remove it manually.
+WARNING: Failed to remove contents in a temporary directory 'C:\Users\66476\AppData\Local\Packages\sandbox.{17b78e90-8e72-4fad-ab33-bde0a77d4c50}\AC\Temp\pip-install-sy4m0gbr'.
+You can safely remove it manually.

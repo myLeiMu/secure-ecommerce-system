@@ -6,7 +6,8 @@ from decimal import Decimal
 from typing import Mapping
 
 from django.conf import settings
-from gmssl import func, sm2, sm3, sm4
+from src.utils.secure_sm2 import SecureSM2, secure_scalar
+from gmssl import func, sm3, sm4
 
 
 SIGNED_REQUEST_FIELDS = ("order_no", "amount", "merchant_id", "timestamp")
@@ -27,14 +28,14 @@ def sm3_hash_text(text: str) -> str:
 
 
 def public_key_from_private(private_key_hex: str) -> str:
-    crypt = sm2.CryptSM2(public_key="", private_key=private_key_hex)
+    crypt = SecureSM2(public_key="", private_key=private_key_hex)
     return crypt._kg(int(private_key_hex, 16), crypt.ecc_table["g"])
 
 
 def sign_sm2_digest(params: Mapping[str, object], private_key_hex: str) -> str:
     digest_hex = sm3_hash_text(canonical_string(params))
-    signer = sm2.CryptSM2(public_key=public_key_from_private(private_key_hex), private_key=private_key_hex)
-    return signer.sign(bytes.fromhex(digest_hex), func.random_hex(64))
+    signer = SecureSM2(public_key=public_key_from_private(private_key_hex), private_key=private_key_hex)
+    return signer.sign(bytes.fromhex(digest_hex), secure_scalar())
 
 
 def verify_sm2_digest(params: Mapping[str, object], public_key_hex: str, signature: str) -> bool:
@@ -43,7 +44,7 @@ def verify_sm2_digest(params: Mapping[str, object], public_key_hex: str, signatu
     if len(signature) != 128:
         return False
     digest_hex = sm3_hash_text(canonical_string(params))
-    verifier = sm2.CryptSM2(public_key=public_key_hex, private_key="")
+    verifier = SecureSM2(public_key=public_key_hex, private_key="")
     try:
         return bool(verifier.verify(signature, bytes.fromhex(digest_hex)))
     except (TypeError, ValueError):
@@ -59,13 +60,13 @@ def get_merchant_public_key(merchant_id: str) -> str | None:
 
 
 def sm2_encrypt_key(key_bytes: bytes, public_key_hex: str) -> str:
-    crypt = sm2.CryptSM2(public_key=public_key_hex, private_key="")
+    crypt = SecureSM2(public_key=public_key_hex, private_key="")
     encrypted = crypt.encrypt(key_bytes)
     return base64.urlsafe_b64encode(encrypted).decode("ascii")
 
 
 def sm2_decrypt_key(encrypted_key: str, private_key_hex: str) -> bytes:
-    crypt = sm2.CryptSM2(public_key="", private_key=private_key_hex)
+    crypt = SecureSM2(public_key="", private_key=private_key_hex)
     raw = base64.urlsafe_b64decode(encrypted_key.encode("ascii"))
     return crypt.decrypt(raw)
 

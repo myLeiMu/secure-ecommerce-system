@@ -6,6 +6,22 @@ import re
 import json
 from src.unified_service import UnifiedEcommerceService
 from api_service.utils.jwt_balcklist import jwt_blacklist
+from django.conf import settings
+import secrets
+
+
+class TrustedHTTPSMiddleware(MiddlewareMixin):
+    """Never trust a public X-Forwarded-Proto header without the gateway secret."""
+    def process_request(self, request):
+        expected = settings.MTLS_PROXY_SECRET
+        supplied = request.META.get('HTTP_X_MTLS_PROXY_SECRET', '')
+        trusted = bool(expected and supplied and secrets.compare_digest(expected.encode(), supplied.encode()))
+        if trusted and request.META.get('HTTP_X_FORWARDED_PROTO') == 'https':
+            request.META['wsgi.url_scheme'] = 'https'
+        if (settings.SECURE_SSL_REDIRECT and not request.is_secure()
+                and request.path not in ('/api/health', '/api/health/', '/api/pay/callback')
+                and request.method not in ('GET', 'HEAD', 'OPTIONS')):
+            return JsonResponse({'success': False, 'message': '请通过 HTTPS 入口访问系统'}, status=426)
 
 class JWTAuthenticationMiddleware(MiddlewareMixin):
     PUBLIC = {'/api/auth/login', '/api/auth/cert/challenge', '/api/auth/cert/login',

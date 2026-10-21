@@ -1,0 +1,21 @@
+{
+  "time_utc": "2026-10-21T16:25:07.528796+00:00",
+  "base_commit": "baae308efa607a04859ead7b015bce98ef76b640",
+  "scope": "Current index candidate paths; working tree matches index. This record itself is added after the check. No Git history or image OCR scan.",
+  "candidate_files_checked": 423,
+  "configured_secret_or_jwt_or_pem_findings": [],
+  "documentation_links_checked": 69,
+  "missing_local_link_targets": [],
+  "preserved_local_files_checked": 16,
+  "preserved_local_files_changed": [],
+  "ignore_rule_failures": [],
+  "jmeter_xml_parse": "pass",
+  "git_diff_check_exit": 0,
+  "unstaged_tracked_changes": [],
+  "runtime_requirements_check": "pip install --dry-run --no-index: exit 0 in existing WAF; not fresh install verification",
+  "limitations": [
+    "Shared MySQL credential still valid in old Git history, rotation deferred by user.",
+    "Burp zero-issue export does not establish scan scope or authentication coverage.",
+    "No new full DAST/SAST or performance run for documentation-only delivery."
+  ]
+}

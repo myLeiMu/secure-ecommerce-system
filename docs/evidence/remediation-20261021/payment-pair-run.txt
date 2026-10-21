@@ -1,0 +1,1 @@
+Payment pair checks: {'public_matches_private': True, 'both_local_services_same_merchant_private': True, 'ecommerce_signature_bank_verifies': True, 'bank_envelope_ecommerce_decrypts': True, 'modified_amount_rejected': True}

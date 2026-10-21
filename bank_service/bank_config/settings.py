@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
 import os
+import sys
 from pathlib import Path
 
 from dotenv import load_dotenv
@@ -18,6 +19,7 @@ from dotenv import load_dotenv
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 PROJECT_ROOT = BASE_DIR.parent
+sys.path.insert(0, str(PROJECT_ROOT))  # Shared, reviewed SM2 adapter used by both services.
 load_dotenv(PROJECT_ROOT / ".env")
 os.makedirs(BASE_DIR / "logs", exist_ok=True)
 
@@ -153,13 +155,13 @@ BANK_PAYMENT_TIMESTAMP_VALID_SECONDS = int(os.getenv("BANK_PAYMENT_TIMESTAMP_VAL
 BANK_MERCHANT_PRIVATE_KEYS = _parse_key_map(
     os.getenv(
         "BANK_MERCHANT_PRIVATE_KEYS",
-        "ECOMMERCE_DEMO:a96e3fd619a89a6c239d84435c4c174f35439f8fb1f3d0b773d505c4aa75265c",
+        "",
     )
 )
 BANK_MERCHANT_PUBLIC_KEYS = _parse_key_map(
     os.getenv(
         "BANK_MERCHANT_PUBLIC_KEYS",
-        "ECOMMERCE_DEMO:a88b6f2d32e6df38e94f3e627af9ac4e576d7ca91beeeb2d1f1d925119e9913fea9a6a857e97cf2caa36e2b05da5373d26e0ec2bc2649b959c98da3755235216",
+        "",
     )
 )
 BANK_MERCHANT_CALLBACK_URLS = _parse_key_map(

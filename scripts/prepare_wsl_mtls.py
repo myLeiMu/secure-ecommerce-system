@@ -84,6 +84,8 @@ linux_root = '/mnt/' + root.drive[0].lower() + root.as_posix()[2:]
 site = '''# Included from nginx http {}; generated for the local WSL classroom.
 server {
     listen 8443 ssl;
+    server_tokens off;
+    error_page 497 =308 https://localhost:8443$request_uri;
     server_name localhost;
     ssl_certificate __ROOT__/keys/mtls_local/localhost.crt;
     ssl_certificate_key __ROOT__/keys/mtls_local/localhost.key;
@@ -94,10 +96,22 @@ server {
     ssl_session_tickets off;
     root __ROOT__/frontend/dist;
     index index.html;
-    location / { try_files $uri $uri/ /index.html; }
+    add_header X-Frame-Options "DENY" always;
+    add_header Content-Security-Policy "default-src 'none'; script-src 'self'; script-src-attr 'none'; style-src 'self'; style-src-attr 'none'; img-src 'self' https: http: data: blob:; font-src 'self' data:; connect-src 'self'; form-action 'self'; frame-ancestors 'none'; object-src 'none'; base-uri 'self'" always;
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header Referrer-Policy "no-referrer" always;
+    add_header Strict-Transport-Security "max-age=86400" always;
+    location / { try_files $uri /index.html; }
     location /api/ {
+        proxy_hide_header Content-Security-Policy;
+        proxy_hide_header X-Frame-Options;
+        proxy_hide_header X-Content-Type-Options;
+        proxy_hide_header Referrer-Policy;
+        proxy_hide_header Strict-Transport-Security;
         proxy_pass http://__IP__:8080;
         proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-Host "";
+        proxy_set_header Forwarded "";
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $remote_addr;
         proxy_set_header X-Forwarded-Proto $scheme;
@@ -107,6 +121,13 @@ server {
         proxy_set_header X-CLIENT-CERT-PEM "";
         include /etc/nginx/snippets/secondhand-mtls-secret.conf;
     }
+}
+# Local HTTP upgrade
+server {
+    listen 8088;
+    server_name localhost;
+    server_tokens off;
+    return 308 https://localhost:8443$request_uri;
 }
 '''.replace('__ROOT__', linux_root).replace('__IP__', args.backend_ip)
 (out / 'nginx-site.conf').write_text(site, encoding='utf-8')

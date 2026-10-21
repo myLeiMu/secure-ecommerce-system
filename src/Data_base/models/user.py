@@ -2,6 +2,7 @@ from sqlalchemy import Column, BigInteger, String, Boolean, DateTime, Text, Inte
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from src.Data_base.database import Base
+from src.Data_base.encrypted_fields import EncryptedBankCard
 
 
 class User(Base):
@@ -11,7 +12,7 @@ class User(Base):
     username = Column(String(20), unique=True, nullable=False, index=True)
     email = Column(String(100), unique=True, nullable=False, index=True)
     phone = Column(String(20), index=True)
-    bank_card_number = Column(String(64), nullable=True, default=None)
+    bank_card_number = Column(EncryptedBankCard(), nullable=True, default=None)
     avatar_url = Column(String(255))
     pass_word = Column(String(64), nullable=False)  # 加密后的密码
     is_verified = Column(Boolean, default=False)

@@ -1,9 +1,10 @@
 // Run against scripts/preview_course.py. Requires Playwright and Chromium.
-const { chromium } = require(process.env.PLAYWRIGHT_MODULE || 'playwright');
+const { chromium } = require(process.env.PLAYWRIGHT_MODULE || '../frontend/node_modules/playwright');
 const crypto = require('crypto');
 const fs = require('fs');
 const path = require('path');
-const output = path.resolve(__dirname, '../docs/evidence');
+const output = path.resolve(process.env.UI_OUTPUT_DIR || path.join(__dirname, '../docs/evidence'));
+const base = process.env.UI_BASE_URL || 'http://127.0.0.1:8765';
 fs.mkdirSync(output, { recursive: true });
 function totp(secret) {
   const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
@@ -15,8 +16,11 @@ function totp(secret) {
 }
 (async () => {
   const browser = await chromium.launch({ headless: true, ...(process.env.CHROME_EXECUTABLE ? { executablePath: process.env.CHROME_EXECUTABLE } : {}) });
-  const page = await browser.newPage({ viewport: { width: 1440, height: 1050 } });
+  const page = await browser.newPage({ viewport: { width: 1440, height: 1050 }, ignoreHTTPSErrors: true });
   const errors = [], actions = [];
+  await page.exposeFunction('reportCspViolation', directive => errors.push(`CSP blocked: ${directive}`));
+  await page.addInitScript(() => document.addEventListener('securitypolicyviolation', event =>
+    window.reportCspViolation(event.violatedDirective)));
   async function checkDialog(name) {
     for (const width of [1440, 390]) {
       await page.setViewportSize({ width, height: 844 });
@@ -35,11 +39,13 @@ function totp(secret) {
   }
 
   page.on('pageerror', error => errors.push(error.message));
-  await page.goto('http://127.0.0.1:8765/login');
+  await page.goto(base + '/login');
   await page.locator('#username').fill('user3');
   await page.locator('#password').fill('TestPass123!');
   await page.locator('.login-form button[type=submit], .login-form button:not([type])').first().click();
   await page.getByRole('heading', { name: '绑定身份验证器' }).waitFor();
+  await page.locator('.totp-qr svg').waitFor();
+  actions.push('TOTP QR SVG rendered under strict CSP');
   await page.locator('#code').fill(totp(await page.locator('code.secret').textContent()));
   await page.getByRole('button', { name: '验证并登录', exact: true }).click();
   await page.getByRole('heading', { name: '保存恢复码' }).waitFor();
@@ -96,7 +102,7 @@ function totp(secret) {
   if (overflow) errors.push('Mobile viewport has horizontal overflow');
   for (const width of [1440, 390]) {
     await page.setViewportSize({ width, height: 900 });
-    await page.goto('http://127.0.0.1:8765/products');
+    await page.goto(base + '/products');
     const entry = page.getByRole('link', { name: '控制台', exact: true });
     await entry.waitFor();
     if (await entry.count() !== 1) throw new Error('Duplicate dashboard entry on catalog');

@@ -1,0 +1,21 @@
+
+> ecommerce-frontend@1.0.0 build
+> vite build
+
+vite v8.3.5 building client environment for production...
+transforming...
+[plugin rolldown:vite-resolve] Module "crypto" has been externalized for browser compatibility, imported by "D:/Coding/secure-ecommerce-project/frontend/node_modules/sm-crypto-v2/dist/index.mjs". See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.
+✓ 189 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                                    0.50 kB │ gzip:   0.34 kB
+dist/assets/TunnelDemo-ky-PFt51.css                1.90 kB │ gzip:   0.70 kB
+dist/assets/Dashboard-BwsAcoG2.css                10.52 kB │ gzip:   2.36 kB
+dist/assets/index-DJm7Jruz.css                    35.97 kB │ gzip:   6.99 kB
+dist/assets/__vite-browser-external-BDfy7Drd.js    0.10 kB │ gzip:   0.11 kB
+dist/assets/rolldown-runtime-XKyaHtl9.js           0.72 kB │ gzip:   0.42 kB
+dist/assets/TunnelDemo-Y7aUOaBe.js                 2.25 kB │ gzip:   1.28 kB
+dist/assets/Dashboard-D1UIG1mi.js                 21.94 kB │ gzip:   8.09 kB
+dist/assets/index-DD6NXAAv.js                    323.63 kB │ gzip: 113.66 kB
+
+✓ built in 432ms

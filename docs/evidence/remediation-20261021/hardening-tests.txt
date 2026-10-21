@@ -1,0 +1,59 @@
+test_curve_rejects_invalid_points (api_service.tests.test_secure_sm2.SecureSM2Tests.test_curve_rejects_invalid_points) ... ok
+test_encrypt_sign_interoperate_without_legacy_random_generator (api_service.tests.test_secure_sm2.SecureSM2Tests.test_encrypt_sign_interoperate_without_legacy_random_generator) ... ok
+test_admin_email_data_requires_administrator (api_service.tests.test_week8_security.Week8SecurityTests.test_admin_email_data_requires_administrator) ... D:\Anaconda\envs\WAF\Lib\site-packages\sqlalchemy\sql\schema.py:3624: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+  return util.wrap_callable(lambda ctx: fn(), fn)  # type: ignore
+Unauthorized: /api/admin/users
+Forbidden: /api/admin/users
+Forbidden: /api/admin/users
+Forbidden: /api/admin/users
+D:\Anaconda\envs\WAF\Lib\site-packages\drf_yasg\views.py:100: DeprecationWarning: SwaggerJSONRenderer & SwaggerYAMLRenderer's `format` has changed to not include a `.` prefix, please silence this warning by setting `SWAGGER_USE_COMPAT_RENDERERS = False` in your Django settings and ensure your application works (check your URLCONF and swagger/redoc URLs).
+  warnings.warn(
+ok
+test_bank_card_is_encrypted_in_database_and_tampering_fails (api_service.tests.test_week8_security.Week8SecurityTests.test_bank_card_is_encrypted_in_database_and_tampering_fails) ... ok
+test_cross_origin_response_does_not_grant_attacker_read_access (api_service.tests.test_week8_security.Week8SecurityTests.test_cross_origin_response_does_not_grant_attacker_read_access) ... ok
+test_http_and_spoofed_tls_headers_cannot_reach_login (api_service.tests.test_week8_security.Week8SecurityTests.test_http_and_spoofed_tls_headers_cannot_reach_login) ... Upgrade Required: /api/auth/login
+Upgrade Required: /api/auth/login
+Upgrade Required: /api/auth/login
+ok
+test_missing_payment_key_fails_closed (api_service.tests.test_week8_security.Week8SecurityTests.test_missing_payment_key_fails_closed) ... Service Unavailable: /api/orders/1/pay
+bank callback received transaction_id=None has_encrypted_key=False has_iv=False has_data=False
+Service Unavailable: /api/pay/sync-result
+Service Unavailable: /api/pay/callback
+ok
+test_same_origin_proxy_needs_no_cors_allowlist (api_service.tests.test_week8_security.Week8SecurityTests.test_same_origin_proxy_needs_no_cors_allowlist) ... ok
+test_untrusted_forwarded_host_is_ignored (api_service.tests.test_week8_security.Week8SecurityTests.test_untrusted_forwarded_host_is_ignored) ... ok
+
+----------------------------------------------------------------------
+Ran 9 tests in 3.203s
+
+OK
+Redis����ʧ��: Error 10061 connecting to 127.0.0.1:1. ����Ŀ�����������ܾ����޷����ӡ�.����ʹ���ڴ滺��
+JWT��Կ��ʼ����ɣ�����: 62
+JWT��Կ��ʼ����ɣ�����: 62
+JWT��Կ��ʼ����ɣ�����: 62
+JWT��Կ��ʼ����ɣ�����: 62
+JWT��Կ��ʼ����ɣ�����: 62
+JWT��Կ��ʼ����ɣ�����: 62
+JWT��Կ��ʼ����ɣ�����: 62
+JWT��Կ��ʼ����ɣ�����: 62
+JWT��Կ��ʼ����ɣ�����: 62
+JWT��Կ��ʼ����ɣ�����: 62
+JWT��Կ��ʼ����ɣ�����: 62
+ͳһ���̷����ʼ����ɣ�
+[����] ����δ���У����û���: user_profile:user1
+JWT��Կ��ʼ����ɣ�����: 62
+ͳһ���̷����ʼ����ɣ�
+JWT��Կ��ʼ����ɣ�����: 62
+JWT��Կ��ʼ����ɣ�����: 62
+JWT��Կ��ʼ����ɣ�����: 62
+JWT��Կ��ʼ����ɣ�����: 62
+JWT��Կ��ʼ����ɣ�����: 62
+JWT��Կ��ʼ����ɣ�����: 62
+JWT��Կ��ʼ����ɣ�����: 62
+[����] ��������: user_profile:user1
+JWT��Կ��ʼ����ɣ�����: 62
+JWT��Կ��ʼ����ɣ�����: 62
+[����] ��������: user_profile:user1
+JWT��Կ��ʼ����ɣ�����: 62
+JWT��Կ��ʼ����ɣ�����: 62
+[����] ��������: user_profile:user1

@@ -5,7 +5,7 @@ import secrets
 from dataclasses import dataclass
 from typing import Iterable, Optional
 
-from gmssl import func, sm2
+from src.utils.secure_sm2 import SecureSM2, secure_scalar
 
 from src.utils.security import sm3_digest
 from src.algorithm.secure_key_storage import SecureKeyStorage
@@ -125,8 +125,8 @@ OID_CLIENT_AUTH = "1.3.6.1.5.5.7.3.2"
 
 
 def sm2_generate_keypair() -> tuple[str, str]:
-    private_key_hex = func.random_hex(64)
-    crypt = sm2.CryptSM2(public_key="", private_key=private_key_hex)
+    private_key_hex = secure_scalar(private=True)
+    crypt = SecureSM2(public_key="", private_key=private_key_hex)
     public_key_hex = crypt._kg(int(private_key_hex, 16), crypt.ecc_table["g"])
     return private_key_hex, public_key_hex
 
@@ -325,8 +325,8 @@ def create_root_ca(
     ]
     tbs_der = der_sequence(tbs_items)
 
-    signer = sm2.CryptSM2(public_key=root_pub, private_key=root_priv)
-    sig_raw_hex = signer.sign(tbs_der, func.random_hex(64))
+    signer = SecureSM2(public_key=root_pub, private_key=root_priv)
+    sig_raw_hex = signer.sign(tbs_der, secure_scalar())
     sig_der = _ecdsa_like_sig_der_from_raw(bytes.fromhex(sig_raw_hex))
 
     cert_der = der_sequence([tbs_der, algorithm_identifier_sm2_with_sm3(), der_bit_string(sig_der, 0)])
@@ -353,8 +353,8 @@ def create_csr(
     attrs = _der(0xA0, b"")
     info_der = der_sequence([version, subject, spki, attrs])
 
-    signer = sm2.CryptSM2(public_key=subject_public_key_hex, private_key=subject_private_key_hex)
-    sig_raw_hex = signer.sign(info_der, func.random_hex(64))
+    signer = SecureSM2(public_key=subject_public_key_hex, private_key=subject_private_key_hex)
+    sig_raw_hex = signer.sign(info_der, secure_scalar())
     sig_der = _ecdsa_like_sig_der_from_raw(bytes.fromhex(sig_raw_hex))
 
     csr_der = der_sequence([info_der, algorithm_identifier_sm2_with_sm3(), der_bit_string(sig_der, 0)])
@@ -418,8 +418,8 @@ def issue_certificate_from_csr(
         ]
     )
 
-    signer = sm2.CryptSM2(public_key=issuer_public_key_hex, private_key=issuer_private_key_hex)
-    sig_raw_hex = signer.sign(tbs_der, func.random_hex(64))
+    signer = SecureSM2(public_key=issuer_public_key_hex, private_key=issuer_private_key_hex)
+    sig_raw_hex = signer.sign(tbs_der, secure_scalar())
     sig_der = _ecdsa_like_sig_der_from_raw(bytes.fromhex(sig_raw_hex))
 
     cert_der = der_sequence([tbs_der, algorithm_identifier_sm2_with_sm3(), der_bit_string(sig_der, 0)])
@@ -433,14 +433,14 @@ def issue_certificate_from_csr(
 
 
 def verify_certificate_signature(cert: X509Certificate) -> bool:
-    verifier = sm2.CryptSM2(public_key=cert.issuer_public_key_hex, private_key="")
+    verifier = SecureSM2(public_key=cert.issuer_public_key_hex, private_key="")
     raw = _raw_sig_from_ecdsa_like_der(cert.signature_der)
     sig_hex = raw.hex()
     return bool(verifier.verify(sig_hex, cert.tbs_der))
 
 
 def verify_csr_signature(csr: X509CSR) -> bool:
-    verifier = sm2.CryptSM2(public_key=csr.subject_public_key_hex, private_key="")
+    verifier = SecureSM2(public_key=csr.subject_public_key_hex, private_key="")
     raw = _raw_sig_from_ecdsa_like_der(csr.signature_der)
     sig_hex = raw.hex()
     return bool(verifier.verify(sig_hex, csr.info_der))
@@ -488,7 +488,7 @@ def verify_certificate_with_root(cert_pem: str, root_cert_pem: str) -> bool:
     root_info = parse_certificate_pem(root_cert_pem)
     if cert_info["issuer_name_der"] != root_info["subject_name_der"]:
         return False
-    verifier = sm2.CryptSM2(public_key=root_info["subject_public_key_hex"], private_key="")
+    verifier = SecureSM2(public_key=root_info["subject_public_key_hex"], private_key="")
     raw = _raw_sig_from_ecdsa_like_der(cert_info["signature_der"])
     return bool(verifier.verify(raw.hex(), cert_info["tbs_der"]))
 

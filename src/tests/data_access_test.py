@@ -1,3 +1,5 @@
+import os
+from sqlalchemy.engine import make_url
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from src.Data_base.database import Base
@@ -9,7 +11,7 @@ import logging
 logging.basicConfig(level=logging.ERROR)
 logging.getLogger('sqlalchemy.engine').setLevel(logging.ERROR)
 
-TEST_DATABASE_URL = "mysql+pymysql://root:Weibomysql369@localhost:3306/test_ecommerce"
+TEST_DATABASE_URL = os.getenv('TEST_DATABASE_URL', '')
 
 
 class SimpleTester:
@@ -18,6 +20,8 @@ class SimpleTester:
     def __init__(self):
         self.passed = 0
         self.failed = 0
+        if not TEST_DATABASE_URL or not (make_url(TEST_DATABASE_URL).database or '').startswith('test_'):
+            raise RuntimeError('Set TEST_DATABASE_URL to a dedicated test_ database; never use a business database')
         self.setup_database()
 
     def setup_database(self):

@@ -1,0 +1,12 @@
+{
+  "actions": [
+    "TOTP QR SVG rendered under strict CSP",
+    "Password + TOTP enrollment and recovery-code acknowledgement",
+    "User role saved through authenticated PATCH",
+    "Product created and displayed from database",
+    "Paid order shipped with tracking number",
+    "Audit records queried and report downloaded",
+    "Single dashboard entry and account-security layout at desktop and mobile widths"
+  ],
+  "errors": []
+}

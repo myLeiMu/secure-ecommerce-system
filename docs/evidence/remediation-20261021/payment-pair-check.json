@@ -1,0 +1,11 @@
+{
+  "time_utc": "2026-10-21T12:08:05.956564+00:00",
+  "checks": {
+    "public_matches_private": true,
+    "both_local_services_same_merchant_private": true,
+    "ecommerce_signature_bank_verifies": true,
+    "bank_envelope_ecommerce_decrypts": true,
+    "modified_amount_rejected": true
+  },
+  "scope": "Offline crypto interoperability using local rotated pair; no real order/payment written."
+}

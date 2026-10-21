@@ -1,6 +1,6 @@
 import sys
 import os
-import random
+import secrets
 import time
 import traceback
 
@@ -43,7 +43,7 @@ def example_usage_complete():
 
     # ========== 1. 用户注册 ==========
     print("\n=== 用户注册测试 ===")
-    random_suffix = random.randint(100000, 999999)
+    random_suffix = secrets.randbelow(900000) + 100000
     test_username = f"demo_user_{random_suffix}"
     test_phone = f"13800{random_suffix}"
 
@@ -63,23 +63,22 @@ def example_usage_complete():
     time.sleep(3)
 
     # 直接调用 EnhancedUserSystem 的 register 方法
+    password = secrets.token_urlsafe(24)
     register_result = service.user_system.register(
         username=test_username,
-        password="TestPass123!",
+        password=password,
         phone=test_phone,
         code=verification_code,
         email=f"{test_username}@example.com"
     )
 
     if not register_result[0]:  # register 返回的是 (success, message) 元组
-        print(f"用户注册失败: {register_result[1]}，将使用 testuser 继续测试。")
+        print(f"用户注册失败: {register_result[1]}，停止演示以避免操作已有账号。")
         test_results['用户注册'] = False
-        test_username = "testuser"
-        password = "TestPass123!"
+        return
     else:
         print("用户注册成功")
         test_results['用户注册'] = True
-        password = "TestPass123!"
 
     # ========== 2. JWT 登录与验证 ==========
     print("\n=== JWT 功能测试 ===")
@@ -90,7 +89,7 @@ def example_usage_complete():
 
     if login_result.get('success'):
         token = login_result.get('token')
-        print(f"登录成功，令牌前20位: {token[:20]}...")
+        print("登录成功，令牌仅保留在进程内。")
         payload = service.verify_token(token)
         if payload:
             print(f"令牌验证成功，用户: {payload.get('username')}")

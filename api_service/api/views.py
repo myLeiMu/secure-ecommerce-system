@@ -25,7 +25,7 @@ from api_service.api.payment_crypto import open_result_envelope, sign_payment_pa
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 from src.unified_service import UnifiedEcommerceService
 from sqlalchemy.orm import joinedload
-from gmssl import sm2
+from src.utils.secure_sm2 import SecureSM2
 from src.algorithm.ca_center import parse_certificate_pem, verify_certificate_with_root
 from src.Data_base.models.product import Product
 from src.Data_base.models.user import User
@@ -407,7 +407,7 @@ class CertLoginView(APIView):
                     "timestamp": datetime.now().isoformat()
                 }, status=status)
 
-            verifier = sm2.CryptSM2(public_key=cert_info["subject_public_key_hex"], private_key="")
+            verifier = SecureSM2(public_key=cert_info["subject_public_key_hex"], private_key="")
             if not verifier.verify(signature_hex, challenge.encode("utf-8")):
                 return Response({
                     "code": 401,
@@ -531,7 +531,7 @@ class CertMTLSLoginView(APIView):
 
         proxy_secret = os.environ.get('MTLS_PROXY_SECRET', '')
         provided_secret = request.META.get('HTTP_X_MTLS_PROXY_SECRET', '')
-        if not proxy_secret or not secrets.compare_digest(proxy_secret, provided_secret):
+        if not proxy_secret or not secrets.compare_digest(proxy_secret.encode(), provided_secret.encode()):
             return Response(APIResponse.error('证书登录必须经过受信任的 mTLS 网关', 403), status=403)
         verify_header = request.META.get("HTTP_X_SSL_CLIENT_VERIFY", "")
         if verify_header.upper() != "SUCCESS":

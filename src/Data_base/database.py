@@ -81,10 +81,11 @@ def _ensure_schema_updates():
         if 'users' in tables:
             user_cols = {c['name'] for c in inspector.get_columns('users')}
             if 'bank_card_number' not in user_cols:
-                conn.execute(text("ALTER TABLE users ADD COLUMN bank_card_number VARCHAR(64) NULL DEFAULT NULL"))
+                conn.execute(text("ALTER TABLE users ADD COLUMN bank_card_number VARCHAR(512) NULL DEFAULT NULL"))
             else:
                 conn.execute(text("UPDATE users SET bank_card_number = NULL WHERE bank_card_number = ''"))
-                conn.execute(text("ALTER TABLE users MODIFY COLUMN bank_card_number VARCHAR(64) NULL DEFAULT NULL"))
+                if engine.dialect.name == 'mysql':
+                    conn.execute(text("ALTER TABLE users MODIFY COLUMN bank_card_number VARCHAR(512) NULL DEFAULT NULL"))
 
         if 'orders' in tables:
             order_cols = {c['name'] for c in inspector.get_columns('orders')}

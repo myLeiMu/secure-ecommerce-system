@@ -3,7 +3,8 @@ bcrypt==5.0.0
 beautifulsoup4==4.13.5
 Brotli==1.2.0
 brotlicffi==1.0.9.2
-certifi==2025.10.5
+certifi==2026.10.19
+waitress==3.0.2
 cffi==2.1.1
 charset-normalizer==3.3.2
 colorama==0.4.6

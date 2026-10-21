@@ -1,0 +1,35 @@
+Creating test database for alias 'default'...
+
+2026-10-21 20:10:18,177 [INFO] payments.views: bank verify start merchant_id=ECOMMERCE_DEMO order_no=ORD10001 amount=25.50 timestamp=1792584618
+2026-10-21 20:10:18,187 [INFO] payments.views: bank verify success merchant_id=ECOMMERCE_DEMO order_no=ORD10001 amount=25.50
+.2026-10-21 20:10:18,217 [INFO] payments.views: bank verify start merchant_id=ECOMMERCE_DEMO order_no=ORD10001 amount=25.50 timestamp=1792584618
+2026-10-21 20:10:18,217 [WARNING] payments.views: bank verify failed merchant_id=ECOMMERCE_DEMO order_no=ORD10001 reason=bad_signature
+.2026-10-21 20:10:18,233 [INFO] payments.views: bank verify start merchant_id=ECOMMERCE_DEMO order_no=ORD10001 amount=25.50 timestamp=1792584317
+2026-10-21 20:10:18,243 [WARNING] payments.views: bank verify failed merchant_id=ECOMMERCE_DEMO order_no=ORD10001 reason=expired_timestamp timestamp=1792584317
+.2026-10-21 20:10:18,260 [INFO] payments.views: bank verify start merchant_id=ECOMMERCE_DEMO order_no=ORD10001 amount=1000.00 timestamp=1792584618
+2026-10-21 20:10:18,269 [INFO] payments.views: bank verify success merchant_id=ECOMMERCE_DEMO order_no=ORD10001 amount=1000.00
+2026-10-21 20:10:18,272 [WARNING] payments.views: bank payment failed transaction_id=BNK20261021121018FCAE3C0C order_no=ORD10001 reason=insufficient_balance account_number=6222000000000001 balance=100.00 amount=1000.00
+2026-10-21 20:10:18,282 [INFO] payments.views: bank callback sending transaction_id=BNK20261021121018FCAE3C0C order_no=ORD10001 callback_url=http://127.0.0.1:8080/api/pay/callback
+2026-10-21 20:10:18,282 [INFO] payments.views: bank callback completed transaction_id=BNK20261021121018FCAE3C0C order_no=ORD10001 status=success http_status=200
+.2026-10-21 20:10:18,301 [INFO] payments.views: bank verify start merchant_id=ECOMMERCE_DEMO order_no=ORD10001 amount=25.50 timestamp=1792584618
+2026-10-21 20:10:18,310 [INFO] payments.views: bank verify success merchant_id=ECOMMERCE_DEMO order_no=ORD10001 amount=25.50
+2026-10-21 20:10:18,313 [INFO] payments.views: bank payment success transaction_id=BNK20261021121018F536D849 merchant_id=ECOMMERCE_DEMO order_no=ORD10001 account_number=6222000000000001 amount=25.50 balance_after=74.50
+2026-10-21 20:10:18,325 [INFO] payments.views: bank callback sending transaction_id=BNK20261021121018F536D849 order_no=ORD10001 callback_url=http://127.0.0.1:8080/api/pay/callback
+2026-10-21 20:10:18,325 [INFO] payments.views: bank callback completed transaction_id=BNK20261021121018F536D849 order_no=ORD10001 status=success http_status=200
+.2026-10-21 20:10:18,350 [INFO] payments.views: bank verify start merchant_id=ECOMMERCE_DEMO order_no=ORD10001 amount=25.50 timestamp=1792584618
+2026-10-21 20:10:18,359 [INFO] payments.views: bank verify success merchant_id=ECOMMERCE_DEMO order_no=ORD10001 amount=25.50
+2026-10-21 20:10:18,362 [INFO] payments.views: bank payment success transaction_id=BNK202610211210184380F50E merchant_id=ECOMMERCE_DEMO order_no=ORD10001 account_number=6222000000000001 amount=25.50 balance_after=74.50
+2026-10-21 20:10:18,372 [INFO] payments.views: bank callback sending transaction_id=BNK202610211210184380F50E order_no=ORD10001 callback_url=http://127.0.0.1:8080/api/pay/callback
+2026-10-21 20:10:18,372 [INFO] payments.views: bank callback completed transaction_id=BNK202610211210184380F50E order_no=ORD10001 status=success http_status=200
+2026-10-21 20:10:18,374 [INFO] payments.views: bank verify start merchant_id=ECOMMERCE_DEMO order_no=ORD10001 amount=25.50 timestamp=1792584618
+2026-10-21 20:10:18,384 [INFO] payments.views: bank verify success merchant_id=ECOMMERCE_DEMO order_no=ORD10001 amount=25.50
+2026-10-21 20:10:18,385 [INFO] payments.views: bank payment duplicate success reused transaction_id=BNK202610211210184380F50E merchant_id=ECOMMERCE_DEMO order_no=ORD10001
+.
+----------------------------------------------------------------------
+Ran 6 tests in 0.236s
+
+OK
+Destroying test database for alias 'default'...
+
+Found 6 test(s).
+System check identified no issues (0 silenced).

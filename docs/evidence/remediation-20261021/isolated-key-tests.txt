@@ -1,0 +1,39 @@
+=== Python 环境验证 ===
+Python 版本: 3.13.5 | packaged by Anaconda, Inc. | (main, Jun 12 2025, 16:37:03) [MSC v.1929 64 bit (AMD64)]
+
+=== 大整数运算测试 ===
+大整数运算测试：2^1000 + 2^500 = 302位数
+
+=== SM2 功能测试 ===
+[+] 已生成SM2密钥对。
+[+] 公钥已保存到 public_key.json。
+[+] 已自动生成随机密码
+[+] 密码已保存到 C:\Users\66476\AppData\Local\Temp\tmpajyyga7z\auto_password.txt
+[+] 已安全保存加密的私钥到 C:\Users\66476\AppData\Local\Temp\tmpajyyga7z\sm2_key_secure.json
+[+] 私钥已加密保存为 sm2_key_secure.json。
+SM2 密钥生成成功
+
+=== 哈希功能测试 ===
+SM3 哈希测试成功，结果长度：32字节
+
+✅ 所有环境测试通过！
+===== SM2 密钥生成与加解密测试 =====
+[+] 已生成SM2密钥对。
+[+] 公钥已保存到 public_key.json。
+[+] 已自动生成随机密码
+[+] 密码已保存到 C:\Users\66476\AppData\Local\Temp\tmp77i75tdc\auto_password.txt
+[+] 已安全保存加密的私钥到 C:\Users\66476\AppData\Local\Temp\tmp77i75tdc\sm2_key_secure.json
+[+] 私钥已加密保存为 sm2_key_secure.json。
+测试成功：SM2 加解密结果一致！
+===== 在临时目录测试密钥轮换 =====
+[+] 已生成SM2密钥对。
+[+] 公钥已保存到 public_key.json。
+[+] 已自动生成随机密码
+[+] 密码已保存到 C:\Users\66476\AppData\Local\Temp\tmpv0xkoq2g\auto_password.txt
+[+] 已安全保存加密的私钥到 C:\Users\66476\AppData\Local\Temp\tmpv0xkoq2g\sm2_key_secure.json
+[+] 私钥已加密保存为 sm2_key_secure.json。
+[+] 公钥已写入 C:\Users\66476\AppData\Local\Temp\tmpv0xkoq2g\public_key.json
+[+] 已安全保存加密的私钥到 C:\Users\66476\AppData\Local\Temp\tmpv0xkoq2g\sm2_key_secure.json
+[+] 新密钥已生成并加密保存，轮换完成。
+完成：测试密钥已生成并保存，不修改业务密钥。
+{"temporary_key_tests_passed": 3, "business_key_files_unchanged": true}

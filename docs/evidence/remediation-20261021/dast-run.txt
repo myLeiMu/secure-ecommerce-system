@@ -1,0 +1,43 @@
+127.0.0.1 - - [21/Oct/2026 19:49:55] "GET /api/orders/1 HTTP/1.1" 200 236
+Forbidden: /api/orders/1
+127.0.0.1 - - [21/Oct/2026 19:49:55] "GET /api/orders/1 HTTP/1.1" 403 102
+Unauthorized: /api/admin/categories
+127.0.0.1 - - [21/Oct/2026 19:49:55] "POST /api/admin/categories HTTP/1.1" 401 72
+Bad Request: /api/products
+127.0.0.1 - - [21/Oct/2026 19:49:55] "GET /api/products?keyword=%27+OR+1%3D1-- HTTP/1.1" 400 126
+��Ʒ����: keyword='<script>alert(1)</script>', category=None, �����: 0
+127.0.0.1 - - [21/Oct/2026 19:49:55] "GET /api/products?keyword=%3Cscript%3Ealert%281%29%3C%2Fscript%3E HTTP/1.1" 200 81
+127.0.0.1 - - [21/Oct/2026 19:49:55] "GET /api/users/profile HTTP/1.1" 200 305
+127.0.0.1 - - [21/Oct/2026 19:49:56] "GET /api/users/profile HTTP/1.1" 200 305
+127.0.0.1 - - [21/Oct/2026 19:49:56] "POST /api/auth/logout HTTP/1.1" 200 88
+Unauthorized: /api/users/profile
+127.0.0.1 - - [21/Oct/2026 19:49:56] "GET /api/users/profile HTTP/1.1" 401 72
+Unauthorized: /api/users/profile
+127.0.0.1 - - [21/Oct/2026 19:49:56] "GET /api/users/profile HTTP/1.1" 401 72
+JWT��Կ��ʼ����ɣ�����: 62
+JWT��Կ��ʼ����ɣ�����: 62
+Redis����ʧ��: Error 10061 connecting to 127.0.0.1:1. ����Ŀ�����������ܾ����޷����ӡ�.����ʹ���ڴ滺��
+JWT��Կ��ʼ����ɣ�����: 62
+JWT��Կ��ʼ����ɣ�����: 62
+ͳһ���̷����ʼ����ɣ�
+JWT��Կ��ʼ����ɣ�����: 62
+JWT��Կ��ʼ����ɣ�����: 62
+ͳһ���̷����ʼ����ɣ�
+JWT��Կ��ʼ����ɣ�����: 62
+ͳһ���̷����ʼ����ɣ�
+[����] ����δ���У����û���: product_list:keyword=<script>alert(1)</script>
+JWT��Կ��ʼ����ɣ�����: 62
+JWT��Կ��ʼ����ɣ�����: 62
+ͳһ���̷����ʼ����ɣ�
+[����] ����δ���У����û���: user_profile:user1
+JWT��Կ��ʼ����ɣ�����: 62
+[����] ��������: user_profile:user1
+JWT��Կ��ʼ����ɣ�����: 62
+[JWT������] �����Ѽ��������������ʱ��: 60����
+JWT��Կ��ʼ����ɣ�����: 62
+ͳһ���̷����ʼ����ɣ�
+�û��ǳ�: user1
+[LOGOUT] �û��ǳ��������Ѽ���Redis������
+JWT��Կ��ʼ����ɣ�����: 62
+JWT������Ч: invalid token format
+docs\evidence\remediation-20261021\dast-regression.json: {"idor_protected": true, "cross_origin_write_denied": true, "sqli_probe_denied": true, "xss_script_not_reflected": true, "logout_revokes_bearer": true, "invalid_bearer_denied": true, "bank_card_disclosed": false}

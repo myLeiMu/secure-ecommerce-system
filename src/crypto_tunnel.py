@@ -9,6 +9,7 @@ from pathlib import Path
 from cryptography.fernet import Fernet
 from cryptography.exceptions import InvalidTag
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
+from src.utils.secure_sm2 import SecureSM2
 from gmssl import sm2, sm3
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -61,7 +62,7 @@ def read_key():
 
 def create_key():
     private = '%064x' % (secrets.randbelow(int(sm2.default_ecc_table['n'], 16) - 1) + 1)
-    crypt = sm2.CryptSM2(private_key=private, public_key='', mode=1)
+    crypt = SecureSM2(private_key=private, public_key='', mode=1)
     public = crypt._kg(int(private, 16), sm2.default_ecc_table['g'])
     record = {'kid': hashlib.sha256(bytes.fromhex(public)).hexdigest()[:16], 'public_key': '04' + public,
               'encrypted_private_key': Fernet(os.environ['TUNNEL_KEY_ENCRYPTION_KEY'].encode()).encrypt(private.encode()).decode()}
@@ -83,7 +84,7 @@ def unwrap_key(encoded, private):
     p, a, b = (int(curve[k], 16) for k in ('p', 'a', 'b'))
     if not (0 <= x < p and 0 <= y < p) or (y*y - x*x*x - a*x - b) % p:
         raise ValueError('Invalid envelope')
-    crypt = sm2.CryptSM2(private_key=private, public_key='', mode=1)
+    crypt = SecureSM2(private_key=private, public_key='', mode=1)
     shared = bytes.fromhex(crypt._kg(int(private, 16), point))
     key = crypt.decrypt(raw)
     # gmssl 3.2.2 decrypt does not verify C3; do it explicitly before use.

@@ -1,0 +1,13 @@
+{
+  "queries": 54,
+  "sql_ms": 53.05330059491098,
+  "ddl": 0,
+  "checkouts": 34,
+  "checkins": 34,
+  "checked_out": 0,
+  "peak_checked_out": 3,
+  "orders": 2,
+  "cart_items": 0,
+  "negative_stock": 0,
+  "time": 1792656389.1744692
+}

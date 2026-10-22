@@ -1,5 +1,7 @@
 # 第八周版本启动与环境配置
 
+> 第九周更新：启动入口保持不变；请求不再自动建表或生成 SM2 密钥。新环境仍先执行下文 init_security/seed_week1。已有环境的复合索引迁移和代码更新见[第九周部署说明](docs/week9/README.md#应用到现有本机环境)。保留现有 `.env` 和 keys。
+
 对应版本：[第八周交付索引](docs/week8/README.md)。旧的 HTTP 3000、Vue CLI 和直接 runserver 8080 说明已被本页替代。以下默认 Windows 项目目录 `D:/Coding/secure-ecommerce-project`，nginx 在 WSL Ubuntu-22.04；换机器必须调整路径和 WSL 网卡地址。
 
 ## 1. 已有本机环境日常启动

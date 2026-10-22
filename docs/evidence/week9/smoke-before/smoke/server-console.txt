@@ -1,0 +1,35 @@
+Traceback (most recent call last):
+  File "D:\Anaconda\envs\WAF\Lib\logging\config.py", line 604, in configure
+    handler = self.configure_handler(handlers[name])
+  File "D:\Anaconda\envs\WAF\Lib\logging\config.py", line 869, in configure_handler
+    result = factory(**kwargs)
+  File "D:\Anaconda\envs\WAF\Lib\logging\__init__.py", line 1219, in __init__
+    StreamHandler.__init__(self, self._open())
+                                 ~~~~~~~~~~^^
+  File "D:\Anaconda\envs\WAF\Lib\logging\__init__.py", line 1248, in _open
+    return open_func(self.baseFilename, self.mode,
+                     encoding=self.encoding, errors=self.errors)
+FileNotFoundError: [Errno 2] No such file or directory: 'D:\\Coding\\secure-ecommerce-project\\dist-releases\\week9-d539fc89b162f556\\source\\api_service\\logs\\django.log'
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "D:\Coding\secure-ecommerce-project\dist-releases\week9-d539fc89b162f556\source\scripts\week9_server.py", line 118, in <module>
+    main()
+    ~~~~^^
+  File "D:\Coding\secure-ecommerce-project\dist-releases\week9-d539fc89b162f556\source\scripts\week9_server.py", line 33, in main
+    django.setup()
+    ~~~~~~~~~~~~^^
+  File "D:\Anaconda\envs\WAF\Lib\site-packages\django\__init__.py", line 19, in setup
+    configure_logging(settings.LOGGING_CONFIG, settings.LOGGING)
+    ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Anaconda\envs\WAF\Lib\site-packages\django\utils\log.py", line 76, in configure_logging
+    logging_config_func(logging_settings)
+    ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+  File "D:\Anaconda\envs\WAF\Lib\logging\config.py", line 935, in dictConfig
+    dictConfigClass(config).configure()
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "D:\Anaconda\envs\WAF\Lib\logging\config.py", line 611, in configure
+    raise ValueError('Unable to configure handler '
+                     '%r' % name) from e
+ValueError: Unable to configure handler 'file'

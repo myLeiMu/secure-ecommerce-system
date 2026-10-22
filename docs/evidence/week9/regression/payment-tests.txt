@@ -1,0 +1,70 @@
+Creating test database for alias 'default' ('file:memorydb_default?mode=memory&cache=shared')...
+Found 6 test(s).
+Operations to perform:
+  Synchronize unmigrated apps: drf_yasg, messages, rest_framework, staticfiles
+  Apply all migrations: admin, auth, contenttypes, payments, sessions
+Synchronizing apps without migrations:
+  Creating tables...
+    Running deferred SQL...
+Running migrations:
+  Applying contenttypes.0001_initial... OK
+  Applying auth.0001_initial... OK
+  Applying admin.0001_initial... OK
+  Applying admin.0002_logentry_remove_auto_add... OK
+  Applying admin.0003_logentry_add_action_flag_choices... OK
+  Applying contenttypes.0002_remove_content_type_name... OK
+  Applying auth.0002_alter_permission_name_max_length... OK
+  Applying auth.0003_alter_user_email_max_length... OK
+  Applying auth.0004_alter_user_username_opts... OK
+  Applying auth.0005_alter_user_last_login_null... OK
+  Applying auth.0006_require_contenttypes_0002... OK
+  Applying auth.0007_alter_validators_add_error_messages... OK
+  Applying auth.0008_alter_user_username_max_length... OK
+  Applying auth.0009_alter_user_last_name_max_length... OK
+  Applying auth.0010_alter_group_name_max_length... OK
+  Applying auth.0011_update_proxy_permissions... OK
+  Applying auth.0012_alter_user_first_name_max_length... OK
+  Applying payments.0001_initial... OK
+  Applying payments.0002_bankaccount_sm2_keys... OK
+  Applying payments.0003_callback_fields_remove_result_signature... OK
+  Applying payments.0004_refunded_status... OK
+  Applying payments.0005_remove_bankaccount_sm2_keys... OK
+  Applying payments.0006_successful_order_key... OK
+  Applying sessions.0001_initial...test_pay_page_accepts_valid_signed_request (payments.tests.PaymentFlowTests.test_pay_page_accepts_valid_signed_request) ... 2026-10-22 16:05:18,049 [INFO] payments.views: bank verify start merchant_id=ECOMMERCE_DEMO order_no=ORD10001 amount=25.50 timestamp=1792656318
+2026-10-22 16:05:18,060 [INFO] payments.views: bank verify success merchant_id=ECOMMERCE_DEMO order_no=ORD10001 amount=25.50
+ok
+test_pay_page_rejects_bad_signature (payments.tests.PaymentFlowTests.test_pay_page_rejects_bad_signature) ... 2026-10-22 16:05:18,152 [INFO] payments.views: bank verify start merchant_id=ECOMMERCE_DEMO order_no=ORD10001 amount=25.50 timestamp=1792656318
+2026-10-22 16:05:18,152 [WARNING] payments.views: bank verify failed merchant_id=ECOMMERCE_DEMO order_no=ORD10001 reason=bad_signature
+ok
+test_pay_page_rejects_expired_timestamp (payments.tests.PaymentFlowTests.test_pay_page_rejects_expired_timestamp) ... 2026-10-22 16:05:18,169 [INFO] payments.views: bank verify start merchant_id=ECOMMERCE_DEMO order_no=ORD10001 amount=25.50 timestamp=1792656017
+2026-10-22 16:05:18,178 [WARNING] payments.views: bank verify failed merchant_id=ECOMMERCE_DEMO order_no=ORD10001 reason=expired_timestamp timestamp=1792656017
+ok
+test_process_payment_fails_on_low_balance (payments.tests.PaymentFlowTests.test_process_payment_fails_on_low_balance) ... 2026-10-22 16:05:18,197 [INFO] payments.views: bank verify start merchant_id=ECOMMERCE_DEMO order_no=ORD10001 amount=1000.00 timestamp=1792656318
+2026-10-22 16:05:18,208 [INFO] payments.views: bank verify success merchant_id=ECOMMERCE_DEMO order_no=ORD10001 amount=1000.00
+2026-10-22 16:05:18,211 [WARNING] payments.views: bank payment failed transaction_id=BNK20261022080518841EB9EE order_no=ORD10001 reason=insufficient_balance account_number=6222000000000001 balance=100.00 amount=1000.00
+2026-10-22 16:05:18,223 [INFO] payments.views: bank callback sending transaction_id=BNK20261022080518841EB9EE order_no=ORD10001 callback_url=http://127.0.0.1:8080/api/pay/callback
+2026-10-22 16:05:18,223 [INFO] payments.views: bank callback completed transaction_id=BNK20261022080518841EB9EE order_no=ORD10001 status=success http_status=200
+ok
+test_process_payment_redirects_and_posts_same_digital_envelope (payments.tests.PaymentFlowTests.test_process_payment_redirects_and_posts_same_digital_envelope) ... 2026-10-22 16:05:18,243 [INFO] payments.views: bank verify start merchant_id=ECOMMERCE_DEMO order_no=ORD10001 amount=25.50 timestamp=1792656318
+2026-10-22 16:05:18,254 [INFO] payments.views: bank verify success merchant_id=ECOMMERCE_DEMO order_no=ORD10001 amount=25.50
+2026-10-22 16:05:18,256 [INFO] payments.views: bank payment success transaction_id=BNK20261022080518E75CA39D merchant_id=ECOMMERCE_DEMO order_no=ORD10001 account_number=6222000000000001 amount=25.50 balance_after=74.50
+2026-10-22 16:05:18,271 [INFO] payments.views: bank callback sending transaction_id=BNK20261022080518E75CA39D order_no=ORD10001 callback_url=http://127.0.0.1:8080/api/pay/callback
+2026-10-22 16:05:18,271 [INFO] payments.views: bank callback completed transaction_id=BNK20261022080518E75CA39D order_no=ORD10001 status=success http_status=200
+ok
+test_replayed_successful_payment_does_not_debit_twice (payments.tests.PaymentFlowTests.test_replayed_successful_payment_does_not_debit_twice) ... 2026-10-22 16:05:18,305 [INFO] payments.views: bank verify start merchant_id=ECOMMERCE_DEMO order_no=ORD10001 amount=25.50 timestamp=1792656318
+2026-10-22 16:05:18,315 [INFO] payments.views: bank verify success merchant_id=ECOMMERCE_DEMO order_no=ORD10001 amount=25.50
+2026-10-22 16:05:18,318 [INFO] payments.views: bank payment success transaction_id=BNK202610220805180CC77C82 merchant_id=ECOMMERCE_DEMO order_no=ORD10001 account_number=6222000000000001 amount=25.50 balance_after=74.50
+2026-10-22 16:05:18,330 [INFO] payments.views: bank callback sending transaction_id=BNK202610220805180CC77C82 order_no=ORD10001 callback_url=http://127.0.0.1:8080/api/pay/callback
+2026-10-22 16:05:18,330 [INFO] payments.views: bank callback completed transaction_id=BNK202610220805180CC77C82 order_no=ORD10001 status=success http_status=200
+2026-10-22 16:05:18,332 [INFO] payments.views: bank verify start merchant_id=ECOMMERCE_DEMO order_no=ORD10001 amount=25.50 timestamp=1792656318
+2026-10-22 16:05:18,342 [INFO] payments.views: bank verify success merchant_id=ECOMMERCE_DEMO order_no=ORD10001 amount=25.50
+2026-10-22 16:05:18,343 [INFO] payments.views: bank payment duplicate success reused transaction_id=BNK202610220805180CC77C82 merchant_id=ECOMMERCE_DEMO order_no=ORD10001
+ok
+
+----------------------------------------------------------------------
+Ran 6 tests in 0.333s
+
+OK
+Destroying test database for alias 'default' ('file:memorydb_default?mode=memory&cache=shared')...
+ OK
+System check identified no issues (0 silenced).

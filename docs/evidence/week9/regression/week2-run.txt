@@ -1,0 +1,56 @@
+Traceback (most recent call last):
+  File "D:\Coding\secure-ecommerce-project\scripts\week2_classroom.py", line 39, in run
+    root_path.write_text(root_cert.to_pem(), encoding='utf-8')
+    ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Anaconda\envs\WAF\Lib\pathlib\_local.py", line 555, in write_text
+    return PathBase.write_text(self, data, encoding, errors, newline)
+           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Anaconda\envs\WAF\Lib\pathlib\_abc.py", line 651, in write_text
+    with self.open(mode='w', encoding=encoding, errors=errors, newline=newline) as f:
+         ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Anaconda\envs\WAF\Lib\pathlib\_local.py", line 537, in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+PermissionError: [Errno 13] Permission denied: 'C:\\Users\\66476\\AppData\\Local\\Packages\\sandbox.{1f1eb47e-fda6-4450-99c0-17eef7debcc3}\\AC\\Temp\\week2-cert-ssmw4m_l\\root.pem'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\Anaconda\envs\WAF\Lib\shutil.py", line 631, in _rmtree_unsafe
+    os.rmdir(path)
+    ~~~~~~~~^^^^^^
+PermissionError: [WinError 5] 拒绝访问。: 'C:\\Users\\66476\\AppData\\Local\\Packages\\sandbox.{1f1eb47e-fda6-4450-99c0-17eef7debcc3}\\AC\\Temp\\week2-cert-ssmw4m_l'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\Coding\secure-ecommerce-project\scripts\week2_classroom.py", line 144, in <module>
+    run(args.serve, args.output_dir)
+    ~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Coding\secure-ecommerce-project\scripts\week2_classroom.py", line 31, in run
+    with tempfile.TemporaryDirectory(prefix='week2-cert-') as temporary:
+         ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Anaconda\envs\WAF\Lib\tempfile.py", line 950, in __exit__
+    self.cleanup()
+    ~~~~~~~~~~~~^^
+  File "D:\Anaconda\envs\WAF\Lib\tempfile.py", line 954, in cleanup
+    self._rmtree(self.name, ignore_errors=self._ignore_cleanup_errors)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Anaconda\envs\WAF\Lib\tempfile.py", line 934, in _rmtree
+    _shutil.rmtree(name, onexc=onexc)
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^
+  File "D:\Anaconda\envs\WAF\Lib\shutil.py", line 790, in rmtree
+    return _rmtree_unsafe(path, onexc)
+  File "D:\Anaconda\envs\WAF\Lib\shutil.py", line 635, in _rmtree_unsafe
+    onexc(os.rmdir, path, err)
+    ~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Anaconda\envs\WAF\Lib\tempfile.py", line 906, in onexc
+    _resetperms(path)
+    ~~~~~~~~~~~^^^^^^
+  File "D:\Anaconda\envs\WAF\Lib\tempfile.py", line 286, in _resetperms
+    _dont_follow_symlinks(_os.chmod, path, 0o700)
+    ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Anaconda\envs\WAF\Lib\tempfile.py", line 275, in _dont_follow_symlinks
+    func(path, *args, follow_symlinks=False)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+PermissionError: [WinError 5] 拒绝访问。: 'C:\\Users\\66476\\AppData\\Local\\Packages\\sandbox.{1f1eb47e-fda6-4450-99c0-17eef7debcc3}\\AC\\Temp\\week2-cert-ssmw4m_l'

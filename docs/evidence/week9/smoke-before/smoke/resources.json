@@ -1,0 +1,16 @@
+[
+  {
+    "time_utc": "2026-10-22T03:13:02.322919+00:00",
+    "stage": "startup",
+    "backend_cpu_percent_one_core": 35.5,
+    "backend_rss_bytes": 32886784,
+    "machine_cpu_percent": 0.0
+  },
+  {
+    "time_utc": "2026-10-22T03:13:03.325258+00:00",
+    "stage": "startup",
+    "backend_cpu_percent_one_core": 21.8,
+    "backend_rss_bytes": 41189376,
+    "machine_cpu_percent": 23.7
+  }
+]

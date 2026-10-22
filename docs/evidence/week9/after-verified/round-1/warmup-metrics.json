@@ -1,0 +1,34 @@
+{
+  "login": {
+    "samples": 4,
+    "errors": 0,
+    "error_rate_percent": 0.0,
+    "p95_ms": 223,
+    "mean_ms": 82.75,
+    "throughput_rps": 0.8586
+  },
+  "products": {
+    "samples": 4,
+    "errors": 0,
+    "error_rate_percent": 0.0,
+    "p95_ms": 27,
+    "mean_ms": 18.0,
+    "throughput_rps": 0.9485
+  },
+  "order": {
+    "samples": 4,
+    "errors": 0,
+    "error_rate_percent": 0.0,
+    "p95_ms": 63,
+    "mean_ms": 52.75,
+    "throughput_rps": 0.9461
+  },
+  "setup_cart": {
+    "samples": 4,
+    "errors": 0,
+    "error_rate_percent": 0.0,
+    "p95_ms": 39,
+    "mean_ms": 34.25,
+    "throughput_rps": 0.9483
+  }
+}

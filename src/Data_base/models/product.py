@@ -26,6 +26,10 @@ class Category(Base):
 
 class Product(Base):
     __tablename__ = 'products'
+    __table_args__ = (
+        Index('ix_products_catalog', 'is_active', 'is_available', 'created_at'),
+        Index('ix_products_category_catalog', 'category_id', 'is_active', 'is_available', 'created_at'),
+    )
 
     product_id = Column(BigInteger, primary_key=True, autoincrement=True)
     sku = Column(String(50), unique=True, nullable=False, index=True)

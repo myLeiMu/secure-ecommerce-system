@@ -1,0 +1,159 @@
+{
+  "environment_comparable": true,
+  "target": "Each target API pooled p95 reduction >=20%, error rate <=1%",
+  "all_three_targets_pass": true,
+  "comparison": {
+    "login": {
+      "before": {
+        "samples": 150,
+        "errors": 6,
+        "error_rate_percent": 4.0,
+        "p95_ms": 8291,
+        "mean_ms": 5346.093333333333,
+        "throughput_rps": 0.17517511672501948,
+        "response_codes": {
+          "200": 144,
+          "500": 6
+        }
+      },
+      "after": {
+        "samples": 150,
+        "errors": 0,
+        "error_rate_percent": 0.0,
+        "p95_ms": 58,
+        "mean_ms": 33.6,
+        "throughput_rps": 0.4995237873227523,
+        "response_codes": {
+          "200": 150
+        }
+      },
+      "p95_reduction_percent": 99.30044626703655,
+      "meets_target": true,
+      "round_p95_before": [
+        7426,
+        8592,
+        7533
+      ],
+      "round_p95_after": [
+        54,
+        101,
+        62
+      ]
+    },
+    "products": {
+      "before": {
+        "samples": 150,
+        "errors": 0,
+        "error_rate_percent": 0.0,
+        "p95_ms": 3654,
+        "mean_ms": 1223.6266666666668,
+        "throughput_rps": 0.17776345136036445,
+        "response_codes": {
+          "200": 150
+        }
+      },
+      "after": {
+        "samples": 150,
+        "errors": 0,
+        "error_rate_percent": 0.0,
+        "p95_ms": 21,
+        "mean_ms": 8.826666666666666,
+        "throughput_rps": 0.5012347081644452,
+        "response_codes": {
+          "200": 150
+        }
+      },
+      "p95_reduction_percent": 99.42528735632183,
+      "meets_target": true,
+      "round_p95_before": [
+        3443,
+        3849,
+        2989
+      ],
+      "round_p95_after": [
+        20,
+        22,
+        18
+      ]
+    },
+    "order": {
+      "before": {
+        "samples": 150,
+        "errors": 6,
+        "error_rate_percent": 4.0,
+        "p95_ms": 3621,
+        "mean_ms": 493.12,
+        "throughput_rps": 0.1794290567414487,
+        "response_codes": {
+          "200": 144,
+          "401": 6
+        }
+      },
+      "after": {
+        "samples": 150,
+        "errors": 0,
+        "error_rate_percent": 0.0,
+        "p95_ms": 61,
+        "mean_ms": 40.553333333333335,
+        "throughput_rps": 0.501388847106485,
+        "response_codes": {
+          "200": 150
+        }
+      },
+      "p95_reduction_percent": 98.31538249102458,
+      "meets_target": true,
+      "round_p95_before": [
+        169,
+        232,
+        3995
+      ],
+      "round_p95_after": [
+        60,
+        65,
+        51
+      ]
+    },
+    "setup_cart": {
+      "before": {
+        "samples": 150,
+        "errors": 6,
+        "error_rate_percent": 4.0,
+        "p95_ms": 3475,
+        "mean_ms": 449.38666666666666,
+        "throughput_rps": 0.17942562269662357,
+        "response_codes": {
+          "200": 144,
+          "401": 6
+        }
+      },
+      "after": {
+        "samples": 150,
+        "errors": 0,
+        "error_rate_percent": 0.0,
+        "p95_ms": 47,
+        "mean_ms": 33.42666666666667,
+        "throughput_rps": 0.501289986231235,
+        "response_codes": {
+          "200": 150
+        }
+      },
+      "p95_reduction_percent": 98.64748201438849,
+      "meets_target": true,
+      "round_p95_before": [
+        141,
+        165,
+        4057
+      ],
+      "round_p95_after": [
+        104,
+        44,
+        39
+      ]
+    }
+  },
+  "limitations": [
+    "2 concurrent users, loopback HTTP API, dedicated MySQL; not production capacity.",
+    "JMeter and MySQL share this machine; CPU/RSS and raw JTL remain available.",
+    "Warmup and smoke excluded; failed samples included, no retry removal."
+  ]
+}

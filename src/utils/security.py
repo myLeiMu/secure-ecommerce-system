@@ -1,8 +1,19 @@
 import re
 import logging
+import hashlib
+import hmac
 from typing import Optional
 
 logger = logging.getLogger(__name__)
+
+# Probe the provider once, without caching passwords, salts, or derived keys.
+try:
+    _SM3_TEMPLATE = hashlib.new('sm3')
+    hashlib.pbkdf2_hmac('sm3', b'provider-check', b'salt', 1)
+    _NATIVE_SM3 = True
+except (ValueError, AttributeError):
+    _SM3_TEMPLATE = None
+    _NATIVE_SM3 = False
 
 
 class SQLInjectionValidator:
@@ -165,16 +176,21 @@ class InputValidator:
 
 
 def sm3_digest(data: bytes) -> bytes:
+    if _NATIVE_SM3:
+        digest = _SM3_TEMPLATE.copy()  # Each operation has independent mutable state.
+        digest.update(data)
+        return digest.digest()
     from gmssl import sm3
     return bytes.fromhex(sm3.sm3_hash(list(data)))
 
 
 def sm3_hexdigest(data: bytes) -> str:
-    from gmssl import sm3
-    return sm3.sm3_hash(list(data))
+    return sm3_digest(data).hex()
 
 
 def hmac_sm3(key: bytes, message: bytes) -> bytes:
+    if _NATIVE_SM3:
+        return hmac.digest(key, message, 'sm3')
     block_size = 64
     if len(key) > block_size:
         key = sm3_digest(key)
@@ -191,6 +207,9 @@ def pbkdf2_sm3(password: bytes, salt: bytes, iterations: int, dklen: int) -> byt
         raise ValueError("iterations must be positive")
     if dklen <= 0:
         raise ValueError("dklen must be positive")
+
+    if _NATIVE_SM3:
+        return hashlib.pbkdf2_hmac('sm3', password, salt, iterations, dklen)
 
     hlen = 32
     blocks = (dklen + hlen - 1) // hlen

@@ -1,0 +1,171 @@
+{
+  "time_utc": "2026-10-22T16:21:29.083239+00:00",
+  "scope": "Existing local application MySQL schema; additive indexes only",
+  "product_rows_before": 32,
+  "product_rows_after": 32,
+  "indexes_before": [
+    {
+      "name": "idx_brand_id",
+      "column_names": [
+        "brand_id"
+      ],
+      "unique": false
+    },
+    {
+      "name": "idx_category_id",
+      "column_names": [
+        "category_id"
+      ],
+      "unique": false
+    },
+    {
+      "name": "idx_is_available",
+      "column_names": [
+        "is_available"
+      ],
+      "unique": false
+    },
+    {
+      "name": "idx_is_featured",
+      "column_names": [
+        "is_featured"
+      ],
+      "unique": false
+    },
+    {
+      "name": "idx_sale_price",
+      "column_names": [
+        "sale_price"
+      ],
+      "unique": false
+    },
+    {
+      "name": "idx_sku",
+      "column_names": [
+        "sku"
+      ],
+      "unique": false
+    },
+    {
+      "name": "ix_products_seller_id",
+      "column_names": [
+        "seller_id"
+      ],
+      "unique": false
+    },
+    {
+      "name": "ix_products_status",
+      "column_names": [
+        "status"
+      ],
+      "unique": false
+    },
+    {
+      "name": "sku",
+      "column_names": [
+        "sku"
+      ],
+      "unique": true,
+      "type": "UNIQUE"
+    }
+  ],
+  "indexes_after": [
+    {
+      "name": "idx_brand_id",
+      "column_names": [
+        "brand_id"
+      ],
+      "unique": false
+    },
+    {
+      "name": "idx_category_id",
+      "column_names": [
+        "category_id"
+      ],
+      "unique": false
+    },
+    {
+      "name": "idx_is_available",
+      "column_names": [
+        "is_available"
+      ],
+      "unique": false
+    },
+    {
+      "name": "idx_is_featured",
+      "column_names": [
+        "is_featured"
+      ],
+      "unique": false
+    },
+    {
+      "name": "idx_sale_price",
+      "column_names": [
+        "sale_price"
+      ],
+      "unique": false
+    },
+    {
+      "name": "idx_sku",
+      "column_names": [
+        "sku"
+      ],
+      "unique": false
+    },
+    {
+      "name": "ix_products_catalog",
+      "column_names": [
+        "is_active",
+        "is_available",
+        "created_at"
+      ],
+      "unique": false
+    },
+    {
+      "name": "ix_products_category_catalog",
+      "column_names": [
+        "category_id",
+        "is_active",
+        "is_available",
+        "created_at"
+      ],
+      "unique": false
+    },
+    {
+      "name": "ix_products_seller_id",
+      "column_names": [
+        "seller_id"
+      ],
+      "unique": false
+    },
+    {
+      "name": "ix_products_status",
+      "column_names": [
+        "status"
+      ],
+      "unique": false
+    },
+    {
+      "name": "sku",
+      "column_names": [
+        "sku"
+      ],
+      "unique": true,
+      "type": "UNIQUE"
+    }
+  ],
+  "migration": {
+    "dialect": "mysql",
+    "dry_run": false,
+    "missing_before": [
+      "ix_products_catalog",
+      "ix_products_category_catalog"
+    ],
+    "created": [
+      "ix_products_catalog",
+      "ix_products_category_catalog"
+    ]
+  },
+  "password_changed": false,
+  "application_restarted": false
+}

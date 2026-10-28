@@ -1,0 +1,105 @@
+{
+  "redis_error_rate_pass": true,
+  "comparison": {
+    "login": {
+      "locmem": {
+        "samples": 1800,
+        "errors": 0,
+        "error_rate_percent": 0.0,
+        "p95_ms": 523,
+        "mean_ms": 345.7266666666667,
+        "throughput_rps": 23.67517657735864,
+        "response_codes": {
+          "200": 1800
+        }
+      },
+      "redis": {
+        "samples": 1800,
+        "errors": 0,
+        "error_rate_percent": 0.0,
+        "p95_ms": 651,
+        "mean_ms": 402.505,
+        "throughput_rps": 20.694888362574446,
+        "response_codes": {
+          "200": 1800
+        }
+      },
+      "redis_p95_change_percent": 24.47418738049713
+    },
+    "products": {
+      "locmem": {
+        "samples": 1800,
+        "errors": 0,
+        "error_rate_percent": 0.0,
+        "p95_ms": 423,
+        "mean_ms": 258.92944444444447,
+        "throughput_rps": 23.929805902685455,
+        "response_codes": {
+          "200": 1800
+        }
+      },
+      "redis": {
+        "samples": 1800,
+        "errors": 0,
+        "error_rate_percent": 0.0,
+        "p95_ms": 504,
+        "mean_ms": 295.7183333333333,
+        "throughput_rps": 20.896700643154006,
+        "response_codes": {
+          "200": 1800
+        }
+      },
+      "redis_p95_change_percent": 19.148936170212767
+    },
+    "order": {
+      "locmem": {
+        "samples": 1800,
+        "errors": 0,
+        "error_rate_percent": 0.0,
+        "p95_ms": 521,
+        "mean_ms": 342.5577777777778,
+        "throughput_rps": 24.003200426723566,
+        "response_codes": {
+          "200": 1800
+        }
+      },
+      "redis": {
+        "samples": 1800,
+        "errors": 0,
+        "error_rate_percent": 0.0,
+        "p95_ms": 628,
+        "mean_ms": 393.89666666666665,
+        "throughput_rps": 20.935344677188617,
+        "response_codes": {
+          "200": 1800
+        }
+      },
+      "redis_p95_change_percent": 20.53742802303263
+    },
+    "setup_cart": {
+      "locmem": {
+        "samples": 1800,
+        "errors": 0,
+        "error_rate_percent": 0.0,
+        "p95_ms": 464,
+        "mean_ms": 294.2938888888889,
+        "throughput_rps": 23.95113967506287,
+        "response_codes": {
+          "200": 1800
+        }
+      },
+      "redis": {
+        "samples": 1800,
+        "errors": 0,
+        "error_rate_percent": 0.0,
+        "p95_ms": 524,
+        "mean_ms": 321.9605555555556,
+        "throughput_rps": 20.88506253915949,
+        "response_codes": {
+          "200": 1800
+        }
+      },
+      "redis_p95_change_percent": 12.931034482758621
+    }
+  }
+}

@@ -23,6 +23,17 @@ class TrustedHTTPSMiddleware(MiddlewareMixin):
                 and request.method not in ('GET', 'HEAD', 'OPTIONS')):
             return JsonResponse({'success': False, 'message': '请通过 HTTPS 入口访问系统'}, status=426)
 
+class BusinessSessionCleanupMiddleware:
+    """Bound SQLAlchemy service sessions to the request, rather than GC timing."""
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        from src.Data_base.database import request_session_scope
+        with request_session_scope():
+            return self.get_response(request)
+
+
 class JWTAuthenticationMiddleware(MiddlewareMixin):
     PUBLIC = {'/api/auth/login', '/api/auth/cert/challenge', '/api/auth/cert/login',
               '/api/auth/cert/mtls-login', '/api/auth/mfa/verify',

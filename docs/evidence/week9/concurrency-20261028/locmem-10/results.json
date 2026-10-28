@@ -1,0 +1,214 @@
+{
+  "smoke": {
+    "metrics": {
+      "login": {
+        "samples": 10,
+        "errors": 0,
+        "error_rate_percent": 0.0,
+        "p95_ms": 252,
+        "mean_ms": 135.3,
+        "throughput_rps": 9.8814
+      },
+      "products": {
+        "samples": 10,
+        "errors": 0,
+        "error_rate_percent": 0.0,
+        "p95_ms": 49,
+        "mean_ms": 25.4,
+        "throughput_rps": 15.873
+      },
+      "order": {
+        "samples": 10,
+        "errors": 0,
+        "error_rate_percent": 0.0,
+        "p95_ms": 87,
+        "mean_ms": 61.1,
+        "throughput_rps": 17.8891
+      },
+      "setup_cart": {
+        "samples": 10,
+        "errors": 0,
+        "error_rate_percent": 0.0,
+        "p95_ms": 96,
+        "mean_ms": 48.8,
+        "throughput_rps": 16.7224
+      }
+    },
+    "persistence": {
+      "expected_orders": 10,
+      "orders": 10,
+      "cart_items": 0,
+      "negative_stock": 0
+    },
+    "sql_delta": {
+      "queries": 287,
+      "sql_ms": 431.984,
+      "ddl": 0,
+      "checkouts": 104,
+      "checkins": 104,
+      "cache_hits": 3,
+      "cache_misses": 7,
+      "cache_errors": 0
+    },
+    "peak_pool_checked_out_including_monitor": 5
+  },
+  "round-1": {
+    "metrics": {
+      "login": {
+        "samples": 200,
+        "errors": 0,
+        "error_rate_percent": 0.0,
+        "p95_ms": 223,
+        "mean_ms": 137.755,
+        "throughput_rps": 19.8965
+      },
+      "products": {
+        "samples": 200,
+        "errors": 0,
+        "error_rate_percent": 0.0,
+        "p95_ms": 140,
+        "mean_ms": 79.335,
+        "throughput_rps": 20.8073
+      },
+      "order": {
+        "samples": 200,
+        "errors": 0,
+        "error_rate_percent": 0.0,
+        "p95_ms": 213,
+        "mean_ms": 137.865,
+        "throughput_rps": 21.0172
+      },
+      "setup_cart": {
+        "samples": 200,
+        "errors": 0,
+        "error_rate_percent": 0.0,
+        "p95_ms": 183,
+        "mean_ms": 120.96,
+        "throughput_rps": 20.8616
+      }
+    },
+    "persistence": {
+      "expected_orders": 220,
+      "orders": 220,
+      "cart_items": 0,
+      "negative_stock": 0
+    },
+    "sql_delta": {
+      "queries": 5701,
+      "sql_ms": 18340.939,
+      "ddl": 0,
+      "checkouts": 1916,
+      "checkins": 1916,
+      "cache_hits": 99,
+      "cache_misses": 101,
+      "cache_errors": 0
+    },
+    "peak_pool_checked_out_including_monitor": 5
+  },
+  "round-2": {
+    "metrics": {
+      "login": {
+        "samples": 200,
+        "errors": 0,
+        "error_rate_percent": 0.0,
+        "p95_ms": 183,
+        "mean_ms": 119.485,
+        "throughput_rps": 21.4569
+      },
+      "products": {
+        "samples": 200,
+        "errors": 0,
+        "error_rate_percent": 0.0,
+        "p95_ms": 138,
+        "mean_ms": 73.555,
+        "throughput_rps": 22.1214
+      },
+      "order": {
+        "samples": 200,
+        "errors": 0,
+        "error_rate_percent": 0.0,
+        "p95_ms": 188,
+        "mean_ms": 122.03,
+        "throughput_rps": 22.2841
+      },
+      "setup_cart": {
+        "samples": 200,
+        "errors": 0,
+        "error_rate_percent": 0.0,
+        "p95_ms": 162,
+        "mean_ms": 108.525,
+        "throughput_rps": 22.1828
+      }
+    },
+    "persistence": {
+      "expected_orders": 220,
+      "orders": 220,
+      "cart_items": 0,
+      "negative_stock": 0
+    },
+    "sql_delta": {
+      "queries": 5699,
+      "sql_ms": 16731.171,
+      "ddl": 0,
+      "checkouts": 1914,
+      "checkins": 1914,
+      "cache_hits": 101,
+      "cache_misses": 99,
+      "cache_errors": 0
+    },
+    "peak_pool_checked_out_including_monitor": 5
+  },
+  "round-3": {
+    "metrics": {
+      "login": {
+        "samples": 200,
+        "errors": 0,
+        "error_rate_percent": 0.0,
+        "p95_ms": 163,
+        "mean_ms": 106.28,
+        "throughput_rps": 25.025
+      },
+      "products": {
+        "samples": 200,
+        "errors": 0,
+        "error_rate_percent": 0.0,
+        "p95_ms": 103,
+        "mean_ms": 59.93,
+        "throughput_rps": 25.8933
+      },
+      "order": {
+        "samples": 200,
+        "errors": 0,
+        "error_rate_percent": 0.0,
+        "p95_ms": 158,
+        "mean_ms": 106.4,
+        "throughput_rps": 26.1063
+      },
+      "setup_cart": {
+        "samples": 200,
+        "errors": 0,
+        "error_rate_percent": 0.0,
+        "p95_ms": 137,
+        "mean_ms": 93.48,
+        "throughput_rps": 25.9808
+      }
+    },
+    "persistence": {
+      "expected_orders": 220,
+      "orders": 220,
+      "cart_items": 0,
+      "negative_stock": 0
+    },
+    "sql_delta": {
+      "queries": 5690,
+      "sql_ms": 13515.0,
+      "ddl": 0,
+      "checkouts": 1904,
+      "checkins": 1904,
+      "cache_hits": 110,
+      "cache_misses": 90,
+      "cache_errors": 0
+    },
+    "peak_pool_checked_out_including_monitor": 5
+  }
+}

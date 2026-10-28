@@ -1,0 +1,10 @@
+{
+  "login_status": 200,
+  "health_status": 200,
+  "anonymous_admin_status": 401,
+  "invalid_host_status": 403,
+  "nonce_in_html": true,
+  "nonce_rotates": true,
+  "csp_uses_5173": true,
+  "full_gateway_check": "incomplete: existing 8443 health request timed out"
+}

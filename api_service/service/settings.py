@@ -44,6 +44,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'api.middleware.BusinessSessionCleanupMiddleware',
     'api.middleware.JWTAuthenticationMiddleware',
     'api.middleware.RateLimitMiddleware',
     'api.tunnel.TunnelMiddleware',

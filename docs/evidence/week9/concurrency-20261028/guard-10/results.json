@@ -1,0 +1,108 @@
+{
+  "smoke": {
+    "metrics": {
+      "login": {
+        "samples": 10,
+        "errors": 0,
+        "error_rate_percent": 0.0,
+        "p95_ms": 412,
+        "mean_ms": 263.6,
+        "throughput_rps": 10.01
+      },
+      "products": {
+        "samples": 10,
+        "errors": 0,
+        "error_rate_percent": 0.0,
+        "p95_ms": 59,
+        "mean_ms": 45.0,
+        "throughput_rps": 24.57
+      },
+      "order": {
+        "samples": 10,
+        "errors": 0,
+        "error_rate_percent": 0.0,
+        "p95_ms": 154,
+        "mean_ms": 111.8,
+        "throughput_rps": 34.965
+      },
+      "setup_cart": {
+        "samples": 10,
+        "errors": 0,
+        "error_rate_percent": 0.0,
+        "p95_ms": 156,
+        "mean_ms": 103.1,
+        "throughput_rps": 28.49
+      }
+    },
+    "persistence": {
+      "expected_orders": 10,
+      "orders": 10,
+      "cart_items": 0,
+      "negative_stock": 0
+    },
+    "sql_delta": {
+      "queries": 285,
+      "sql_ms": 852.155,
+      "ddl": 0,
+      "checkouts": 102,
+      "checkins": 102,
+      "cache_hits": 5,
+      "cache_misses": 5,
+      "cache_errors": 0
+    },
+    "peak_pool_checked_out_including_monitor": 5
+  },
+  "round-1": {
+    "metrics": {
+      "login": {
+        "samples": 50,
+        "errors": 35,
+        "error_rate_percent": 70.0,
+        "p95_ms": 114,
+        "mean_ms": 37.02,
+        "throughput_rps": 41.9463
+      },
+      "products": {
+        "samples": 50,
+        "errors": 0,
+        "error_rate_percent": 0.0,
+        "p95_ms": 50,
+        "mean_ms": 18.68,
+        "throughput_rps": 59.6659
+      },
+      "order": {
+        "samples": 50,
+        "errors": 40,
+        "error_rate_percent": 80.0,
+        "p95_ms": 85,
+        "mean_ms": 36.28,
+        "throughput_rps": 68.306
+      },
+      "setup_cart": {
+        "samples": 50,
+        "errors": 35,
+        "error_rate_percent": 70.0,
+        "p95_ms": 89,
+        "mean_ms": 36.06,
+        "throughput_rps": 63.4518
+      }
+    },
+    "persistence": {
+      "expected_orders": 30,
+      "orders": 30,
+      "cart_items": 5,
+      "negative_stock": 0
+    },
+    "sql_delta": {
+      "queries": 461,
+      "sql_ms": 979.291,
+      "ddl": 0,
+      "checkouts": 209,
+      "checkins": 209,
+      "cache_hits": 44,
+      "cache_misses": 6,
+      "cache_errors": 0
+    },
+    "peak_pool_checked_out_including_monitor": 5
+  }
+}

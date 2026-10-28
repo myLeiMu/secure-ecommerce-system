@@ -1,0 +1,1040 @@
+{
+  "environment": "Isolated SQLite; collected from actual middleware/views, no inserted fake audit events",
+  "events": [
+    {
+      "case": "api_service.tests.test_tunnel.TunnelTests.test_authorization_route_binding_and_three_roles",
+      "action": "auth.denied",
+      "resource": "/api/tunnel/demo",
+      "result": "denied",
+      "role": null,
+      "username": null,
+      "created_at": "2026-10-22T08:09:42.480267"
+    },
+    {
+      "case": "api_service.tests.test_tunnel.TunnelTests.test_authorization_route_binding_and_three_roles",
+      "action": "tunnel.invalid",
+      "resource": "/api/tunnel/demo",
+      "result": "denied",
+      "role": "admin",
+      "username": "user3",
+      "created_at": "2026-10-22T08:09:42.528395"
+    },
+    {
+      "case": "api_service.tests.test_tunnel.TunnelTests.test_authorization_route_binding_and_three_roles",
+      "action": "post /api/tunnel/demo",
+      "resource": "/api/tunnel/demo",
+      "result": "denied",
+      "role": "admin",
+      "username": "user3",
+      "created_at": "2026-10-22T08:09:42.529368"
+    },
+    {
+      "case": "api_service.tests.test_tunnel.TunnelTests.test_authorization_route_binding_and_three_roles",
+      "action": "tunnel.accepted",
+      "resource": "/api/tunnel/demo",
+      "result": "success",
+      "role": "admin",
+      "username": "user3",
+      "created_at": "2026-10-22T08:09:42.871923"
+    },
+    {
+      "case": "api_service.tests.test_tunnel.TunnelTests.test_authorization_route_binding_and_three_roles",
+      "action": "post /api/tunnel/demo",
+      "resource": "/api/tunnel/demo",
+      "result": "success",
+      "role": "admin",
+      "username": "user3",
+      "created_at": "2026-10-22T08:09:42.906755"
+    },
+    {
+      "case": "api_service.tests.test_tunnel.TunnelTests.test_authorization_route_binding_and_three_roles",
+      "action": "rbac.denied",
+      "resource": "/api/tunnel/demo",
+      "result": "denied",
+      "role": "auditor",
+      "username": "user4",
+      "created_at": "2026-10-22T08:09:43.117339"
+    },
+    {
+      "case": "api_service.tests.test_tunnel.TunnelTests.test_authorization_route_binding_and_three_roles",
+      "action": "post /api/tunnel/demo",
+      "resource": "/api/tunnel/demo",
+      "result": "denied",
+      "role": "auditor",
+      "username": "user4",
+      "created_at": "2026-10-22T08:09:43.117715"
+    },
+    {
+      "case": "api_service.tests.test_tunnel.TunnelTests.test_authorization_route_binding_and_three_roles",
+      "action": "tunnel.invalid",
+      "resource": "/api/users/bank-card",
+      "result": "denied",
+      "role": "normal",
+      "username": "user1",
+      "created_at": "2026-10-22T08:09:43.128874"
+    },
+    {
+      "case": "api_service.tests.test_tunnel.TunnelTests.test_authorization_route_binding_and_three_roles",
+      "action": "post /api/users/bank-card",
+      "resource": "/api/users/bank-card",
+      "result": "denied",
+      "role": "normal",
+      "username": "user1",
+      "created_at": "2026-10-22T08:09:43.129254"
+    },
+    {
+      "case": "api_service.tests.test_tunnel.TunnelTests.test_bank_card_only_mutates_after_valid_tunnel",
+      "action": "tunnel.required",
+      "resource": "/api/users/bank-card",
+      "result": "denied",
+      "role": "normal",
+      "username": "user1",
+      "created_at": "2026-10-22T08:09:43.155587"
+    },
+    {
+      "case": "api_service.tests.test_tunnel.TunnelTests.test_bank_card_only_mutates_after_valid_tunnel",
+      "action": "post /api/users/bank-card",
+      "resource": "/api/users/bank-card",
+      "result": "denied",
+      "role": "normal",
+      "username": "user1",
+      "created_at": "2026-10-22T08:09:43.155932"
+    },
+    {
+      "case": "api_service.tests.test_tunnel.TunnelTests.test_bank_card_only_mutates_after_valid_tunnel",
+      "action": "tunnel.accepted",
+      "resource": "/api/users/bank-card",
+      "result": "success",
+      "role": "normal",
+      "username": "user1",
+      "created_at": "2026-10-22T08:09:43.396763"
+    },
+    {
+      "case": "api_service.tests.test_tunnel.TunnelTests.test_bank_card_only_mutates_after_valid_tunnel",
+      "action": "post /api/users/bank-card",
+      "resource": "/api/users/bank-card",
+      "result": "success",
+      "role": "normal",
+      "username": "user1",
+      "created_at": "2026-10-22T08:09:43.401203"
+    },
+    {
+      "case": "api_service.tests.test_tunnel.TunnelTests.test_bank_card_only_mutates_after_valid_tunnel",
+      "action": "tunnel.replay",
+      "resource": "/api/users/bank-card",
+      "result": "denied",
+      "role": "normal",
+      "username": "user1",
+      "created_at": "2026-10-22T08:09:43.414694"
+    },
+    {
+      "case": "api_service.tests.test_tunnel.TunnelTests.test_bank_card_only_mutates_after_valid_tunnel",
+      "action": "post /api/users/bank-card",
+      "resource": "/api/users/bank-card",
+      "result": "denied",
+      "role": "normal",
+      "username": "user1",
+      "created_at": "2026-10-22T08:09:43.415097"
+    },
+    {
+      "case": "api_service.tests.test_tunnel.TunnelTests.test_browser_interop_and_replay_audit",
+      "action": "tunnel.accepted",
+      "resource": "/api/tunnel/demo",
+      "result": "success",
+      "role": "normal",
+      "username": "user1",
+      "created_at": "2026-10-22T08:09:43.688970"
+    },
+    {
+      "case": "api_service.tests.test_tunnel.TunnelTests.test_browser_interop_and_replay_audit",
+      "action": "post /api/tunnel/demo",
+      "resource": "/api/tunnel/demo",
+      "result": "success",
+      "role": "normal",
+      "username": "user1",
+      "created_at": "2026-10-22T08:09:43.689795"
+    },
+    {
+      "case": "api_service.tests.test_tunnel.TunnelTests.test_browser_interop_and_replay_audit",
+      "action": "tunnel.replay",
+      "resource": "/api/tunnel/demo",
+      "result": "denied",
+      "role": "normal",
+      "username": "user1",
+      "created_at": "2026-10-22T08:09:43.703048"
+    },
+    {
+      "case": "api_service.tests.test_tunnel.TunnelTests.test_browser_interop_and_replay_audit",
+      "action": "post /api/tunnel/demo",
+      "resource": "/api/tunnel/demo",
+      "result": "denied",
+      "role": "normal",
+      "username": "user1",
+      "created_at": "2026-10-22T08:09:43.703457"
+    },
+    {
+      "case": "api_service.tests.test_tunnel.TunnelTests.test_browser_interop_and_replay_audit",
+      "action": "tunnel.accepted",
+      "resource": "/api/tunnel/demo",
+      "result": "success",
+      "role": "normal",
+      "username": "user1",
+      "created_at": "2026-10-22T08:09:43.978833"
+    },
+    {
+      "case": "api_service.tests.test_tunnel.TunnelTests.test_browser_interop_and_replay_audit",
+      "action": "post /api/tunnel/demo",
+      "resource": "/api/tunnel/demo",
+      "result": "success",
+      "role": "normal",
+      "username": "user1",
+      "created_at": "2026-10-22T08:09:43.979499"
+    },
+    {
+      "case": "api_service.tests.test_tunnel.TunnelTests.test_expiry_future_plaintext_and_size",
+      "action": "tunnel.expired",
+      "resource": "/api/tunnel/demo",
+      "result": "denied",
+      "role": "normal",
+      "username": "user1",
+      "created_at": "2026-10-22T08:09:44.237319"
+    },
+    {
+      "case": "api_service.tests.test_tunnel.TunnelTests.test_expiry_future_plaintext_and_size",
+      "action": "post /api/tunnel/demo",
+      "resource": "/api/tunnel/demo",
+      "result": "denied",
+      "role": "normal",
+      "username": "user1",
+      "created_at": "2026-10-22T08:09:44.237733"
+    },
+    {
+      "case": "api_service.tests.test_tunnel.TunnelTests.test_expiry_future_plaintext_and_size",
+      "action": "tunnel.expired",
+      "resource": "/api/tunnel/demo",
+      "result": "denied",
+      "role": "normal",
+      "username": "user1",
+      "created_at": "2026-10-22T08:09:44.471758"
+    },
+    {
+      "case": "api_service.tests.test_tunnel.TunnelTests.test_expiry_future_plaintext_and_size",
+      "action": "post /api/tunnel/demo",
+      "resource": "/api/tunnel/demo",
+      "result": "denied",
+      "role": "normal",
+      "username": "user1",
+      "created_at": "2026-10-22T08:09:44.472134"
+    },
+    {
+      "case": "api_service.tests.test_tunnel.TunnelTests.test_expiry_future_plaintext_and_size",
+      "action": "tunnel.required",
+      "resource": "/api/tunnel/demo",
+      "result": "denied",
+      "role": "normal",
+      "username": "user1",
+      "created_at": "2026-10-22T08:09:44.473719"
+    },
+    {
+      "case": "api_service.tests.test_tunnel.TunnelTests.test_expiry_future_plaintext_and_size",
+      "action": "post /api/tunnel/demo",
+      "resource": "/api/tunnel/demo",
+      "result": "denied",
+      "role": "normal",
+      "username": "user1",
+      "created_at": "2026-10-22T08:09:44.474051"
+    },
+    {
+      "case": "api_service.tests.test_tunnel.TunnelTests.test_expiry_future_plaintext_and_size",
+      "action": "tunnel.too_large",
+      "resource": "/api/tunnel/demo",
+      "result": "denied",
+      "role": "normal",
+      "username": "user1",
+      "created_at": "2026-10-22T08:09:44.475778"
+    },
+    {
+      "case": "api_service.tests.test_tunnel.TunnelTests.test_expiry_future_plaintext_and_size",
+      "action": "post /api/tunnel/demo",
+      "resource": "/api/tunnel/demo",
+      "result": "denied",
+      "role": "normal",
+      "username": "user1",
+      "created_at": "2026-10-22T08:09:44.476110"
+    },
+    {
+      "case": "api_service.tests.test_tunnel.TunnelTests.test_expiry_future_plaintext_and_size",
+      "action": "tunnel.invalid",
+      "resource": "/api/tunnel/demo",
+      "result": "denied",
+      "role": "normal",
+      "username": "user1",
+      "created_at": "2026-10-22T08:09:44.733755"
+    },
+    {
+      "case": "api_service.tests.test_tunnel.TunnelTests.test_expiry_future_plaintext_and_size",
+      "action": "post /api/tunnel/demo",
+      "resource": "/api/tunnel/demo",
+      "result": "denied",
+      "role": "normal",
+      "username": "user1",
+      "created_at": "2026-10-22T08:09:44.734232"
+    },
+    {
+      "case": "api_service.tests.test_tunnel.TunnelTests.test_missing_key_fails_closed",
+      "action": "tunnel.key_changed",
+      "resource": "/api/tunnel/demo",
+      "result": "denied",
+      "role": "normal",
+      "username": "user1",
+      "created_at": "2026-10-22T08:09:45.013881"
+    },
+    {
+      "case": "api_service.tests.test_tunnel.TunnelTests.test_missing_key_fails_closed",
+      "action": "post /api/tunnel/demo",
+      "resource": "/api/tunnel/demo",
+      "result": "denied",
+      "role": "normal",
+      "username": "user1",
+      "created_at": "2026-10-22T08:09:45.014454"
+    },
+    {
+      "case": "api_service.tests.test_tunnel.TunnelTests.test_missing_key_fails_closed",
+      "action": "tunnel.unavailable",
+      "resource": "/api/tunnel/demo",
+      "result": "denied",
+      "role": "normal",
+      "username": "user1",
+      "created_at": "2026-10-22T08:09:45.016871"
+    },
+    {
+      "case": "api_service.tests.test_tunnel.TunnelTests.test_missing_key_fails_closed",
+      "action": "post /api/tunnel/demo",
+      "resource": "/api/tunnel/demo",
+      "result": "denied",
+      "role": "normal",
+      "username": "user1",
+      "created_at": "2026-10-22T08:09:45.017256"
+    },
+    {
+      "case": "api_service.tests.test_tunnel.TunnelTests.test_tamper_ciphertext_tag_c3_point_and_metadata",
+      "action": "tunnel.invalid",
+      "resource": "/api/tunnel/demo",
+      "result": "denied",
+      "role": "normal",
+      "username": "user1",
+      "created_at": "2026-10-22T08:09:45.323796"
+    },
+    {
+      "case": "api_service.tests.test_tunnel.TunnelTests.test_tamper_ciphertext_tag_c3_point_and_metadata",
+      "action": "post /api/tunnel/demo",
+      "resource": "/api/tunnel/demo",
+      "result": "denied",
+      "role": "normal",
+      "username": "user1",
+      "created_at": "2026-10-22T08:09:45.324538"
+    },
+    {
+      "case": "api_service.tests.test_tunnel.TunnelTests.test_tamper_ciphertext_tag_c3_point_and_metadata",
+      "action": "tunnel.invalid",
+      "resource": "/api/tunnel/demo",
+      "result": "denied",
+      "role": "normal",
+      "username": "user1",
+      "created_at": "2026-10-22T08:09:45.337859"
+    },
+    {
+      "case": "api_service.tests.test_tunnel.TunnelTests.test_tamper_ciphertext_tag_c3_point_and_metadata",
+      "action": "post /api/tunnel/demo",
+      "resource": "/api/tunnel/demo",
+      "result": "denied",
+      "role": "normal",
+      "username": "user1",
+      "created_at": "2026-10-22T08:09:45.338313"
+    },
+    {
+      "case": "api_service.tests.test_tunnel.TunnelTests.test_tamper_ciphertext_tag_c3_point_and_metadata",
+      "action": "tunnel.invalid",
+      "resource": "/api/tunnel/demo",
+      "result": "denied",
+      "role": "normal",
+      "username": "user1",
+      "created_at": "2026-10-22T08:09:45.351011"
+    },
+    {
+      "case": "api_service.tests.test_tunnel.TunnelTests.test_tamper_ciphertext_tag_c3_point_and_metadata",
+      "action": "post /api/tunnel/demo",
+      "resource": "/api/tunnel/demo",
+      "result": "denied",
+      "role": "normal",
+      "username": "user1",
+      "created_at": "2026-10-22T08:09:45.351480"
+    },
+    {
+      "case": "api_service.tests.test_tunnel.TunnelTests.test_tamper_ciphertext_tag_c3_point_and_metadata",
+      "action": "tunnel.invalid",
+      "resource": "/api/tunnel/demo",
+      "result": "denied",
+      "role": "normal",
+      "username": "user1",
+      "created_at": "2026-10-22T08:09:45.364969"
+    },
+    {
+      "case": "api_service.tests.test_tunnel.TunnelTests.test_tamper_ciphertext_tag_c3_point_and_metadata",
+      "action": "post /api/tunnel/demo",
+      "resource": "/api/tunnel/demo",
+      "result": "denied",
+      "role": "normal",
+      "username": "user1",
+      "created_at": "2026-10-22T08:09:45.365460"
+    },
+    {
+      "case": "api_service.tests.test_tunnel.TunnelTests.test_tamper_ciphertext_tag_c3_point_and_metadata",
+      "action": "tunnel.invalid",
+      "resource": "/api/tunnel/demo",
+      "result": "denied",
+      "role": "normal",
+      "username": "user1",
+      "created_at": "2026-10-22T08:09:45.367992"
+    },
+    {
+      "case": "api_service.tests.test_tunnel.TunnelTests.test_tamper_ciphertext_tag_c3_point_and_metadata",
+      "action": "post /api/tunnel/demo",
+      "resource": "/api/tunnel/demo",
+      "result": "denied",
+      "role": "normal",
+      "username": "user1",
+      "created_at": "2026-10-22T08:09:45.368360"
+    },
+    {
+      "case": "api_service.tests.test_tunnel.TunnelTests.test_tamper_ciphertext_tag_c3_point_and_metadata",
+      "action": "tunnel.invalid",
+      "resource": "/api/tunnel/demo",
+      "result": "denied",
+      "role": "normal",
+      "username": "user1",
+      "created_at": "2026-10-22T08:09:45.381730"
+    },
+    {
+      "case": "api_service.tests.test_tunnel.TunnelTests.test_tamper_ciphertext_tag_c3_point_and_metadata",
+      "action": "post /api/tunnel/demo",
+      "resource": "/api/tunnel/demo",
+      "result": "denied",
+      "role": "normal",
+      "username": "user1",
+      "created_at": "2026-10-22T08:09:45.382307"
+    },
+    {
+      "case": "api_service.tests.test_tunnel.TunnelTests.test_tamper_ciphertext_tag_c3_point_and_metadata",
+      "action": "tunnel.accepted",
+      "resource": "/api/tunnel/demo",
+      "result": "success",
+      "role": "normal",
+      "username": "user1",
+      "created_at": "2026-10-22T08:09:45.399036"
+    },
+    {
+      "case": "api_service.tests.test_tunnel.TunnelTests.test_tamper_ciphertext_tag_c3_point_and_metadata",
+      "action": "post /api/tunnel/demo",
+      "resource": "/api/tunnel/demo",
+      "result": "success",
+      "role": "normal",
+      "username": "user1",
+      "created_at": "2026-10-22T08:09:45.399776"
+    },
+    {
+      "case": "api_service.tests.test_course_security.CourseSecurityTests.test_auditor_mfa_failure_limit_persists_across_requests",
+      "action": "auth.mfa.challenge",
+      "resource": "/api/auth/login",
+      "result": "success",
+      "role": "auditor",
+      "username": "user4",
+      "created_at": "2026-10-22T08:09:45.422593"
+    },
+    {
+      "case": "api_service.tests.test_course_security.CourseSecurityTests.test_auditor_mfa_failure_limit_persists_across_requests",
+      "action": "auth.mfa.failed",
+      "resource": "/api/auth/mfa/verify",
+      "result": "denied",
+      "role": "auditor",
+      "username": "user4",
+      "created_at": "2026-10-22T08:09:45.426905"
+    },
+    {
+      "case": "api_service.tests.test_course_security.CourseSecurityTests.test_auditor_mfa_failure_limit_persists_across_requests",
+      "action": "MFA_FAILED",
+      "resource": "/api/auth/mfa/verify",
+      "result": "denied",
+      "role": "auditor",
+      "username": "user4",
+      "created_at": "2026-10-22T08:09:45.426907"
+    },
+    {
+      "case": "api_service.tests.test_course_security.CourseSecurityTests.test_auditor_mfa_failure_limit_persists_across_requests",
+      "action": "auth.mfa.failed",
+      "resource": "/api/auth/mfa/verify",
+      "result": "denied",
+      "role": "auditor",
+      "username": "user4",
+      "created_at": "2026-10-22T08:09:45.429544"
+    },
+    {
+      "case": "api_service.tests.test_course_security.CourseSecurityTests.test_auditor_mfa_failure_limit_persists_across_requests",
+      "action": "MFA_FAILED",
+      "resource": "/api/auth/mfa/verify",
+      "result": "denied",
+      "role": "auditor",
+      "username": "user4",
+      "created_at": "2026-10-22T08:09:45.429546"
+    },
+    {
+      "case": "api_service.tests.test_course_security.CourseSecurityTests.test_auditor_mfa_failure_limit_persists_across_requests",
+      "action": "auth.mfa.failed",
+      "resource": "/api/auth/mfa/verify",
+      "result": "denied",
+      "role": "auditor",
+      "username": "user4",
+      "created_at": "2026-10-22T08:09:45.431827"
+    },
+    {
+      "case": "api_service.tests.test_course_security.CourseSecurityTests.test_auditor_mfa_failure_limit_persists_across_requests",
+      "action": "MFA_FAILED",
+      "resource": "/api/auth/mfa/verify",
+      "result": "denied",
+      "role": "auditor",
+      "username": "user4",
+      "created_at": "2026-10-22T08:09:45.431828"
+    },
+    {
+      "case": "api_service.tests.test_course_security.CourseSecurityTests.test_auditor_mfa_failure_limit_persists_across_requests",
+      "action": "auth.mfa.failed",
+      "resource": "/api/auth/mfa/verify",
+      "result": "denied",
+      "role": "auditor",
+      "username": "user4",
+      "created_at": "2026-10-22T08:09:45.434438"
+    },
+    {
+      "case": "api_service.tests.test_course_security.CourseSecurityTests.test_auditor_mfa_failure_limit_persists_across_requests",
+      "action": "MFA_FAILED",
+      "resource": "/api/auth/mfa/verify",
+      "result": "denied",
+      "role": "auditor",
+      "username": "user4",
+      "created_at": "2026-10-22T08:09:45.434440"
+    },
+    {
+      "case": "api_service.tests.test_course_security.CourseSecurityTests.test_auditor_mfa_failure_limit_persists_across_requests",
+      "action": "auth.mfa.failed",
+      "resource": "/api/auth/mfa/verify",
+      "result": "denied",
+      "role": "auditor",
+      "username": "user4",
+      "created_at": "2026-10-22T08:09:45.436678"
+    },
+    {
+      "case": "api_service.tests.test_course_security.CourseSecurityTests.test_auditor_mfa_failure_limit_persists_across_requests",
+      "action": "MFA_FAILED",
+      "resource": "/api/auth/mfa/verify",
+      "result": "denied",
+      "role": "auditor",
+      "username": "user4",
+      "created_at": "2026-10-22T08:09:45.436680"
+    },
+    {
+      "case": "api_service.tests.test_course_security.CourseSecurityTests.test_auditor_mfa_failure_limit_persists_across_requests",
+      "action": "MFA_FAILED",
+      "resource": "/api/auth/mfa/verify",
+      "result": "denied",
+      "role": "auditor",
+      "username": "user4",
+      "created_at": "2026-10-22T08:09:45.439195"
+    },
+    {
+      "case": "api_service.tests.test_course_security.CourseSecurityTests.test_demo_sms_code_cannot_reset_privileged_password",
+      "action": "auth.mfa.challenge",
+      "resource": "/api/auth/login",
+      "result": "success",
+      "role": "admin",
+      "username": "user3",
+      "created_at": "2026-10-22T08:09:45.461547"
+    },
+    {
+      "case": "api_service.tests.test_course_security.CourseSecurityTests.test_login_requires_mfa_and_enrollment_returns_one_time_codes",
+      "action": "auth.mfa.challenge",
+      "resource": "/api/auth/login",
+      "result": "success",
+      "role": "admin",
+      "username": "user3",
+      "created_at": "2026-10-22T08:09:45.479808"
+    },
+    {
+      "case": "api_service.tests.test_course_security.CourseSecurityTests.test_login_requires_mfa_and_enrollment_returns_one_time_codes",
+      "action": "auth.mfa.enroll",
+      "resource": "/api/auth/mfa/verify",
+      "result": "success",
+      "role": "admin",
+      "username": "user3",
+      "created_at": "2026-10-22T08:09:45.483381"
+    },
+    {
+      "case": "api_service.tests.test_course_security.CourseSecurityTests.test_login_requires_mfa_and_enrollment_returns_one_time_codes",
+      "action": "auth.mfa.verify",
+      "resource": "/api/auth/mfa/verify",
+      "result": "success",
+      "role": "admin",
+      "username": "user3",
+      "created_at": "2026-10-22T08:09:45.483382"
+    },
+    {
+      "case": "api_service.tests.test_course_security.CourseSecurityTests.test_login_requires_mfa_and_enrollment_returns_one_time_codes",
+      "action": "MFA_SUCCESS",
+      "resource": "/api/auth/mfa/verify",
+      "result": "success",
+      "role": "admin",
+      "username": "user3",
+      "created_at": "2026-10-22T08:09:45.483383"
+    },
+    {
+      "case": "api_service.tests.test_course_security.CourseSecurityTests.test_login_requires_mfa_and_enrollment_returns_one_time_codes",
+      "action": "MFA_REPLAY",
+      "resource": "/api/auth/mfa/verify",
+      "result": "denied",
+      "role": "admin",
+      "username": "user3",
+      "created_at": "2026-10-22T08:09:45.486228"
+    },
+    {
+      "case": "api_service.tests.test_course_security.CourseSecurityTests.test_logout_invalidates_token_without_redis",
+      "action": "post /api/auth/logout",
+      "resource": "/api/auth/logout",
+      "result": "success",
+      "role": "normal",
+      "username": "user1",
+      "created_at": "2026-10-22T08:09:45.502085"
+    },
+    {
+      "case": "api_service.tests.test_course_security.CourseSecurityTests.test_logout_invalidates_token_without_redis",
+      "action": "auth.denied",
+      "resource": "/api/users/profile",
+      "result": "denied",
+      "role": null,
+      "username": null,
+      "created_at": "2026-10-22T08:09:45.502987"
+    },
+    {
+      "case": "api_service.tests.test_course_security.CourseSecurityTests.test_management_validation_shipping_and_audit_export",
+      "action": "put /api/admin/products/1",
+      "resource": "/api/admin/products/1",
+      "result": "denied",
+      "role": "admin",
+      "username": "user3",
+      "created_at": "2026-10-22T08:09:45.518511"
+    },
+    {
+      "case": "api_service.tests.test_course_security.CourseSecurityTests.test_management_validation_shipping_and_audit_export",
+      "action": "patch /api/admin/users/3",
+      "resource": "/api/admin/users/3",
+      "result": "denied",
+      "role": "admin",
+      "username": "user3",
+      "created_at": "2026-10-22T08:09:45.521755"
+    },
+    {
+      "case": "api_service.tests.test_course_security.CourseSecurityTests.test_management_validation_shipping_and_audit_export",
+      "action": "orders.ship",
+      "resource": "order:1",
+      "result": "success",
+      "role": "admin",
+      "username": "user3",
+      "created_at": "2026-10-22T08:09:45.527011"
+    },
+    {
+      "case": "api_service.tests.test_course_security.CourseSecurityTests.test_management_validation_shipping_and_audit_export",
+      "action": "post /api/admin/orders/1/ship",
+      "resource": "/api/admin/orders/1/ship",
+      "result": "success",
+      "role": "admin",
+      "username": "user3",
+      "created_at": "2026-10-22T08:09:45.527479"
+    },
+    {
+      "case": "api_service.tests.test_course_security.CourseSecurityTests.test_management_validation_shipping_and_audit_export",
+      "action": "post /api/admin/orders/1/ship",
+      "resource": "/api/admin/orders/1/ship",
+      "result": "denied",
+      "role": "admin",
+      "username": "user3",
+      "created_at": "2026-10-22T08:09:45.530268"
+    },
+    {
+      "case": "api_service.tests.test_course_security.CourseSecurityTests.test_management_validation_shipping_and_audit_export",
+      "action": "audit.export",
+      "resource": "/api/audit/export",
+      "result": "success",
+      "role": "auditor",
+      "username": "user4",
+      "created_at": "2026-10-22T08:09:45.534028"
+    },
+    {
+      "case": "api_service.tests.test_course_security.CourseSecurityTests.test_orders_are_scoped_to_the_owner",
+      "action": "get /api/orders/1",
+      "resource": "/api/orders/1",
+      "result": "denied",
+      "role": "merchant",
+      "username": "user2",
+      "created_at": "2026-10-22T08:09:45.562474"
+    },
+    {
+      "case": "api_service.tests.test_course_security.CourseSecurityTests.test_profile_and_login_do_not_return_full_bank_card",
+      "action": "auth.login",
+      "resource": "/api/auth/login",
+      "result": "success",
+      "role": "normal",
+      "username": "user1",
+      "created_at": "2026-10-22T08:09:45.587301"
+    },
+    {
+      "case": "api_service.tests.test_course_security.CourseSecurityTests.test_rebind_requires_old_factor_and_revokes_old_session",
+      "action": "auth.mfa.rebind.start",
+      "resource": "/api/auth/mfa/rebind",
+      "result": "success",
+      "role": "admin",
+      "username": "user3",
+      "created_at": "2026-10-22T08:09:45.625273"
+    },
+    {
+      "case": "api_service.tests.test_course_security.CourseSecurityTests.test_rebind_requires_old_factor_and_revokes_old_session",
+      "action": "post /api/auth/mfa/rebind",
+      "resource": "/api/auth/mfa/rebind",
+      "result": "success",
+      "role": "admin",
+      "username": "user3",
+      "created_at": "2026-10-22T08:09:45.626181"
+    },
+    {
+      "case": "api_service.tests.test_course_security.CourseSecurityTests.test_rebind_requires_old_factor_and_revokes_old_session",
+      "action": "auth.session.revoked",
+      "resource": "/api/admin/users",
+      "result": "denied",
+      "role": "admin",
+      "username": "user3",
+      "created_at": "2026-10-22T08:09:45.628409"
+    },
+    {
+      "case": "api_service.tests.test_course_security.CourseSecurityTests.test_rebind_requires_old_factor_and_revokes_old_session",
+      "action": "auth.mfa.enroll",
+      "resource": "/api/auth/mfa/verify",
+      "result": "success",
+      "role": "admin",
+      "username": "user3",
+      "created_at": "2026-10-22T08:09:45.631975"
+    },
+    {
+      "case": "api_service.tests.test_course_security.CourseSecurityTests.test_rebind_requires_old_factor_and_revokes_old_session",
+      "action": "auth.mfa.verify",
+      "resource": "/api/auth/mfa/verify",
+      "result": "success",
+      "role": "admin",
+      "username": "user3",
+      "created_at": "2026-10-22T08:09:45.631977"
+    },
+    {
+      "case": "api_service.tests.test_course_security.CourseSecurityTests.test_rebind_requires_old_factor_and_revokes_old_session",
+      "action": "MFA_SUCCESS",
+      "resource": "/api/auth/mfa/verify",
+      "result": "success",
+      "role": "admin",
+      "username": "user3",
+      "created_at": "2026-10-22T08:09:45.631978"
+    },
+    {
+      "case": "api_service.tests.test_course_security.CourseSecurityTests.test_role_guards_auditor_scope_and_stale_session",
+      "action": "rbac.denied",
+      "resource": "/api/admin/users",
+      "result": "denied",
+      "role": "normal",
+      "username": "user1",
+      "created_at": "2026-10-22T08:09:45.647255"
+    },
+    {
+      "case": "api_service.tests.test_course_security.CourseSecurityTests.test_role_guards_auditor_scope_and_stale_session",
+      "action": "get /api/admin/users",
+      "resource": "/api/admin/users",
+      "result": "denied",
+      "role": "normal",
+      "username": "user1",
+      "created_at": "2026-10-22T08:09:45.647671"
+    },
+    {
+      "case": "api_service.tests.test_course_security.CourseSecurityTests.test_role_guards_auditor_scope_and_stale_session",
+      "action": "rbac.denied",
+      "resource": "/api/admin/users",
+      "result": "denied",
+      "role": "merchant",
+      "username": "user2",
+      "created_at": "2026-10-22T08:09:45.650411"
+    },
+    {
+      "case": "api_service.tests.test_course_security.CourseSecurityTests.test_role_guards_auditor_scope_and_stale_session",
+      "action": "get /api/admin/users",
+      "resource": "/api/admin/users",
+      "result": "denied",
+      "role": "merchant",
+      "username": "user2",
+      "created_at": "2026-10-22T08:09:45.650857"
+    },
+    {
+      "case": "api_service.tests.test_course_security.CourseSecurityTests.test_role_guards_auditor_scope_and_stale_session",
+      "action": "rbac.denied",
+      "resource": "/api/admin/users",
+      "result": "denied",
+      "role": "auditor",
+      "username": "user4",
+      "created_at": "2026-10-22T08:09:45.653379"
+    },
+    {
+      "case": "api_service.tests.test_course_security.CourseSecurityTests.test_role_guards_auditor_scope_and_stale_session",
+      "action": "get /api/admin/users",
+      "resource": "/api/admin/users",
+      "result": "denied",
+      "role": "auditor",
+      "username": "user4",
+      "created_at": "2026-10-22T08:09:45.653745"
+    },
+    {
+      "case": "api_service.tests.test_course_security.CourseSecurityTests.test_role_guards_auditor_scope_and_stale_session",
+      "action": "auth.session.revoked",
+      "resource": "/api/admin/users",
+      "result": "denied",
+      "role": "admin",
+      "username": "user3",
+      "created_at": "2026-10-22T08:09:45.657420"
+    },
+    {
+      "case": "api_service.tests.test_course_security.CourseSecurityTests.test_role_guards_auditor_scope_and_stale_session",
+      "action": "audit.read",
+      "resource": "/api/audit/events",
+      "result": "success",
+      "role": "auditor",
+      "username": "user4",
+      "created_at": "2026-10-22T08:09:45.662332"
+    },
+    {
+      "case": "api_service.tests.test_course_security.CourseSecurityTests.test_role_guards_auditor_scope_and_stale_session",
+      "action": "rbac.denied",
+      "resource": "/api/orders",
+      "result": "denied",
+      "role": "auditor",
+      "username": "user4",
+      "created_at": "2026-10-22T08:09:45.664513"
+    },
+    {
+      "case": "api_service.tests.test_course_security.CourseSecurityTests.test_role_guards_auditor_scope_and_stale_session",
+      "action": "get /api/orders",
+      "resource": "/api/orders",
+      "result": "denied",
+      "role": "auditor",
+      "username": "user4",
+      "created_at": "2026-10-22T08:09:45.664864"
+    },
+    {
+      "case": "api_service.tests.test_course_security.CourseSecurityTests.test_role_guards_auditor_scope_and_stale_session",
+      "action": "users.update",
+      "resource": "user:2",
+      "result": "success",
+      "role": "admin",
+      "username": "user3",
+      "created_at": "2026-10-22T08:09:45.670295"
+    },
+    {
+      "case": "api_service.tests.test_course_security.CourseSecurityTests.test_role_guards_auditor_scope_and_stale_session",
+      "action": "patch /api/admin/users/2",
+      "resource": "/api/admin/users/2",
+      "result": "success",
+      "role": "admin",
+      "username": "user3",
+      "created_at": "2026-10-22T08:09:45.671225"
+    },
+    {
+      "case": "api_service.tests.test_course_security.CourseSecurityTests.test_role_guards_auditor_scope_and_stale_session",
+      "action": "auth.session.revoked",
+      "resource": "/api/merchant/products",
+      "result": "denied",
+      "role": "normal",
+      "username": "user2",
+      "created_at": "2026-10-22T08:09:45.672536"
+    },
+    {
+      "case": "api_service.tests.test_course_security.CourseSecurityTests.test_spoofed_mtls_headers_are_rejected",
+      "action": "auth.login.failed",
+      "resource": "/api/auth/cert/mtls-login",
+      "result": "denied",
+      "role": null,
+      "username": null,
+      "created_at": "2026-10-22T08:09:45.688754"
+    },
+    {
+      "case": "api_service.tests.test_course_security.CourseSecurityTests.test_trading_user_can_publish_only_manage_own_products",
+      "action": "products.create",
+      "resource": "product:2",
+      "result": "success",
+      "role": "normal",
+      "username": "user1",
+      "created_at": "2026-10-22T08:09:45.722532"
+    },
+    {
+      "case": "api_service.tests.test_course_security.CourseSecurityTests.test_trading_user_can_publish_only_manage_own_products",
+      "action": "post /api/merchant/products",
+      "resource": "/api/merchant/products",
+      "result": "success",
+      "role": "normal",
+      "username": "user1",
+      "created_at": "2026-10-22T08:09:45.723064"
+    },
+    {
+      "case": "api_service.tests.test_course_security.CourseSecurityTests.test_trading_user_can_publish_only_manage_own_products",
+      "action": "products.update",
+      "resource": "product:2",
+      "result": "success",
+      "role": "normal",
+      "username": "user1",
+      "created_at": "2026-10-22T08:09:45.734043"
+    },
+    {
+      "case": "api_service.tests.test_course_security.CourseSecurityTests.test_trading_user_can_publish_only_manage_own_products",
+      "action": "put /api/merchant/products/2",
+      "resource": "/api/merchant/products/2",
+      "result": "success",
+      "role": "normal",
+      "username": "user1",
+      "created_at": "2026-10-22T08:09:45.734476"
+    },
+    {
+      "case": "api_service.tests.test_course_security.CourseSecurityTests.test_trading_user_can_publish_only_manage_own_products",
+      "action": "put /api/merchant/products/1",
+      "resource": "/api/merchant/products/1",
+      "result": "denied",
+      "role": "normal",
+      "username": "user1",
+      "created_at": "2026-10-22T08:09:45.737842"
+    },
+    {
+      "case": "api_service.tests.test_course_security.CourseSecurityTests.test_trading_user_can_publish_only_manage_own_products",
+      "action": "put /api/products/1",
+      "resource": "/api/products/1",
+      "result": "denied",
+      "role": "normal",
+      "username": "user1",
+      "created_at": "2026-10-22T08:09:45.741688"
+    },
+    {
+      "case": "api_service.tests.test_course_security.CourseSecurityTests.test_trading_user_can_publish_only_manage_own_products",
+      "action": "delete /api/products/1",
+      "resource": "/api/products/1",
+      "result": "denied",
+      "role": "normal",
+      "username": "user1",
+      "created_at": "2026-10-22T08:09:45.744870"
+    },
+    {
+      "case": "api_service.tests.test_course_security.CourseSecurityTests.test_trading_user_can_publish_only_manage_own_products",
+      "action": "rbac.denied",
+      "resource": "/api/merchant/products",
+      "result": "denied",
+      "role": "auditor",
+      "username": "user4",
+      "created_at": "2026-10-22T08:09:45.747307"
+    },
+    {
+      "case": "api_service.tests.test_course_security.CourseSecurityTests.test_trading_user_can_publish_only_manage_own_products",
+      "action": "post /api/merchant/products",
+      "resource": "/api/merchant/products",
+      "result": "denied",
+      "role": "auditor",
+      "username": "user4",
+      "created_at": "2026-10-22T08:09:45.748032"
+    },
+    {
+      "case": "api_service.tests.test_course_security.CourseSecurityTests.test_trading_user_can_publish_only_manage_own_products",
+      "action": "put /api/merchant/products/1",
+      "resource": "/api/merchant/products/1",
+      "result": "denied",
+      "role": "merchant",
+      "username": "user5",
+      "created_at": "2026-10-22T08:09:45.752118"
+    },
+    {
+      "case": "api_service.tests.test_course_security.CourseSecurityTests.test_trading_user_can_publish_only_manage_own_products",
+      "action": "products.update",
+      "resource": "product:1",
+      "result": "success",
+      "role": "merchant",
+      "username": "user2",
+      "created_at": "2026-10-22T08:09:45.756044"
+    },
+    {
+      "case": "api_service.tests.test_course_security.CourseSecurityTests.test_trading_user_can_publish_only_manage_own_products",
+      "action": "put /api/merchant/products/1",
+      "resource": "/api/merchant/products/1",
+      "result": "success",
+      "role": "merchant",
+      "username": "user2",
+      "created_at": "2026-10-22T08:09:45.756478"
+    },
+    {
+      "case": "audit dictionary supplemental endpoint checks",
+      "action": "auth.login",
+      "resource": "/api/auth/login",
+      "result": "success",
+      "role": "normal",
+      "username": "user1",
+      "created_at": "2026-10-22T08:09:45.778902"
+    },
+    {
+      "case": "audit dictionary supplemental endpoint checks",
+      "action": "auth.login.failed",
+      "resource": "/api/auth/login",
+      "result": "denied",
+      "role": null,
+      "username": null,
+      "created_at": "2026-10-22T08:09:45.820903"
+    },
+    {
+      "case": "audit dictionary supplemental endpoint checks",
+      "action": "categories.update",
+      "resource": "category:2",
+      "result": "success",
+      "role": "admin",
+      "username": "user3",
+      "created_at": "2026-10-22T08:09:45.825509"
+    },
+    {
+      "case": "audit dictionary supplemental endpoint checks",
+      "action": "post /api/admin/categories",
+      "resource": "/api/admin/categories",
+      "result": "success",
+      "role": "admin",
+      "username": "user3",
+      "created_at": "2026-10-22T08:09:45.825939"
+    },
+    {
+      "case": "audit dictionary supplemental endpoint checks",
+      "action": "auth.mfa.rebind.denied",
+      "resource": "/api/auth/mfa/rebind",
+      "result": "denied",
+      "role": "admin",
+      "username": "user3",
+      "created_at": "2026-10-22T08:09:45.831082"
+    },
+    {
+      "case": "audit dictionary supplemental endpoint checks",
+      "action": "post /api/auth/mfa/rebind",
+      "resource": "/api/auth/mfa/rebind",
+      "result": "denied",
+      "role": "admin",
+      "username": "user3",
+      "created_at": "2026-10-22T08:09:45.831534"
+    }
+  ]
+}

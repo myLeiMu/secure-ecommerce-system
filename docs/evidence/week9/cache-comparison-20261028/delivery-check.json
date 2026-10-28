@@ -1,0 +1,18 @@
+{
+  "checked_candidate_files": 114,
+  "sensitive_findings": [],
+  "tested_source_mismatch": [],
+  "broken_links": [],
+  "cleaned_phases": [
+    "redis/smoke",
+    "redis/round-1",
+    "redis/round-2",
+    "redis/round-3",
+    "locmem/smoke",
+    "locmem/round-1",
+    "locmem/round-2",
+    "locmem/round-3"
+  ],
+  "git_head": "1379499",
+  "staged_diff_empty": true
+}

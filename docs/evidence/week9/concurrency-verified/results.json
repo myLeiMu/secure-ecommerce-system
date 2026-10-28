@@ -1,0 +1,40 @@
+{
+  "concurrent_cold_login_rounds": [
+    [
+      200,
+      200
+    ],
+    [
+      200,
+      200
+    ],
+    [
+      200,
+      200
+    ],
+    [
+      200,
+      200
+    ],
+    [
+      200,
+      200
+    ]
+  ],
+  "existing_mfa_and_version_preserved": true,
+  "competing_order_status": [
+    200,
+    400
+  ],
+  "persisted": {
+    "orders": 1,
+    "stock": 0,
+    "sold_quantity": 1
+  },
+  "cached_detail_stock_after_purchase": 0,
+  "normal_user_admin_access": 403,
+  "anonymous_order": 401,
+  "wrong_password_status": 401,
+  "passed": true,
+  "owned_test_database_dropped": true
+}

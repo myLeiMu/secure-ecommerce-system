@@ -1,0 +1,16 @@
+[
+  {
+    "id": 1,
+    "select_type": "SIMPLE",
+    "table": "products",
+    "partitions": null,
+    "type": "ref",
+    "possible_keys": "ix_products_category_id",
+    "key": "ix_products_category_id",
+    "key_len": "8",
+    "ref": "const",
+    "rows": 200,
+    "filtered": 0.33,
+    "Extra": "Using where; Using filesort"
+  }
+]

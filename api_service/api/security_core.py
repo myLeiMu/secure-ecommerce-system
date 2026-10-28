@@ -61,6 +61,17 @@ def totp(secret, step):
 
 
 def state_for(db, user_id):
+    if db.get_bind().dialect.name == 'mysql':
+        # A locking SELECT for an absent key takes an InnoDB gap lock. Two
+        # first-time users can then deadlock when both insert into that gap.
+        # Establish the row atomically first; duplicate rows keep all MFA,
+        # recovery, lockout and security-version fields unchanged.
+        from sqlalchemy.dialects.mysql import insert
+        statement = insert(SecurityState.__table__).values(
+            user_id=user_id, enabled=False, last_step=-1, recovery_hashes='[]',
+            failures=0, locked_until=0, version=0)
+        db.execute(statement.on_duplicate_key_update(user_id=user_id))
+        return db.query(SecurityState).filter_by(user_id=user_id).populate_existing().with_for_update().one()
     state = db.query(SecurityState).filter_by(user_id=user_id).with_for_update().first()
     if state is None:
         state = SecurityState(user_id=user_id, enabled=False, last_step=-1,

@@ -1,0 +1,9 @@
+timeStamp,elapsed,label,responseCode,responseMessage,threadName,dataType,success,failureMessage,bytes,sentBytes,grpThreads,allThreads,URL,Latency,IdleTime,Connect
+1793149197978,588,login,200,OK,Trading user journey 1-1,text,true,,932,269,2,2,http://127.0.0.1:8769/api/auth/login,585,0,31
+1793149198204,364,login,200,OK,Trading user journey 1-2,text,true,,932,269,2,2,http://127.0.0.1:8769/api/auth/login,364,0,1
+1793149199784,44,products,200,OK,Trading user journey 1-1,text,true,,14866,222,2,2,http://127.0.0.1:8769/api/products?category_id=1,43,0,0
+1793149199784,43,products,200,OK,Trading user journey 1-2,text,true,,14866,222,2,2,http://127.0.0.1:8769/api/products?category_id=1,43,0,0
+1793149200858,54,setup_cart,200,OK,Trading user journey 1-2,text,true,,421,575,2,2,http://127.0.0.1:8769/api/cart,54,0,0
+1793149200858,47,setup_cart,200,OK,Trading user journey 1-1,text,true,,421,575,2,2,http://127.0.0.1:8769/api/cart,47,0,0
+1793149201937,67,order,200,OK,Trading user journey 1-2,text,true,,541,599,2,2,http://127.0.0.1:8769/api/orders,67,0,0
+1793149201937,62,order,200,OK,Trading user journey 1-1,text,true,,541,599,2,2,http://127.0.0.1:8769/api/orders,62,0,0

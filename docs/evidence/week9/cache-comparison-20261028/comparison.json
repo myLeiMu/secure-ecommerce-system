@@ -1,0 +1,229 @@
+{
+  "same_source_and_non_cache_environment": true,
+  "redis": {
+    "version": "6.0.16",
+    "host": "172.28.225.228",
+    "port": 6379,
+    "db": 0,
+    "isolation": "random test_week9_ prefix per round; no FLUSHDB/FLUSHALL",
+    "client_version": "7.0.1",
+    "django_redis_version": "6.0.0"
+  },
+  "redis_error_rate_pass": true,
+  "comparison": {
+    "login": {
+      "locmem": {
+        "samples": 150,
+        "errors": 0,
+        "error_rate_percent": 0.0,
+        "p95_ms": 52,
+        "mean_ms": 30.30666666666667,
+        "throughput_rps": 0.5010522096402446,
+        "response_codes": {
+          "200": 150
+        }
+      },
+      "redis": {
+        "samples": 150,
+        "errors": 0,
+        "error_rate_percent": 0.0,
+        "p95_ms": 60,
+        "mean_ms": 31.053333333333335,
+        "throughput_rps": 0.5006675567423231,
+        "response_codes": {
+          "200": 150
+        }
+      },
+      "redis_p95_change_percent": 15.384615384615385
+    },
+    "products": {
+      "locmem": {
+        "samples": 150,
+        "errors": 0,
+        "error_rate_percent": 0.0,
+        "p95_ms": 16,
+        "mean_ms": 8.053333333333333,
+        "throughput_rps": 0.5023846524837897,
+        "response_codes": {
+          "200": 150
+        }
+      },
+      "redis": {
+        "samples": 150,
+        "errors": 0,
+        "error_rate_percent": 0.0,
+        "p95_ms": 23,
+        "mean_ms": 10.173333333333334,
+        "throughput_rps": 0.5019996318669366,
+        "response_codes": {
+          "200": 150
+        }
+      },
+      "redis_p95_change_percent": 43.75
+    },
+    "order": {
+      "locmem": {
+        "samples": 150,
+        "errors": 0,
+        "error_rate_percent": 0.0,
+        "p95_ms": 58,
+        "mean_ms": 36.86,
+        "throughput_rps": 0.5023425909491261,
+        "response_codes": {
+          "200": 150
+        }
+      },
+      "redis": {
+        "samples": 150,
+        "errors": 0,
+        "error_rate_percent": 0.0,
+        "p95_ms": 60,
+        "mean_ms": 37.8,
+        "throughput_rps": 0.5021407935833102,
+        "response_codes": {
+          "200": 150
+        }
+      },
+      "redis_p95_change_percent": 3.4482758620689653
+    },
+    "setup_cart": {
+      "locmem": {
+        "samples": 150,
+        "errors": 0,
+        "error_rate_percent": 0.0,
+        "p95_ms": 63,
+        "mean_ms": 33.04666666666667,
+        "throughput_rps": 0.5022668979326695,
+        "response_codes": {
+          "200": 150
+        }
+      },
+      "redis": {
+        "samples": 150,
+        "errors": 0,
+        "error_rate_percent": 0.0,
+        "p95_ms": 54,
+        "mean_ms": 33.13333333333333,
+        "throughput_rps": 0.5019962718410211,
+        "response_codes": {
+          "200": 150
+        }
+      },
+      "redis_p95_change_percent": -14.285714285714286
+    }
+  },
+  "cache_rounds": [
+    {
+      "backend": "locmem",
+      "round": 1,
+      "hits": 23,
+      "misses": 27,
+      "hit_rate_percent": 46.0,
+      "queries": 1427,
+      "errors": 0
+    },
+    {
+      "backend": "locmem",
+      "round": 2,
+      "hits": 12,
+      "misses": 38,
+      "hit_rate_percent": 24.0,
+      "queries": 1438,
+      "errors": 0
+    },
+    {
+      "backend": "locmem",
+      "round": 3,
+      "hits": 14,
+      "misses": 36,
+      "hit_rate_percent": 28.0,
+      "queries": 1436,
+      "errors": 0
+    },
+    {
+      "backend": "redis",
+      "round": 1,
+      "hits": 16,
+      "misses": 34,
+      "hit_rate_percent": 32.0,
+      "queries": 1434,
+      "errors": 0,
+      "redis_evidence": {
+        "ping": true,
+        "prefix": "test_week9_5b22f7280c3f78a9",
+        "key_count": 28,
+        "product_payload_keys": 27,
+        "payload_ttl_seconds": [
+          270,
+          250,
+          258,
+          185,
+          295,
+          291,
+          225,
+          233,
+          283,
+          195
+        ],
+        "note": "Only this round namespace inspected; no values or credentials exported."
+      }
+    },
+    {
+      "backend": "redis",
+      "round": 2,
+      "hits": 22,
+      "misses": 28,
+      "hit_rate_percent": 44.0,
+      "queries": 1428,
+      "errors": 0,
+      "redis_evidence": {
+        "ping": true,
+        "prefix": "test_week9_573ac4a1dc394745",
+        "key_count": 28,
+        "product_payload_keys": 27,
+        "payload_ttl_seconds": [
+          233,
+          221,
+          229,
+          241,
+          182,
+          186,
+          212,
+          295,
+          204,
+          245
+        ],
+        "note": "Only this round namespace inspected; no values or credentials exported."
+      }
+    },
+    {
+      "backend": "redis",
+      "round": 3,
+      "hits": 17,
+      "misses": 33,
+      "hit_rate_percent": 34.0,
+      "queries": 1433,
+      "errors": 0,
+      "redis_evidence": {
+        "ping": true,
+        "prefix": "test_week9_5bfb329b4834d9ff",
+        "key_count": 28,
+        "product_payload_keys": 27,
+        "payload_ttl_seconds": [
+          229,
+          291,
+          220,
+          287,
+          195,
+          180,
+          283,
+          204,
+          237,
+          295
+        ],
+        "note": "Only this round namespace inspected; no values or credentials exported."
+      }
+    }
+  ],
+  "scope": "Optimized code with LocMem versus Redis, not old-code versus optimized-code acceptance."
+}

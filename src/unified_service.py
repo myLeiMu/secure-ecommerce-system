@@ -1,5 +1,5 @@
 from typing import Dict, Any, List, Optional
-from src.Data_base.database import SessionLocal, init_db
+from src.Data_base.database import SessionLocal, init_db, register_request_session
 from src.Data_base.repositories.user_repository import UserRepository
 from src.Data_base.repositories.order_repository import OrderRepository, PaymentRepository
 from src.Data_base.repositories.product_repository import ProductRepository, CategoryRepository
@@ -24,11 +24,10 @@ class UnifiedEcommerceService:
     """统一电商服务接口"""
 
     def __init__(self):
-        # 初始化数据库表
-        self._initialize_database()
-
-        # 创建数据库会话
+        # Schema and demo data are explicitly provisioned by management commands.
+        # Request construction must not run DDL, seed users, or rotate key files.
         self.db_session = SessionLocal()
+        register_request_session(self.db_session)
 
         try:
             # 初始化各个仓库
@@ -48,17 +47,29 @@ class UnifiedEcommerceService:
                 jwt_secret=jwt_secret  # 传递密钥
             )
 
-            self.asymmetric_service = SM2Service()
-            self.asymmetric_service.generate_keys()
-
-            # 创建示例数据
-            self._create_sample_data()
-
-            print("统一电商服务初始化完成！")
+            self._asymmetric_service = None
         except Exception as e:
             # 如果初始化失败，确保关闭数据库会话
             self.db_session.close()
             raise e
+
+    @property
+    def asymmetric_service(self):
+        # Public-key operations load explicitly provisioned keys on demand.
+        # Never share a mutable SM2 object between request threads or generate
+        # a new identity merely because someone logs in or views a product.
+        if self._asymmetric_service is None:
+            self._asymmetric_service = SM2Service()
+        return self._asymmetric_service
+
+    def close(self):
+        self.db_session.close()
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *exc):
+        self.close()
 
     def _initialize_database(self):
         """初始化数据库表"""

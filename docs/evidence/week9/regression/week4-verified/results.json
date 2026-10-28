@@ -1,0 +1,8 @@
+{
+  "time_utc": "2026-10-22T07:49:17.363999+00:00",
+  "environment": "Isolated SQLite; Node uses exact browser encryption module; real SM2/SM4-GCM",
+  "tests_run": 20,
+  "failures": 0,
+  "errors": 0,
+  "passed": true
+}

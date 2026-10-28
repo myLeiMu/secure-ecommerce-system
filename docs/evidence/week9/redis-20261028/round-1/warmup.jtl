@@ -1,0 +1,17 @@
+timeStamp,elapsed,label,responseCode,responseMessage,threadName,dataType,success,failureMessage,bytes,sentBytes,grpThreads,allThreads,URL,Latency,IdleTime,Connect
+1793149219357,30,login,200,OK,Trading user journey 1-2,text,true,,932,269,2,2,http://127.0.0.1:8769/api/auth/login,30,0,1
+1793149219054,305,login,200,OK,Trading user journey 1-1,text,true,,932,269,2,2,http://127.0.0.1:8769/api/auth/login,300,0,35
+1793149220697,46,products,200,OK,Trading user journey 1-1,text,true,,14866,222,2,2,http://127.0.0.1:8769/api/products?category_id=1,46,0,0
+1793149220697,57,products,200,OK,Trading user journey 1-2,text,true,,14866,222,2,2,http://127.0.0.1:8769/api/products?category_id=1,57,0,0
+1793149221783,47,setup_cart,200,OK,Trading user journey 1-2,text,true,,421,575,2,2,http://127.0.0.1:8769/api/cart,47,0,0
+1793149221783,41,setup_cart,200,OK,Trading user journey 1-1,text,true,,421,575,2,2,http://127.0.0.1:8769/api/cart,41,0,0
+1793149222862,76,order,200,OK,Trading user journey 1-1,text,true,,541,599,2,2,http://127.0.0.1:8769/api/orders,76,0,0
+1793149222862,74,order,200,OK,Trading user journey 1-2,text,true,,541,599,2,2,http://127.0.0.1:8769/api/orders,73,0,0
+1793149223959,42,login,200,OK,Trading user journey 1-2,text,true,,932,269,2,2,http://127.0.0.1:8769/api/auth/login,42,0,0
+1793149223959,46,login,200,OK,Trading user journey 1-1,text,true,,932,269,2,2,http://127.0.0.1:8769/api/auth/login,46,0,0
+1793149225003,7,products,200,OK,Trading user journey 1-2,text,true,,14866,222,2,2,http://127.0.0.1:8769/api/products?category_id=1,6,0,0
+1793149225015,3,products,200,OK,Trading user journey 1-1,text,true,,14866,222,2,2,http://127.0.0.1:8769/api/products?category_id=1,3,0,0
+1793149226013,26,setup_cart,200,OK,Trading user journey 1-2,text,true,,421,575,2,2,http://127.0.0.1:8769/api/cart,26,0,0
+1793149226028,24,setup_cart,200,OK,Trading user journey 1-1,text,true,,421,575,2,2,http://127.0.0.1:8769/api/cart,24,0,0
+1793149227055,30,order,200,OK,Trading user journey 1-1,text,true,,541,599,2,2,http://127.0.0.1:8769/api/orders,30,0,0
+1793149227055,35,order,200,OK,Trading user journey 1-2,text,true,,541,599,1,1,http://127.0.0.1:8769/api/orders,35,0,0

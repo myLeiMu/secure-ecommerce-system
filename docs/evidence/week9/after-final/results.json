@@ -1,0 +1,52 @@
+{
+  "smoke": {
+    "metrics": {
+      "login": {
+        "samples": 2,
+        "errors": 0,
+        "error_rate_percent": 0.0,
+        "p95_ms": 274,
+        "mean_ms": 178.0,
+        "throughput_rps": 6.993
+      },
+      "products": {
+        "samples": 2,
+        "errors": 0,
+        "error_rate_percent": 0.0,
+        "p95_ms": 19,
+        "mean_ms": 17.5,
+        "throughput_rps": 105.2632
+      },
+      "order": {
+        "samples": 2,
+        "errors": 0,
+        "error_rate_percent": 0.0,
+        "p95_ms": 41,
+        "mean_ms": 37.0,
+        "throughput_rps": 48.7805
+      },
+      "setup_cart": {
+        "samples": 2,
+        "errors": 0,
+        "error_rate_percent": 0.0,
+        "p95_ms": 38,
+        "mean_ms": 35.5,
+        "throughput_rps": 52.6316
+      }
+    },
+    "persistence": {
+      "expected_orders": 2,
+      "orders": 2,
+      "cart_items": 0,
+      "negative_stock": 0
+    },
+    "sql_delta": {
+      "queries": 54,
+      "sql_ms": 53.053,
+      "ddl": 0,
+      "checkouts": 30,
+      "checkins": 30
+    },
+    "peak_pool_checked_out_including_monitor": 3
+  }
+}

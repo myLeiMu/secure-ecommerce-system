@@ -1641,8 +1641,7 @@ class ProductDetailView(APIView):
     )
     def get(self, request, product_id):
         try:
-            service = UnifiedEcommerceService()
-            product = service.get_product_detail(product_id)
+            product = ProductCache.get_product_detail(product_id)
 
             if product:
                 # 将 Product 对象转换为字典
@@ -1945,10 +1944,17 @@ class OrderView(APIView):
             if not cart_items:
                 return Response(APIResponse.error("购物车为空", 400), status=400)
 
+            # Lock the actual stock rows in one consistent order. Cart joins
+            # may contain an earlier snapshot; refresh before pricing/checking.
+            locked_products = db.query(Product).filter(
+                Product.product_id.in_({item.product_id for item in cart_items})
+            ).order_by(Product.product_id).populate_existing().with_for_update().all()
+            products_by_id = {product.product_id: product for product in locked_products}
+
             subtotal = Decimal("0.00")
             normalized_items = []
             for cart_item in cart_items:
-                product = cart_item.product
+                product = products_by_id.get(cart_item.product_id)
                 if not product or not product.is_active or not product.is_available:
                     return Response(APIResponse.error(f"商品不可用: {cart_item.product_id}", 400), status=400)
                 if product.stock_quantity < cart_item.quantity:

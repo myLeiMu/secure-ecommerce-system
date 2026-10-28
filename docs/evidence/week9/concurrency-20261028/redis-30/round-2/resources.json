@@ -1,0 +1,366 @@
+[
+  {
+    "time_utc": "2026-10-28T03:14:57.478001+00:00",
+    "stage": "startup",
+    "backend_cpu_percent_one_core": 92.8,
+    "backend_rss_bytes": 62185472,
+    "machine_cpu_percent": 0.0
+  },
+  {
+    "time_utc": "2026-10-28T03:14:58.494003+00:00",
+    "stage": "startup",
+    "backend_cpu_percent_one_core": 36.9,
+    "backend_rss_bytes": 83132416,
+    "machine_cpu_percent": 30.3
+  },
+  {
+    "time_utc": "2026-10-28T03:14:59.504485+00:00",
+    "stage": "startup",
+    "backend_cpu_percent_one_core": 0.0,
+    "backend_rss_bytes": 83259392,
+    "machine_cpu_percent": 33.8
+  },
+  {
+    "time_utc": "2026-10-28T03:15:00.506098+00:00",
+    "stage": "startup",
+    "backend_cpu_percent_one_core": 49.9,
+    "backend_rss_bytes": 118706176,
+    "machine_cpu_percent": 31.2
+  },
+  {
+    "time_utc": "2026-10-28T03:15:01.507869+00:00",
+    "stage": "startup",
+    "backend_cpu_percent_one_core": 46.8,
+    "backend_rss_bytes": 118706176,
+    "machine_cpu_percent": 18.5
+  },
+  {
+    "time_utc": "2026-10-28T03:15:02.516701+00:00",
+    "stage": "startup",
+    "backend_cpu_percent_one_core": 35.6,
+    "backend_rss_bytes": 118706176,
+    "machine_cpu_percent": 21.6
+  },
+  {
+    "time_utc": "2026-10-28T03:15:03.524092+00:00",
+    "stage": "startup",
+    "backend_cpu_percent_one_core": 24.8,
+    "backend_rss_bytes": 118706176,
+    "machine_cpu_percent": 16.3
+  },
+  {
+    "time_utc": "2026-10-28T03:15:04.527586+00:00",
+    "stage": "startup",
+    "backend_cpu_percent_one_core": 37.4,
+    "backend_rss_bytes": 104693760,
+    "machine_cpu_percent": 20.8
+  },
+  {
+    "time_utc": "2026-10-28T03:15:05.534630+00:00",
+    "stage": "startup",
+    "backend_cpu_percent_one_core": 1.6,
+    "backend_rss_bytes": 104693760,
+    "machine_cpu_percent": 19.5
+  },
+  {
+    "time_utc": "2026-10-28T03:15:06.549203+00:00",
+    "stage": "startup",
+    "backend_cpu_percent_one_core": 9.2,
+    "backend_rss_bytes": 105734144,
+    "machine_cpu_percent": 30.3
+  },
+  {
+    "time_utc": "2026-10-28T03:15:07.556642+00:00",
+    "stage": "warmup",
+    "backend_cpu_percent_one_core": 35.7,
+    "backend_rss_bytes": 112140288,
+    "machine_cpu_percent": 37.3
+  },
+  {
+    "time_utc": "2026-10-28T03:15:08.562446+00:00",
+    "stage": "warmup",
+    "backend_cpu_percent_one_core": 0.0,
+    "backend_rss_bytes": 112140288,
+    "machine_cpu_percent": 35.3
+  },
+  {
+    "time_utc": "2026-10-28T03:15:09.569466+00:00",
+    "stage": "warmup",
+    "backend_cpu_percent_one_core": 1.6,
+    "backend_rss_bytes": 112144384,
+    "machine_cpu_percent": 46.1
+  },
+  {
+    "time_utc": "2026-10-28T03:15:10.583942+00:00",
+    "stage": "warmup",
+    "backend_cpu_percent_one_core": 6.2,
+    "backend_rss_bytes": 112836608,
+    "machine_cpu_percent": 46.0
+  },
+  {
+    "time_utc": "2026-10-28T03:15:11.600094+00:00",
+    "stage": "warmup",
+    "backend_cpu_percent_one_core": 130.7,
+    "backend_rss_bytes": 117465088,
+    "machine_cpu_percent": 43.7
+  },
+  {
+    "time_utc": "2026-10-28T03:15:12.613090+00:00",
+    "stage": "warmup",
+    "backend_cpu_percent_one_core": 114.1,
+    "backend_rss_bytes": 118046720,
+    "machine_cpu_percent": 34.8
+  },
+  {
+    "time_utc": "2026-10-28T03:15:13.625816+00:00",
+    "stage": "warmup",
+    "backend_cpu_percent_one_core": 100.3,
+    "backend_rss_bytes": 118411264,
+    "machine_cpu_percent": 31.9
+  },
+  {
+    "time_utc": "2026-10-28T03:15:14.636672+00:00",
+    "stage": "warmup",
+    "backend_cpu_percent_one_core": 1.5,
+    "backend_rss_bytes": 118411264,
+    "machine_cpu_percent": 26.8
+  },
+  {
+    "time_utc": "2026-10-28T03:15:15.640920+00:00",
+    "stage": "warmup",
+    "backend_cpu_percent_one_core": 0.0,
+    "backend_rss_bytes": 118411264,
+    "machine_cpu_percent": 34.0
+  },
+  {
+    "time_utc": "2026-10-28T03:15:16.655746+00:00",
+    "stage": "measurement",
+    "backend_cpu_percent_one_core": 1.5,
+    "backend_rss_bytes": 118411264,
+    "machine_cpu_percent": 41.8
+  },
+  {
+    "time_utc": "2026-10-28T03:15:17.669474+00:00",
+    "stage": "measurement",
+    "backend_cpu_percent_one_core": 1.5,
+    "backend_rss_bytes": 118411264,
+    "machine_cpu_percent": 45.2
+  },
+  {
+    "time_utc": "2026-10-28T03:15:18.675409+00:00",
+    "stage": "measurement",
+    "backend_cpu_percent_one_core": 0.0,
+    "backend_rss_bytes": 118411264,
+    "machine_cpu_percent": 41.2
+  },
+  {
+    "time_utc": "2026-10-28T03:15:19.690930+00:00",
+    "stage": "measurement",
+    "backend_cpu_percent_one_core": 109.3,
+    "backend_rss_bytes": 118444032,
+    "machine_cpu_percent": 47.9
+  },
+  {
+    "time_utc": "2026-10-28T03:15:20.698490+00:00",
+    "stage": "measurement",
+    "backend_cpu_percent_one_core": 124.1,
+    "backend_rss_bytes": 118689792,
+    "machine_cpu_percent": 40.9
+  },
+  {
+    "time_utc": "2026-10-28T03:15:21.707031+00:00",
+    "stage": "measurement",
+    "backend_cpu_percent_one_core": 141.0,
+    "backend_rss_bytes": 118714368,
+    "machine_cpu_percent": 38.6
+  },
+  {
+    "time_utc": "2026-10-28T03:15:22.712083+00:00",
+    "stage": "measurement",
+    "backend_cpu_percent_one_core": 135.3,
+    "backend_rss_bytes": 118779904,
+    "machine_cpu_percent": 39.1
+  },
+  {
+    "time_utc": "2026-10-28T03:15:23.724828+00:00",
+    "stage": "measurement",
+    "backend_cpu_percent_one_core": 134.2,
+    "backend_rss_bytes": 118824960,
+    "machine_cpu_percent": 37.2
+  },
+  {
+    "time_utc": "2026-10-28T03:15:24.740906+00:00",
+    "stage": "measurement",
+    "backend_cpu_percent_one_core": 127.6,
+    "backend_rss_bytes": 118972416,
+    "machine_cpu_percent": 29.4
+  },
+  {
+    "time_utc": "2026-10-28T03:15:25.754577+00:00",
+    "stage": "measurement",
+    "backend_cpu_percent_one_core": 126.4,
+    "backend_rss_bytes": 119422976,
+    "machine_cpu_percent": 34.2
+  },
+  {
+    "time_utc": "2026-10-28T03:15:26.764933+00:00",
+    "stage": "measurement",
+    "backend_cpu_percent_one_core": 142.3,
+    "backend_rss_bytes": 119422976,
+    "machine_cpu_percent": 43.9
+  },
+  {
+    "time_utc": "2026-10-28T03:15:27.780825+00:00",
+    "stage": "measurement",
+    "backend_cpu_percent_one_core": 133.8,
+    "backend_rss_bytes": 119439360,
+    "machine_cpu_percent": 37.8
+  },
+  {
+    "time_utc": "2026-10-28T03:15:28.790936+00:00",
+    "stage": "measurement",
+    "backend_cpu_percent_one_core": 143.9,
+    "backend_rss_bytes": 119439360,
+    "machine_cpu_percent": 63.2
+  },
+  {
+    "time_utc": "2026-10-28T03:15:29.803138+00:00",
+    "stage": "measurement",
+    "backend_cpu_percent_one_core": 135.8,
+    "backend_rss_bytes": 119439360,
+    "machine_cpu_percent": 56.6
+  },
+  {
+    "time_utc": "2026-10-28T03:15:30.812158+00:00",
+    "stage": "measurement",
+    "backend_cpu_percent_one_core": 128.5,
+    "backend_rss_bytes": 119451648,
+    "machine_cpu_percent": 58.6
+  },
+  {
+    "time_utc": "2026-10-28T03:15:31.815587+00:00",
+    "stage": "measurement",
+    "backend_cpu_percent_one_core": 132.4,
+    "backend_rss_bytes": 119455744,
+    "machine_cpu_percent": 48.2
+  },
+  {
+    "time_utc": "2026-10-28T03:15:32.821158+00:00",
+    "stage": "measurement",
+    "backend_cpu_percent_one_core": 119.6,
+    "backend_rss_bytes": 119664640,
+    "machine_cpu_percent": 32.9
+  },
+  {
+    "time_utc": "2026-10-28T03:15:33.833387+00:00",
+    "stage": "measurement",
+    "backend_cpu_percent_one_core": 135.8,
+    "backend_rss_bytes": 33714176,
+    "machine_cpu_percent": 38.8
+  },
+  {
+    "time_utc": "2026-10-28T03:15:34.835882+00:00",
+    "stage": "measurement",
+    "backend_cpu_percent_one_core": 148.1,
+    "backend_rss_bytes": 34775040,
+    "machine_cpu_percent": 46.1
+  },
+  {
+    "time_utc": "2026-10-28T03:15:35.851964+00:00",
+    "stage": "measurement",
+    "backend_cpu_percent_one_core": 138.4,
+    "backend_rss_bytes": 34926592,
+    "machine_cpu_percent": 41.4
+  },
+  {
+    "time_utc": "2026-10-28T03:15:36.868469+00:00",
+    "stage": "measurement",
+    "backend_cpu_percent_one_core": 116.8,
+    "backend_rss_bytes": 34967552,
+    "machine_cpu_percent": 50.9
+  },
+  {
+    "time_utc": "2026-10-28T03:15:37.877184+00:00",
+    "stage": "measurement",
+    "backend_cpu_percent_one_core": 122.4,
+    "backend_rss_bytes": 35037184,
+    "machine_cpu_percent": 42.9
+  },
+  {
+    "time_utc": "2026-10-28T03:15:38.880129+00:00",
+    "stage": "measurement",
+    "backend_cpu_percent_one_core": 141.8,
+    "backend_rss_bytes": 35344384,
+    "machine_cpu_percent": 35.0
+  },
+  {
+    "time_utc": "2026-10-28T03:15:39.894828+00:00",
+    "stage": "measurement",
+    "backend_cpu_percent_one_core": 134.0,
+    "backend_rss_bytes": 35516416,
+    "machine_cpu_percent": 40.9
+  },
+  {
+    "time_utc": "2026-10-28T03:15:40.898545+00:00",
+    "stage": "measurement",
+    "backend_cpu_percent_one_core": 130.8,
+    "backend_rss_bytes": 35540992,
+    "machine_cpu_percent": 33.7
+  },
+  {
+    "time_utc": "2026-10-28T03:15:41.901830+00:00",
+    "stage": "measurement",
+    "backend_cpu_percent_one_core": 143.3,
+    "backend_rss_bytes": 81260544,
+    "machine_cpu_percent": 45.9
+  },
+  {
+    "time_utc": "2026-10-28T03:15:42.903247+00:00",
+    "stage": "measurement",
+    "backend_cpu_percent_one_core": 120.1,
+    "backend_rss_bytes": 81297408,
+    "machine_cpu_percent": 49.9
+  },
+  {
+    "time_utc": "2026-10-28T03:15:43.911477+00:00",
+    "stage": "measurement",
+    "backend_cpu_percent_one_core": 144.1,
+    "backend_rss_bytes": 81297408,
+    "machine_cpu_percent": 38.5
+  },
+  {
+    "time_utc": "2026-10-28T03:15:44.924129+00:00",
+    "stage": "measurement",
+    "backend_cpu_percent_one_core": 135.8,
+    "backend_rss_bytes": 81387520,
+    "machine_cpu_percent": 37.6
+  },
+  {
+    "time_utc": "2026-10-28T03:15:45.929529+00:00",
+    "stage": "measurement",
+    "backend_cpu_percent_one_core": 122.8,
+    "backend_rss_bytes": 81408000,
+    "machine_cpu_percent": 38.7
+  },
+  {
+    "time_utc": "2026-10-28T03:15:46.945896+00:00",
+    "stage": "measurement",
+    "backend_cpu_percent_one_core": 116.8,
+    "backend_rss_bytes": 81416192,
+    "machine_cpu_percent": 39.4
+  },
+  {
+    "time_utc": "2026-10-28T03:15:47.960091+00:00",
+    "stage": "measurement",
+    "backend_cpu_percent_one_core": 0.0,
+    "backend_rss_bytes": 81416192,
+    "machine_cpu_percent": 25.4
+  },
+  {
+    "time_utc": "2026-10-28T03:15:48.965825+00:00",
+    "stage": "measurement",
+    "backend_cpu_percent_one_core": 1.6,
+    "backend_rss_bytes": 81416192,
+    "machine_cpu_percent": 43.0
+  }
+]

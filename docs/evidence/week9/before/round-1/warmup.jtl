@@ -1,0 +1,10 @@
+timeStamp,elapsed,label,responseCode,responseMessage,threadName,dataType,success,failureMessage,bytes,sentBytes,grpThreads,allThreads,URL,Latency,IdleTime,Connect
+1792639113559,7282,login,500,Internal Server Error,Trading user journey 1-1,text,false,HTTP/business assertion failed; response omitted to protect credentials,440,269,2,2,http://127.0.0.1:8769/api/auth/login,7280,0,17
+1792639113923,6947,login,200,OK,Trading user journey 1-2,text,true,,932,269,2,2,http://127.0.0.1:8769/api/auth/login,6947,0,1
+1792639122064,127,products,200,OK,Trading user journey 1-2,text,true,,14866,222,1,1,http://127.0.0.1:8769/api/products?category_id=1,127,0,0
+1792639123227,121,setup_cart,200,OK,Trading user journey 1-2,text,true,,421,575,1,1,http://127.0.0.1:8769/api/cart,121,0,0
+1792639124379,150,order,200,OK,Trading user journey 1-2,text,true,,541,599,1,1,http://127.0.0.1:8769/api/orders,150,0,0
+1792639125563,4213,login,200,OK,Trading user journey 1-2,text,true,,932,269,1,1,http://127.0.0.1:8769/api/auth/login,4213,0,0
+1792639130787,64,products,200,OK,Trading user journey 1-2,text,true,,14866,222,1,1,http://127.0.0.1:8769/api/products?category_id=1,64,0,0
+1792639131865,87,setup_cart,200,OK,Trading user journey 1-2,text,true,,421,575,1,1,http://127.0.0.1:8769/api/cart,87,0,0
+1792639132962,94,order,200,OK,Trading user journey 1-2,text,true,,541,599,1,1,http://127.0.0.1:8769/api/orders,94,0,0

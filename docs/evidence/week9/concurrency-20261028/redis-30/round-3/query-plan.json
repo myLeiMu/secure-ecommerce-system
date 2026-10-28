@@ -1,0 +1,16 @@
+[
+  {
+    "id": 1,
+    "select_type": "SIMPLE",
+    "table": "products",
+    "partitions": null,
+    "type": "range",
+    "possible_keys": "ix_products_catalog,ix_products_category_id,ix_products_category_catalog",
+    "key": "ix_products_category_catalog",
+    "key_len": "12",
+    "ref": null,
+    "rows": 200,
+    "filtered": 33.33,
+    "Extra": "Using index condition; Using where; Backward index scan"
+  }
+]

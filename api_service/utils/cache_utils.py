@@ -112,38 +112,84 @@ class CacheUtils:
 
 
 class ProductCache:
-    """商品缓存管理"""
+    """Bounded DTO caches with generation-based invalidation, no Redis KEYS."""
+    GENERATION_KEY = 'product_catalog_generation_v2'
 
     @staticmethod
-    @CacheUtils.cache_result("product_list", expire=600)  # 10分钟缓存
+    def _generation():
+        import secrets
+        generation = cache.get(ProductCache.GENERATION_KEY)
+        if generation is None:
+            candidate = secrets.token_hex(16)
+            cache.add(ProductCache.GENERATION_KEY, candidate, timeout=None)
+            generation = cache.get(ProductCache.GENERATION_KEY)
+        if not generation:
+            raise RuntimeError('Product cache generation unavailable')
+        return generation
+
+    @staticmethod
+    def _cached(kind, loader, **parameters):
+        try:
+            generation = ProductCache._generation()
+            key = CacheUtils.generate_cache_key('product_v2', generation, kind, **parameters)
+            value = cache.get(key)
+            if value is not None:
+                return value
+        except Exception:
+            return loader()  # A cache outage must never turn into a fake empty catalog.
+        value = loader()
+        try:
+            cache.set(key, value, 300)
+        except Exception:
+            pass
+        # If invalidation happened during the SELECT, this value is written only
+        # under the old generation, unreachable by subsequent requests.
+        return value
+
+    @staticmethod
     def get_product_list(keyword=None, category_id=None, min_price=None, max_price=None):
-        """获取商品列表缓存"""
-        from src.unified_service import UnifiedEcommerceService
-        service = UnifiedEcommerceService()
-        return service.search_products(keyword, category_id, min_price, max_price)
+        def load():
+            from src.Data_base.database import SessionLocal
+            from src.Data_base.repositories.product_repository import ProductRepository
+            with SessionLocal() as db:
+                products = ProductRepository(db).search_products_safe(keyword, category_id, min_price, max_price)
+                return [{'product_id':p.product_id, 'sku':p.sku, 'product_name':p.product_name,
+                         'description':p.description or '', 'sale_price':float(p.sale_price),
+                         'stock_quantity':p.stock_quantity, 'image_urls':p.image_urls or [],
+                         'category_id':p.category_id, 'seller_id':p.seller_id,
+                         'is_available':bool(p.is_available), 'created_at':p.created_at,
+                         'updated_at':p.updated_at} for p in products]
+        return ProductCache._cached('list', load, keyword=keyword, category_id=category_id,
+                                    min_price=min_price, max_price=max_price)
 
     @staticmethod
-    @CacheUtils.cache_result("product_detail", expire=300)  # 5分钟缓存
     def get_product_detail(product_id):
-        """获取商品详情缓存"""
-        from src.unified_service import UnifiedEcommerceService
-        service = UnifiedEcommerceService()
-        return service.get_product_detail(product_id)
+        def load():
+            from src.unified_service import UnifiedEcommerceService
+            with UnifiedEcommerceService() as service:
+                product = service.get_product_detail(product_id)
+                if product is None:
+                    return None
+                return {'product_id':product.product_id, 'product_name':product.product_name,
+                        'description':product.description or '', 'sale_price':float(product.sale_price),
+                        'stock_quantity':product.stock_quantity, 'image_urls':product.image_urls or [],
+                        'category_id':product.category_id, 'category_name':product.category.category_name if product.category else '',
+                        'seller_id':product.seller_id, 'sku':product.sku,
+                        'created_at':product.created_at, 'updated_at':product.updated_at}
+        return ProductCache._cached('detail', load, product_id=product_id)
 
     @staticmethod
     def invalidate_product_caches(product_id=None):
-        """使商品缓存失效"""
-        cleared_count = 0
-
-        if product_id:
-            # 清除特定商品的缓存
-            cleared_count += CacheUtils.invalidate_pattern(f"product_detail:{product_id}")
-
-        # 清除商品列表缓存
-        cleared_count += CacheUtils.invalidate_pattern("product_list")
-
-        print(f"[商品缓存] 已清除 {cleared_count} 个缓存")
-        return cleared_count
+        import secrets
+        # Changes to stock, seller status, prices or categories affect list and
+        # detail responses. Rotate the namespace after commit; do not flush MFA,
+        # token, or other application caches. Old keys expire within five minutes.
+        try:
+            cache.set(ProductCache.GENERATION_KEY, secrets.token_hex(16), timeout=None)
+            return 1
+        except Exception:
+            # If cache is unavailable, subsequent reads use the database.
+            return 0
 
 
 class UserCache:

@@ -1,0 +1,21 @@
+{
+  "concurrent_cold_login_status": [
+    200,
+    200
+  ],
+  "competing_order_status": [
+    200,
+    400
+  ],
+  "persisted": {
+    "orders": 1,
+    "stock": 0,
+    "sold_quantity": 1
+  },
+  "cached_detail_stock_after_purchase": 0,
+  "normal_user_admin_access": 403,
+  "anonymous_order": 401,
+  "wrong_password_status": 401,
+  "passed": true,
+  "owned_test_database_dropped": true
+}

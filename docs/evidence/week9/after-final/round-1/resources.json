@@ -1,0 +1,177 @@
+[
+  {
+    "time_utc": "2026-10-22T08:06:31.132464+00:00",
+    "stage": "startup",
+    "backend_cpu_percent_one_core": 90.2,
+    "backend_rss_bytes": 57262080,
+    "machine_cpu_percent": 0.0
+  },
+  {
+    "time_utc": "2026-10-22T08:06:32.143225+00:00",
+    "stage": "startup",
+    "backend_cpu_percent_one_core": 37.1,
+    "backend_rss_bytes": 82227200,
+    "machine_cpu_percent": 33.4
+  },
+  {
+    "time_utc": "2026-10-22T08:06:33.154451+00:00",
+    "stage": "startup",
+    "backend_cpu_percent_one_core": 0.0,
+    "backend_rss_bytes": 82276352,
+    "machine_cpu_percent": 41.6
+  },
+  {
+    "time_utc": "2026-10-22T08:06:34.167857+00:00",
+    "stage": "startup",
+    "backend_cpu_percent_one_core": 40.1,
+    "backend_rss_bytes": 117276672,
+    "machine_cpu_percent": 29.3
+  },
+  {
+    "time_utc": "2026-10-22T08:06:35.182626+00:00",
+    "stage": "startup",
+    "backend_cpu_percent_one_core": 41.6,
+    "backend_rss_bytes": 117276672,
+    "machine_cpu_percent": 32.5
+  },
+  {
+    "time_utc": "2026-10-22T08:06:36.184200+00:00",
+    "stage": "startup",
+    "backend_cpu_percent_one_core": 54.6,
+    "backend_rss_bytes": 117276672,
+    "machine_cpu_percent": 27.3
+  },
+  {
+    "time_utc": "2026-10-22T08:06:37.194909+00:00",
+    "stage": "startup",
+    "backend_cpu_percent_one_core": 47.9,
+    "backend_rss_bytes": 117276672,
+    "machine_cpu_percent": 25.6
+  },
+  {
+    "time_utc": "2026-10-22T08:06:38.195880+00:00",
+    "stage": "startup",
+    "backend_cpu_percent_one_core": 46.8,
+    "backend_rss_bytes": 117276672,
+    "machine_cpu_percent": 16.4
+  },
+  {
+    "time_utc": "2026-10-22T08:06:39.206920+00:00",
+    "stage": "startup",
+    "backend_cpu_percent_one_core": 34.0,
+    "backend_rss_bytes": 117276672,
+    "machine_cpu_percent": 21.1
+  },
+  {
+    "time_utc": "2026-10-22T08:06:40.216857+00:00",
+    "stage": "startup",
+    "backend_cpu_percent_one_core": 32.5,
+    "backend_rss_bytes": 103231488,
+    "machine_cpu_percent": 20.2
+  },
+  {
+    "time_utc": "2026-10-22T08:06:41.226026+00:00",
+    "stage": "startup",
+    "backend_cpu_percent_one_core": 1.5,
+    "backend_rss_bytes": 103231488,
+    "machine_cpu_percent": 16.5
+  },
+  {
+    "time_utc": "2026-10-22T08:06:42.235691+00:00",
+    "stage": "startup",
+    "backend_cpu_percent_one_core": 18.6,
+    "backend_rss_bytes": 107089920,
+    "machine_cpu_percent": 29.7
+  },
+  {
+    "time_utc": "2026-10-22T08:06:43.246621+00:00",
+    "stage": "warmup",
+    "backend_cpu_percent_one_core": 10.8,
+    "backend_rss_bytes": 110407680,
+    "machine_cpu_percent": 35.5
+  },
+  {
+    "time_utc": "2026-10-22T08:06:44.254052+00:00",
+    "stage": "warmup",
+    "backend_cpu_percent_one_core": 0.0,
+    "backend_rss_bytes": 110407680,
+    "machine_cpu_percent": 46.6
+  },
+  {
+    "time_utc": "2026-10-22T08:06:45.257909+00:00",
+    "stage": "warmup",
+    "backend_cpu_percent_one_core": 0.0,
+    "backend_rss_bytes": 110411776,
+    "machine_cpu_percent": 48.2
+  },
+  {
+    "time_utc": "2026-10-22T08:06:46.262757+00:00",
+    "stage": "warmup",
+    "backend_cpu_percent_one_core": 0.0,
+    "backend_rss_bytes": 110411776,
+    "machine_cpu_percent": 49.6
+  },
+  {
+    "time_utc": "2026-10-22T08:06:47.277957+00:00",
+    "stage": "warmup",
+    "backend_cpu_percent_one_core": 24.6,
+    "backend_rss_bytes": 115736576,
+    "machine_cpu_percent": 36.4
+  },
+  {
+    "time_utc": "2026-10-22T08:06:48.289044+00:00",
+    "stage": "warmup",
+    "backend_cpu_percent_one_core": 1.5,
+    "backend_rss_bytes": 116244480,
+    "machine_cpu_percent": 27.8
+  },
+  {
+    "time_utc": "2026-10-22T08:06:49.303663+00:00",
+    "stage": "warmup",
+    "backend_cpu_percent_one_core": 1.5,
+    "backend_rss_bytes": 116363264,
+    "machine_cpu_percent": 32.5
+  },
+  {
+    "time_utc": "2026-10-22T08:06:50.314233+00:00",
+    "stage": "warmup",
+    "backend_cpu_percent_one_core": 1.5,
+    "backend_rss_bytes": 116953088,
+    "machine_cpu_percent": 30.8
+  },
+  {
+    "time_utc": "2026-10-22T08:06:51.328036+00:00",
+    "stage": "warmup",
+    "backend_cpu_percent_one_core": 4.6,
+    "backend_rss_bytes": 116998144,
+    "machine_cpu_percent": 27.7
+  },
+  {
+    "time_utc": "2026-10-22T08:06:52.337864+00:00",
+    "stage": "warmup",
+    "backend_cpu_percent_one_core": 0.0,
+    "backend_rss_bytes": 117202944,
+    "machine_cpu_percent": 27.9
+  },
+  {
+    "time_utc": "2026-10-22T08:06:53.352160+00:00",
+    "stage": "warmup",
+    "backend_cpu_percent_one_core": 3.1,
+    "backend_rss_bytes": 117227520,
+    "machine_cpu_percent": 29.9
+  },
+  {
+    "time_utc": "2026-10-22T08:06:54.365396+00:00",
+    "stage": "warmup",
+    "backend_cpu_percent_one_core": 6.2,
+    "backend_rss_bytes": 117293056,
+    "machine_cpu_percent": 36.4
+  },
+  {
+    "time_utc": "2026-10-22T08:06:55.379855+00:00",
+    "stage": "warmup",
+    "backend_cpu_percent_one_core": 0.0,
+    "backend_rss_bytes": 117293056,
+    "machine_cpu_percent": 36.8
+  }
+]

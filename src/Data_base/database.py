@@ -4,6 +4,7 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import QueuePool
 from contextlib import contextmanager
+from contextvars import ContextVar
 import logging
 
 # 创建带连接池的引擎
@@ -21,6 +22,32 @@ engine = create_engine(
 
 # 创建会话工厂
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+
+_request_sessions = ContextVar('ecommerce_request_sessions', default=None)
+
+
+def register_request_session(session):
+    sessions = _request_sessions.get()
+    if sessions is not None:
+        sessions.append(session)
+
+
+@contextmanager
+def request_session_scope():
+    """Release service-owned connections on every response, including failures."""
+    sessions = []
+    token = _request_sessions.set(sessions)
+    try:
+        yield
+    finally:
+        try:
+            for session in reversed(sessions):
+                try:
+                    session.close()
+                except Exception:
+                    logging.exception('Failed to release request database session')
+        finally:
+            _request_sessions.reset(token)
 
 # 声明基类
 Base = declarative_base()

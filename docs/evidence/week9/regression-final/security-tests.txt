@@ -1,0 +1,81 @@
+test_invalid_kdf_cost_is_rejected (api_service.tests.test_week9_performance.SM3CompatibilityTests.test_invalid_kdf_cost_is_rejected) ... ok
+test_native_and_python_preserve_password_hashes_and_hmac (api_service.tests.test_week9_performance.SM3CompatibilityTests.test_native_and_python_preserve_password_hashes_and_hmac) ... ok
+test_standard_digest_and_independent_thread_state (api_service.tests.test_week9_performance.SM3CompatibilityTests.test_standard_digest_and_independent_thread_state) ... ok
+test_cache_outage_falls_back_to_database (api_service.tests.test_week9_performance.Week9LifecycleTests.test_cache_outage_falls_back_to_database) ... 商品搜索: keyword='None', category=1, 结果数: 1
+ok
+test_hot_catalog_hit_and_invalidation_leave_other_state_intact (api_service.tests.test_week9_performance.Week9LifecycleTests.test_hot_catalog_hit_and_invalidation_leave_other_state_intact) ... 商品搜索: keyword='None', category=1, 结果数: 1
+商品搜索: keyword='None', category=1, 结果数: 0
+ok
+test_inflight_old_generation_cannot_repopulate_new_cache (api_service.tests.test_week9_performance.Week9LifecycleTests.test_inflight_old_generation_cannot_repopulate_new_cache) ... ok
+test_request_scope_closes_sessions_even_on_exception (api_service.tests.test_week9_performance.Week9LifecycleTests.test_request_scope_closes_sessions_even_on_exception) ... ok
+test_request_service_does_not_run_ddl_seed_or_generate_keys (api_service.tests.test_week9_performance.Week9LifecycleTests.test_request_service_does_not_run_ddl_seed_or_generate_keys) ... ok
+test_successful_order_invalidates_hot_detail_and_catalog (api_service.tests.test_week9_performance.Week9LifecycleTests.test_successful_order_invalidates_hot_detail_and_catalog) ... 商品搜索: keyword='None', category=1, 结果数: 1
+D:\Anaconda\envs\WAF\Lib\site-packages\drf_yasg\views.py:100: DeprecationWarning: SwaggerJSONRenderer & SwaggerYAMLRenderer's `format` has changed to not include a `.` prefix, please silence this warning by setting `SWAGGER_USE_COMPAT_RENDERERS = False` in your Django settings and ensure your application works (check your URLCONF and swagger/redoc URLs).
+  warnings.warn(
+D:\Anaconda\envs\WAF\Lib\site-packages\sqlalchemy\sql\schema.py:3624: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+  return util.wrap_callable(lambda ctx: fn(), fn)  # type: ignore
+商品搜索: keyword='None', category=1, 结果数: 0
+ok
+test_admin_email_data_requires_administrator (api_service.tests.test_week8_security.Week8SecurityTests.test_admin_email_data_requires_administrator) ... Unauthorized: /api/admin/users
+Forbidden: /api/admin/users
+Forbidden: /api/admin/users
+Forbidden: /api/admin/users
+ok
+test_bank_card_is_encrypted_in_database_and_tampering_fails (api_service.tests.test_week8_security.Week8SecurityTests.test_bank_card_is_encrypted_in_database_and_tampering_fails) ... ok
+test_cross_origin_response_does_not_grant_attacker_read_access (api_service.tests.test_week8_security.Week8SecurityTests.test_cross_origin_response_does_not_grant_attacker_read_access) ... ok
+test_http_and_spoofed_tls_headers_cannot_reach_login (api_service.tests.test_week8_security.Week8SecurityTests.test_http_and_spoofed_tls_headers_cannot_reach_login) ... Upgrade Required: /api/auth/login
+Upgrade Required: /api/auth/login
+Upgrade Required: /api/auth/login
+ok
+test_missing_payment_key_fails_closed (api_service.tests.test_week8_security.Week8SecurityTests.test_missing_payment_key_fails_closed) ... Service Unavailable: /api/orders/1/pay
+bank callback received transaction_id=None has_encrypted_key=False has_iv=False has_data=False
+Service Unavailable: /api/pay/sync-result
+Service Unavailable: /api/pay/callback
+ok
+test_same_origin_proxy_needs_no_cors_allowlist (api_service.tests.test_week8_security.Week8SecurityTests.test_same_origin_proxy_needs_no_cors_allowlist) ... ok
+test_untrusted_forwarded_host_is_ignored (api_service.tests.test_week8_security.Week8SecurityTests.test_untrusted_forwarded_host_is_ignored) ... ok
+test_curve_rejects_invalid_points (api_service.tests.test_secure_sm2.SecureSM2Tests.test_curve_rejects_invalid_points) ... ok
+test_encrypt_sign_interoperate_without_legacy_random_generator (api_service.tests.test_secure_sm2.SecureSM2Tests.test_encrypt_sign_interoperate_without_legacy_random_generator) ... ok
+
+----------------------------------------------------------------------
+Ran 18 tests in 6.976s
+
+OK
+JWT密钥初始化完成，长度: 62
+JWT密钥初始化完成，长度: 62
+JWT密钥初始化完成，长度: 62
+JWT密钥初始化完成，长度: 62
+Redis连接失败: Error 10061 connecting to 127.0.0.1:1. 由于目标计算机积极拒绝，无法连接。.，将使用内存缓存
+JWT密钥初始化完成，长度: 62
+JWT密钥初始化完成，长度: 62
+JWT密钥初始化完成，长度: 62
+JWT密钥初始化完成，长度: 62
+JWT密钥初始化完成，长度: 62
+JWT密钥初始化完成，长度: 62
+JWT密钥初始化完成，长度: 62
+JWT密钥初始化完成，长度: 62
+JWT密钥初始化完成，长度: 62
+JWT密钥初始化完成，长度: 62
+JWT密钥初始化完成，长度: 62
+JWT密钥初始化完成，长度: 62
+JWT密钥初始化完成，长度: 62
+JWT密钥初始化完成，长度: 62
+JWT密钥初始化完成，长度: 62
+JWT密钥初始化完成，长度: 62
+JWT密钥初始化完成，长度: 62
+[缓存] 缓存未命中，设置缓存: user_profile:user1
+JWT密钥初始化完成，长度: 62
+JWT密钥初始化完成，长度: 62
+JWT密钥初始化完成，长度: 62
+JWT密钥初始化完成，长度: 62
+JWT密钥初始化完成，长度: 62
+JWT密钥初始化完成，长度: 62
+JWT密钥初始化完成，长度: 62
+JWT密钥初始化完成，长度: 62
+[缓存] 缓存命中: user_profile:user1
+JWT密钥初始化完成，长度: 62
+JWT密钥初始化完成，长度: 62
+[缓存] 缓存命中: user_profile:user1
+JWT密钥初始化完成，长度: 62
+JWT密钥初始化完成，长度: 62
+[缓存] 缓存命中: user_profile:user1

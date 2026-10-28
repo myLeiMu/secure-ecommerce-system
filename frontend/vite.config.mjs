@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url';
 
 const root = fileURLToPath(new URL('.', import.meta.url));
 const noncePlaceholder = '__RESPONSE_CSP_NONCE__';
-const policy = nonce => [
+const policy = (nonce, port = 3000) => [
   "default-src 'none'",
   `script-src 'self'${nonce ? ` 'nonce-${nonce}'` : ''}`,
   "script-src-attr 'none'",
@@ -14,7 +14,7 @@ const policy = nonce => [
   "style-src-attr 'none'",
   "img-src 'self' https: http: data: blob:",
   "font-src 'self' data:",
-  "connect-src 'self' wss://localhost:3000 wss://127.0.0.1:3000",
+  `connect-src 'self' wss://localhost:${port} wss://127.0.0.1:${port}`,
   "form-action 'self'", "frame-ancestors 'none'", "base-uri 'self'", "object-src 'none'"
 ].join('; ');
 
@@ -30,7 +30,7 @@ function responseSecurity() {
         }
         // A new nonce for every HTML response; Vite uses its meta tag for HMR styles.
         const nonce = randomBytes(24).toString('base64');
-        res.setHeader('Content-Security-Policy', policy(nonce));
+        res.setHeader('Content-Security-Policy', policy(nonce, server.config.server.port));
         res.setHeader('X-Frame-Options', 'DENY');
         res.setHeader('X-Content-Type-Options', 'nosniff');
         res.setHeader('Referrer-Policy', 'no-referrer');
@@ -52,6 +52,8 @@ function responseSecurity() {
 
 export default defineConfig(({ command, mode }) => {
   const env = loadEnv(mode, root, 'VUE_APP_');
+  const port = Number(process.env.FRONTEND_DEV_PORT || loadEnv(mode, root, 'FRONTEND_DEV_PORT').FRONTEND_DEV_PORT || 3000);
+  if (!Number.isInteger(port) || port < 1024 || port > 65535) throw new Error('FRONTEND_DEV_PORT must be an integer between 1024 and 65535');
   // Server-side only: never expose this value through Vite define/import.meta.env.
   const gatewaySecret = loadEnv(mode, fileURLToPath(new URL('..', import.meta.url)), 'MTLS_PROXY_SECRET').MTLS_PROXY_SECRET;
   if (command === 'serve' && !gatewaySecret) throw new Error('MTLS_PROXY_SECRET is required for the HTTPS API proxy');
@@ -68,7 +70,7 @@ export default defineConfig(({ command, mode }) => {
     },
     html: command === 'serve' ? { cspNonce: noncePlaceholder } : {},
     server: {
-      host: '127.0.0.1', port: 3000, strictPort: true, https,
+      host: '127.0.0.1', port, strictPort: true, https,
       allowedHosts: ['localhost', '127.0.0.1'], cors: false,
       proxy: { '/api': { target: 'http://127.0.0.1:8080', changeOrigin: false, timeout: 30000,
         configure(proxy) {
@@ -84,8 +86,8 @@ export default defineConfig(({ command, mode }) => {
       } }
     },
     preview: {
-      host: '127.0.0.1', port: 3000, strictPort: true, https,
-      headers: { 'Content-Security-Policy': policy(), 'X-Frame-Options': 'DENY',
+      host: '127.0.0.1', port, strictPort: true, https,
+      headers: { 'Content-Security-Policy': policy(undefined, port), 'X-Frame-Options': 'DENY',
         'X-Content-Type-Options': 'nosniff', 'Referrer-Policy': 'no-referrer',
         'Strict-Transport-Security': 'max-age=86400' }
     },

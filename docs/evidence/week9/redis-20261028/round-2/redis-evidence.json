@@ -1,0 +1,19 @@
+{
+  "ping": true,
+  "prefix": "test_week9_573ac4a1dc394745",
+  "key_count": 28,
+  "product_payload_keys": 27,
+  "payload_ttl_seconds": [
+    233,
+    221,
+    229,
+    241,
+    182,
+    186,
+    212,
+    295,
+    204,
+    245
+  ],
+  "note": "Only this round namespace inspected; no values or credentials exported."
+}

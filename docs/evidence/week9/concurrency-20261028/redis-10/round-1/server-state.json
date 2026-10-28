@@ -1,0 +1,16 @@
+{
+  "queries": 6300,
+  "sql_ms": 16260.387700865977,
+  "ddl": 0,
+  "checkouts": 2145,
+  "checkins": 2145,
+  "checked_out": 0,
+  "peak_checked_out": 5,
+  "cache_hits": 80,
+  "cache_misses": 140,
+  "cache_errors": 0,
+  "orders": 220,
+  "cart_items": 0,
+  "negative_stock": 0,
+  "time": 1793157121.7306798
+}

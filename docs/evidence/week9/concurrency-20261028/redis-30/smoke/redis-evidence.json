@@ -1,0 +1,10 @@
+{
+  "ping": true,
+  "prefix": "test_week9_92bb78331d4dc78c",
+  "key_count": 2,
+  "product_payload_keys": 1,
+  "payload_ttl_seconds": [
+    296
+  ],
+  "note": "Only this round namespace inspected; no values or credentials exported."
+}

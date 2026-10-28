@@ -119,3 +119,19 @@ npm ci
 Redis 连接失败时代码有进程内缓存回退，但多进程共享状态和持久性不等价，不能把回退模式当成正式多实例部署。沿用本机已配置 Redis 即可；新配置应绑定回环或必要的专用接口、保留 protected-mode、设置凭据及访问限制，**不要照搬旧文档的 bind 0.0.0.0 / protected-mode no**。第九周需把是否启用 Redis 写入冻结环境。
 
 需要 Swagger 时使用 HTTPS 8443 的 `/api/swagger/`，用实际登录令牌临时授权，不能复制到仓库。安全复测与第八周演示见[交付说明](docs/week8/README.md)；原始 Burp 报告含认证信息，仅提交审核后的脱敏副本。
+
+## Windows 开发端口被保留（EACCES）
+
+项目按用户要求继续使用 **https://localhost:3000**。2026-10-28 本机 IPv4/IPv6 TCP 排除段 2988–3087 包含 3000，两种地址均实际绑定失败；动态端口范围为 1024–65534。切换监听地址不能解决。
+
+当前 Codex 进程没有 Windows 管理员权限，尚未修改系统网络设置。先保存任务并暂停 WSL/Docker 中需要保持连接的工作，再以管理员身份打开 PowerShell，在项目根目录运行：
+
+```powershell
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\repair-dev-port-3000.ps1
+```
+
+脚本先检查 3000 是否可用，已可用则不改系统；否则备份端口范围和相关注册表信息到被忽略的 dist-releases，恢复 TCP 动态端口范围到 Windows 默认的 49152–65535，并重启 WinNAT 后实际检查绑定。重启 WinNAT 会短暂影响 WSL/容器网络。脚本不会删除整段保留端口或修改注册表，不会自动重启电脑；若仍无法绑定，会明确报告未修复，保存工作后重启 Windows 再查。备份目录中含原动态端口范围的回退命令。
+
+修复脚本必须输出 `3000 bind OK` 后再运行 `npm run dev`。若重启后复发，保留诊断记录进一步检查系统服务或策略，不要重复改项目端口或把未释放的状态当作修复成功。
+
+前端端口仍支持 FRONTEND_DEV_PORT，但默认值保持 3000。安全检查脚本同样读取该变量，默认输出到 docs/evidence/local-https-check，可通过 EVIDENCE_DIR 指定新目录。先前 dev-port-20261028 的 5173 记录是临时方案验证，不代表恢复 3000 后已经通过验证。

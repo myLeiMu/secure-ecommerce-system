@@ -5,6 +5,7 @@
 ## 从这里开始
 
 - **[第九周性能基线与优化](docs/week9/README.md)**：JMeter 三接口、MySQL 前后对比、监控与正确性回归。
+- [Redis 补充实测与课堂演示](docs/week9/REDIS.md)：相同优化后代码的 LocMem / WSL Redis 对照、缓存命中率和隔离清理证据。
 - **[第八周交付说明与验收索引](docs/week8/README.md)**：修复提交、扫描、回归、性能准备和待办。
 - **[启动与新机器配置](HowtoRun.md)**：WAF、WSL nginx、HTTPS 和本地配置。
 - [漏洞整改与前后对比](docs/reports/2026-10-21-漏洞整改与复测.md)

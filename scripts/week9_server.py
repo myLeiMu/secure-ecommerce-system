@@ -23,6 +23,7 @@ def main():
     p.add_argument('--port', type=int, default=8769)
     p.add_argument('--output', required=True)
     args = p.parse_args()
+    users_count = int(os.environ.get('WEEK9_THREADS', '2'))
     out = Path(args.output)
     if not os.environ.get('DB_NAME', '').startswith('test_week9_'):
         raise RuntimeError('Only isolated test_week9_ databases are permitted')
@@ -45,7 +46,8 @@ def main():
     with SessionLocal.begin() as db:
         for i, (name, role) in enumerate([('perf_user_1', 'normal'), ('perf_user_2', 'normal'),
                                         ('perf_seller', 'normal'), ('admin', 'admin'),
-                                        ('testuser', 'normal'), ('perf_auditor', 'auditor')], 1):
+                                        ('testuser', 'normal'), ('perf_auditor', 'auditor')] +
+                                       [(f'perf_user_{n}', 'normal') for n in range(3,users_count+1)], 1):
             db.add(User(user_id=i, username=name, phone=f'13990000{i:03}', email=f'{name}@example.invalid',
                         pass_word=digest, salt=salt, user_role=role, is_active=True, is_verified=True))
         for i in range(1, 101):
@@ -69,6 +71,24 @@ def main():
         (out / 'query-plan.json').write_text(json.dumps(plan, default=str, indent=2), encoding='utf-8')
     counters = {'queries': 0, 'sql_ms': 0.0, 'ddl': 0, 'checkouts': 0, 'checkins': 0, 'checked_out': 0, 'peak_checked_out': 0}
     lock = threading.Lock()
+    # Observe actual product payload reads, excluding generation-key lookups.
+    # Both cache backends receive exactly the same instrumentation.
+    from django.core.cache import caches
+    cache_class = type(caches['default'])
+    original_get = cache_class.get
+    counters.update(cache_hits=0, cache_misses=0, cache_errors=0)
+    def measured_get(self, key, default=None, *args, **kwargs):
+        tracked = str(key).startswith('product_v2:')
+        try:
+            value = original_get(self, key, default, *args, **kwargs)
+        except Exception:
+            if tracked:
+                with lock: counters['cache_errors'] += 1
+            raise
+        if tracked:
+            with lock: counters['cache_misses' if value is None else 'cache_hits'] += 1
+        return value
+    cache_class.get = measured_get
     @event.listens_for(engine, 'before_cursor_execute')
     def before(conn, cursor, statement, params, context, many):
         context._week9_started = time.perf_counter()
@@ -95,8 +115,8 @@ def main():
         while True:
             try:
                 with engine.connect().execution_options(week9_observer=True) as connection:
-                    row = connection.execute(text('SELECT COUNT(*) FROM orders WHERE user_id IN (1,2)')).scalar_one()
-                    cart = connection.execute(text('SELECT COUNT(*) FROM cart_items WHERE user_id IN (1,2)')).scalar_one()
+                    row = connection.execute(text('SELECT COUNT(*) FROM orders')).scalar_one()
+                    cart = connection.execute(text('SELECT COUNT(*) FROM cart_items')).scalar_one()
                     negative = connection.execute(text('SELECT COUNT(*) FROM products WHERE stock_quantity<0')).scalar_one()
                 with lock: report = dict(counters)
                 report.update(orders=row, cart_items=cart, negative_stock=negative, time=time.time())
@@ -113,7 +133,7 @@ def main():
     from waitress import serve
     app = get_wsgi_application()
     (out / 'ready.json').write_text(json.dumps({'database':os.environ['DB_NAME'], 'fixture_products':20000,
-                                              'users':6, 'password_iterations':2500}), encoding='utf-8')
+                                              'users':users_count+4, 'password_iterations':2500}), encoding='utf-8')
     serve(app, listen=f'127.0.0.1:{args.port}', threads=4)
 
 

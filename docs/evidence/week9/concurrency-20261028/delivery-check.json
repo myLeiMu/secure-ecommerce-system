@@ -1,0 +1,9 @@
+{
+  "checked_files": 355,
+  "sensitive_findings": [],
+  "tested_source_mismatch": [],
+  "broken_links": [],
+  "cleaned_test_databases": 18,
+  "git_head": "1379499",
+  "staged_diff_empty": true
+}

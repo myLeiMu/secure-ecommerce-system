@@ -40,7 +40,15 @@ def main():
     parser.add_argument('--allow-errors', action='store_true', help='Retain all failing baseline samples; never mark them successful')
     parser.add_argument('--resume', action='store_true', help='Verify the saved environment and resume incomplete rounds only')
     parser.add_argument('--port', type=int, default=8769)
+    parser.add_argument('--cache', choices=('locmem', 'redis'), default='locmem')
+    parser.add_argument('--threads', type=int, default=2)
+    parser.add_argument('--pause-ms', type=int, default=1000)
+    parser.add_argument('--capacity', action='store_true', help='Isolated loopback only: omit IP limiter, preserve all other middleware')
     args = parser.parse_args()
+    if not 2 <= args.threads <= 60 or not 0 <= args.pause_ms <= 10000:
+        parser.error('threads must be 2..60 and pause-ms 0..10000')
+    if (args.threads != 2 or args.capacity) and args.source_ref != 'WORKTREE':
+        parser.error('Extended fixture requires reviewed WORKTREE')
     if not 1 <= args.loops <= 100 or not 1 <= args.repeats <= 5:
         parser.error('loops must be 1..100 and repeats 1..5')
     output = (ROOT / args.output).resolve()
@@ -54,6 +62,30 @@ def main():
     from cryptography.fernet import Fernet
     import psutil
     config = dotenv_values(ROOT / '.env')
+    redis_client = None
+    redis_metadata = None
+    if args.cache == 'redis':
+        if args.source_ref != 'WORKTREE':
+            parser.error('Redis experiment supports reviewed WORKTREE only; legacy cache code may delete unrelated keys')
+        import redis
+        redis_client = redis.Redis(host=config.get('REDIS_HOST', 'localhost'),
+            port=int(config.get('REDIS_PORT', 6379)), db=int(config.get('REDIS_DB', 0)),
+            password=config.get('REDIS_PASSWORD') or None, socket_connect_timeout=5, socket_timeout=5)
+        redis_client.ping()
+        info = redis_client.info('server')
+        redis_metadata = {'version': info['redis_version'], 'host': config.get('REDIS_HOST', 'localhost'),
+                          'port': int(config.get('REDIS_PORT',6379)), 'db': int(config.get('REDIS_DB',0)),
+                          'isolation': 'random test_week9_ prefix per round; no FLUSHDB/FLUSHALL',
+                          'client_version': importlib.metadata.version('redis'),
+                          'django_redis_version': importlib.metadata.version('django-redis')}
+    def clean_redis(prefix, folder):
+        if redis_client is None: return
+        if not re.fullmatch(r'test_week9_[0-9a-f]{16}', prefix): raise RuntimeError('Unsafe Redis cleanup prefix')
+        keys = list(redis_client.scan_iter(match=prefix+':*', count=100))
+        for i in range(0,len(keys),100): redis_client.delete(*keys[i:i+100])
+        remaining = sum(1 for _ in redis_client.scan_iter(match=prefix+':*', count=100))
+        write_json(folder/'redis-cleanup.json', {'prefix':prefix,'deleted_keys':len(keys),'remaining_keys':remaining})
+        if remaining: raise RuntimeError('Redis experiment keys remain')
     admin_url = URL.create('mysql+pymysql', username=config.get('DB_USERNAME', 'root'),
                           password=config.get('DB_PASSWORD', ''), host=config.get('DB_HOST', 'localhost'),
                           port=int(config.get('DB_PORT', 3306)))
@@ -95,17 +127,24 @@ def main():
                  'database':'MySQL fresh dedicated schema per round, same instance, InnoDB',
                  'cache':'LocMem, 2000 entries, same before/after; Redis deliberately not used',
                  'pool_size':10,'max_overflow':20,'pool_timeout':30,'pool_pre_ping':True,
-                 'users':6,'independent_trading_threads':2,'products':20000,'categories':102,'stock_per_item':1,
+                 'users':args.threads+4,'independent_trading_threads':args.threads,'products':20000,'categories':102,'stock_per_item':1,
                  'password_algorithm':'PBKDF2-HMAC-SM3','password_iterations':2500,'dklen':32,
-                 'threads':2,'ramp_seconds':2,'pause_before_each_sample_ms':1000,
+                 'threads':args.threads,'ramp_seconds':2,'pause_before_each_sample_ms':args.pause_ms,
                  'warmup_loops_per_thread':2,'loops_per_thread':args.loops,'repeats':args.repeats,
                  'rate_limit':'unchanged 100/IP/60s, products exempt; no forged client IP',
                  'measurement':'nearest-rank p95 including failures; throughput = samples / per-label elapsed window'},
         'limitations':['Dedicated loopback API experiment; does not measure nginx/TLS or production capacity.',
                        'MySQL process is shared with other projects; machine CPU is recorded, avoid concurrent loads.',
                        'Credentials and key files stay in ignored temporary snapshot directories.']}
+    manifest['cache_backend'] = args.cache
+    if args.capacity:
+        manifest['fixed']['rate_limit'] = 'CAPACITY ONLY: IP limiter omitted in isolated loopback settings; auth/audit/stock checks retained'
+    manifest['redis'] = redis_metadata
+    if args.cache == 'redis':
+        manifest['fixed']['cache'] = 'WSL Redis; isolated prefix per round; payload TTL 300 seconds'
     if args.resume:
         previous = json.loads((output/'environment.json').read_text(encoding='utf-8'))
+        if previous.get('redis') != redis_metadata: raise RuntimeError('Redis environment changed')
         for key in ('fixed','source_ref','source_sha256','jmx_sha256','python','platform','mysql','java','jmeter','packages'):
             if previous[key] != manifest[key]: raise RuntimeError('Cannot resume changed environment: '+key)
         previous.setdefault('resume_times_utc',[]).append(manifest['time_utc'])
@@ -131,10 +170,13 @@ def main():
                     exists = c.execute(text('SELECT COUNT(*) FROM information_schema.schemata WHERE SCHEMA_NAME=:name'),{'name':old_database}).scalar_one()
                     if exists:
                         users = c.execute(text(f'SELECT username FROM `{old_database}`.users ORDER BY user_id')).scalars().all()
-                        if users != ['perf_user_1','perf_user_2','perf_seller','admin','testuser','perf_auditor']:
+                        expected_users = ['perf_user_1','perf_user_2','perf_seller','admin','testuser','perf_auditor'] + [f'perf_user_{i}' for i in range(3,args.threads+1)]
+                        if users != expected_users:
                             raise RuntimeError('Unexpected interrupted fixture; refusing cleanup')
                         c.execute(text(f'DROP DATABASE `{old_database}`'))
                 write_json(phase_dir/'cleanup.json',{'database':old_database,'owned_test_database_dropped':True,'reason':'interrupted run, no live connections'})
+            if ready.exists():
+                clean_redis(json.loads(ready.read_text())['database'], phase_dir)
             preserved = output/(phase+'-interrupted-'+str(int(time.time())))
             if not phase_dir.resolve().is_relative_to(ROOT.resolve()) or not preserved.resolve().is_relative_to(ROOT.resolve()):
                 raise RuntimeError('Resume move must stay inside the project workspace')
@@ -158,6 +200,13 @@ def main():
                     'BANK_CARD_ENCRYPTION_KEY':Fernet.generate_key().decode(),
                     'TUNNEL_KEY_ENCRYPTION_KEY':Fernet.generate_key().decode(), 'SM3_PBKDF2_ITERATIONS':'2500',
                     'DEBUG':'False','ECOMMERCE_MERCHANT_PRIVATE_KEY':'','BANK_MERCHANT_PRIVATE_KEYS':''})
+        env['WEEK9_CACHE'] = args.cache
+        env['WEEK9_THREADS'] = str(args.threads)
+        env['WEEK9_CAPACITY'] = '1' if args.capacity else '0'
+        env['WEEK9_CACHE_PREFIX'] = database
+        if redis_client is not None:
+            for key, default in (('REDIS_HOST','localhost'),('REDIS_PORT','6379'),('REDIS_DB','0'),('REDIS_PASSWORD','')):
+                env[key] = config.get(key) or default
         def state():
             path = phase_dir / 'server-state.json'
             return json.loads(path.read_text()) if path.exists() else {}
@@ -165,7 +214,7 @@ def main():
             stage[0] = 'warmup' if label == 'warmup' else 'measurement'
             jtl = phase_dir / (label + '.jtl')
             command = [args.jmeter,'-n','-t',str(jmx),'-l',str(jtl),'-j',str(phase_dir/(label+'.log')),
-                       f'-Jport={args.port}','-Jthreads=2',f'-Jloops={count}','-Jramp=2','-Jpause_ms=1000',
+                       f'-Jport={args.port}',f'-Jthreads={args.threads}',f'-Jloops={count}','-Jramp=2',f'-Jpause_ms={args.pause_ms}',
                        f'-Jproduct_start={product_start}','-Jjmeter.save.saveservice.output_format=csv',
                        '-Jjmeter.save.saveservice.response_data=false','-Jjmeter.save.saveservice.response_data.on_error=false',
                        '-Jjmeter.save.saveservice.samplerData=false','-Jjmeter.save.saveservice.requestHeaders=false',
@@ -175,7 +224,7 @@ def main():
             metrics = summarize(jtl)
             successful_orders[0] += metrics['order']['samples'] - metrics['order']['errors']
             write_json(phase_dir/(label+'-metrics.json'),metrics)
-            if done.returncode or any(v['samples'] != count*2 or (v['errors'] and not args.allow_errors) for v in metrics.values()):
+            if done.returncode or any(v['samples'] != count*args.threads or (v['errors'] and not args.allow_errors) for v in metrics.values()):
                 raise RuntimeError(f'{phase}/{label}: failed samples; inspect retained evidence')
             return metrics
         try:
@@ -212,9 +261,18 @@ def main():
             if phase!='smoke': jmeter('warmup',2,1)
             time.sleep(1.2)
             counters_before = state()
-            metrics = jmeter('measurement',loops,1 if phase=='smoke' else 5)
+            metrics = jmeter('measurement',loops,1 if phase=='smoke' else 2*args.threads+1)
             time.sleep(1.2)
             final = state()
+            if redis_client is not None:
+                redis_client.ping()
+                keys = list(redis_client.scan_iter(match=database+':*', count=100))
+                write_json(phase_dir/'redis-evidence.json', {'ping':True,'prefix':database,
+                    'key_count':len(keys), 'product_payload_keys':sum(b'product_v2:' in key for key in keys),
+                    'payload_ttl_seconds':[redis_client.ttl(key) for key in keys if b'product_v2:' in key][:10],
+                    'note':'Only this round namespace inspected; no values or credentials exported.'})
+                if not any(b'product_v2:' in key for key in keys): raise RuntimeError('No real Redis product cache evidence')
+            if final.get('cache_errors',0): raise RuntimeError('Cache read errors; do not accept fallback-only results')
             expected = successful_orders[0]
             persistence = {'expected_orders':expected,'orders':final.get('orders'),'cart_items':final.get('cart_items'),
                            'negative_stock':final.get('negative_stock')}
@@ -223,7 +281,7 @@ def main():
                 raise RuntimeError(f'{phase}: persistence validation failed')
             results[phase] = {'metrics':metrics,'persistence':persistence,
                               'sql_delta':{k:round(final.get(k,0)-counters_before.get(k,0),3)
-                                           for k in ('queries','sql_ms','ddl','checkouts','checkins')},
+                                           for k in ('queries','sql_ms','ddl','checkouts','checkins','cache_hits','cache_misses','cache_errors')},
                               'peak_pool_checked_out_including_monitor':final.get('peak_checked_out')}
             write_json(output/'results.json',results)
             status = 'COMPLETED WITH ERRORS' if any(v['errors'] for v in metrics.values()) else 'PASS'
@@ -240,6 +298,7 @@ def main():
                 # This exact unpredictable schema was created by this process above.
                 with admin.connect() as c: c.execute(text(f'DROP DATABASE `{database}`'))
                 write_json(phase_dir/'cleanup.json',{'database':database,'owned_test_database_dropped':True})
+            clean_redis(database, phase_dir)
     admin.dispose()
     return 0
 

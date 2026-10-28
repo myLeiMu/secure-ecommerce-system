@@ -4,6 +4,8 @@
 
 ## 验收入口
 
+- [10 / 30 并发补充实验](HIGH_CONCURRENCY.md)：原有限流边界与独立容量对照分别报告。
+- **[2026-10-28 Redis 补充实验](REDIS.md)**：相同优化后代码，新增 LocMem / WSL Redis 实测、命中率和独立缓存清理证据；原验收结果保留。
 - **[实测前后对比](../evidence/week9/comparison/summary.md)**：三接口并发、p95、吞吐量、错误率与 CPU/RSS。
 - [机器可读结果](../evidence/week9/comparison/comparison.json)、[对比图](../evidence/week9/comparison/comparison.png)。
 - [JMeter 脚本](../../performance/week9-comparison.jmx)、[复现与课堂展示步骤](../../performance/WEEK9.md)。
@@ -33,7 +35,7 @@
 
 ## 改了什么、为什么
 
-| 热点/问题 | 本周实现 | 相关代码与验证 |
+| 问题 | 本周实现 | 相关代码与验证 |
 | --- | --- | --- |
 | Python 循环执行 SM3/PBKDF2，登录占用 CPU | 探测 OpenSSL SM3 支持，使用原生 PBKDF2-HMAC-SM3/HMAC；SM3 空模板每次 copy，线程不共享可变摘要状态；不支持时保持旧算法回退 | [security.py](../../src/utils/security.py)；标准向量、Unicode/长口令、多块派生、2500 次旧摘要兼容、线程隔离测试 |
 | 每次创建业务服务都检查表结构、初始化样例账号并生成 SM2 密钥 | 请求构造只创建业务对象；建表/种子改为显式管理命令；SM2 服务按需创建并读取已配置密钥，不随普通请求生成/覆盖密钥文件 | [unified_service.py](../../src/unified_service.py)；请求期 DDL 计数、无初始化/密钥生成回归 |

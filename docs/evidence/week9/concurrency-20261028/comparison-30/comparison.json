@@ -1,0 +1,255 @@
+{
+  "same_source_and_non_cache_environment": true,
+  "redis": {
+    "version": "6.0.16",
+    "host": "172.28.225.228",
+    "port": 6379,
+    "db": 0,
+    "isolation": "random test_week9_ prefix per round; no FLUSHDB/FLUSHALL",
+    "client_version": "7.0.1",
+    "django_redis_version": "6.0.0"
+  },
+  "fixed": {
+    "server": "Waitress 1 process, 4 threads",
+    "entry": "http://127.0.0.1:8769",
+    "database": "MySQL fresh dedicated schema per round, same instance, InnoDB",
+    "cache": "LocMem, 2000 entries, same before/after; Redis deliberately not used",
+    "pool_size": 10,
+    "max_overflow": 20,
+    "pool_timeout": 30,
+    "pool_pre_ping": true,
+    "users": 34,
+    "independent_trading_threads": 30,
+    "products": 20000,
+    "categories": 102,
+    "stock_per_item": 1,
+    "password_algorithm": "PBKDF2-HMAC-SM3",
+    "password_iterations": 2500,
+    "dklen": 32,
+    "threads": 30,
+    "ramp_seconds": 2,
+    "pause_before_each_sample_ms": 0,
+    "warmup_loops_per_thread": 2,
+    "loops_per_thread": 20,
+    "repeats": 3,
+    "rate_limit": "CAPACITY ONLY: IP limiter omitted in isolated loopback settings; auth/audit/stock checks retained",
+    "measurement": "nearest-rank p95 including failures; throughput = samples / per-label elapsed window"
+  },
+  "redis_error_rate_pass": true,
+  "comparison": {
+    "login": {
+      "locmem": {
+        "samples": 1800,
+        "errors": 0,
+        "error_rate_percent": 0.0,
+        "p95_ms": 523,
+        "mean_ms": 345.7266666666667,
+        "throughput_rps": 23.67517657735864,
+        "response_codes": {
+          "200": 1800
+        }
+      },
+      "redis": {
+        "samples": 1800,
+        "errors": 0,
+        "error_rate_percent": 0.0,
+        "p95_ms": 651,
+        "mean_ms": 402.505,
+        "throughput_rps": 20.694888362574446,
+        "response_codes": {
+          "200": 1800
+        }
+      },
+      "redis_p95_change_percent": 24.47418738049713
+    },
+    "products": {
+      "locmem": {
+        "samples": 1800,
+        "errors": 0,
+        "error_rate_percent": 0.0,
+        "p95_ms": 423,
+        "mean_ms": 258.92944444444447,
+        "throughput_rps": 23.929805902685455,
+        "response_codes": {
+          "200": 1800
+        }
+      },
+      "redis": {
+        "samples": 1800,
+        "errors": 0,
+        "error_rate_percent": 0.0,
+        "p95_ms": 504,
+        "mean_ms": 295.7183333333333,
+        "throughput_rps": 20.896700643154006,
+        "response_codes": {
+          "200": 1800
+        }
+      },
+      "redis_p95_change_percent": 19.148936170212767
+    },
+    "order": {
+      "locmem": {
+        "samples": 1800,
+        "errors": 0,
+        "error_rate_percent": 0.0,
+        "p95_ms": 521,
+        "mean_ms": 342.5577777777778,
+        "throughput_rps": 24.003200426723566,
+        "response_codes": {
+          "200": 1800
+        }
+      },
+      "redis": {
+        "samples": 1800,
+        "errors": 0,
+        "error_rate_percent": 0.0,
+        "p95_ms": 628,
+        "mean_ms": 393.89666666666665,
+        "throughput_rps": 20.935344677188617,
+        "response_codes": {
+          "200": 1800
+        }
+      },
+      "redis_p95_change_percent": 20.53742802303263
+    },
+    "setup_cart": {
+      "locmem": {
+        "samples": 1800,
+        "errors": 0,
+        "error_rate_percent": 0.0,
+        "p95_ms": 464,
+        "mean_ms": 294.2938888888889,
+        "throughput_rps": 23.95113967506287,
+        "response_codes": {
+          "200": 1800
+        }
+      },
+      "redis": {
+        "samples": 1800,
+        "errors": 0,
+        "error_rate_percent": 0.0,
+        "p95_ms": 524,
+        "mean_ms": 321.9605555555556,
+        "throughput_rps": 20.88506253915949,
+        "response_codes": {
+          "200": 1800
+        }
+      },
+      "redis_p95_change_percent": 12.931034482758621
+    }
+  },
+  "cache_rounds": [
+    {
+      "backend": "locmem",
+      "round": 1,
+      "hits": 449,
+      "misses": 151,
+      "hit_rate_percent": 74.83333333333333,
+      "queries": 16951,
+      "errors": 0
+    },
+    {
+      "backend": "locmem",
+      "round": 2,
+      "hits": 367,
+      "misses": 233,
+      "hit_rate_percent": 61.166666666666664,
+      "queries": 17033,
+      "errors": 0
+    },
+    {
+      "backend": "locmem",
+      "round": 3,
+      "hits": 436,
+      "misses": 164,
+      "hit_rate_percent": 72.66666666666667,
+      "queries": 16964,
+      "errors": 0
+    },
+    {
+      "backend": "redis",
+      "round": 1,
+      "hits": 450,
+      "misses": 150,
+      "hit_rate_percent": 75.0,
+      "queries": 16950,
+      "errors": 0,
+      "redis_evidence": {
+        "ping": true,
+        "prefix": "test_week9_d89175bfe7b61bec",
+        "key_count": 112,
+        "product_payload_keys": 111,
+        "payload_ttl_seconds": [
+          267,
+          277,
+          282,
+          290,
+          266,
+          283,
+          292,
+          267,
+          283,
+          268
+        ],
+        "note": "Only this round namespace inspected; no values or credentials exported."
+      }
+    },
+    {
+      "backend": "redis",
+      "round": 2,
+      "hits": 423,
+      "misses": 177,
+      "hit_rate_percent": 70.5,
+      "queries": 16977,
+      "errors": 0,
+      "redis_evidence": {
+        "ping": true,
+        "prefix": "test_week9_47a7d8442367e03d",
+        "key_count": 125,
+        "product_payload_keys": 124,
+        "payload_ttl_seconds": [
+          263,
+          264,
+          290,
+          278,
+          295,
+          274,
+          288,
+          286,
+          272,
+          262
+        ],
+        "note": "Only this round namespace inspected; no values or credentials exported."
+      }
+    },
+    {
+      "backend": "redis",
+      "round": 3,
+      "hits": 384,
+      "misses": 216,
+      "hit_rate_percent": 64.0,
+      "queries": 17016,
+      "errors": 0,
+      "redis_evidence": {
+        "ping": true,
+        "prefix": "test_week9_7d7cbd7e20b05546",
+        "key_count": 176,
+        "product_payload_keys": 175,
+        "payload_ttl_seconds": [
+          263,
+          289,
+          278,
+          262,
+          289,
+          290,
+          291,
+          285,
+          297,
+          283
+        ],
+        "note": "Only this round namespace inspected; no values or credentials exported."
+      }
+    }
+  ],
+  "scope": "Optimized code with LocMem versus Redis, not old-code versus optimized-code acceptance."
+}

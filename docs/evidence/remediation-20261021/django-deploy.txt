@@ -1,0 +1,8 @@
+System check identified some issues:
+
+WARNINGS:
+?: (security.W005) You have not set the SECURE_HSTS_INCLUDE_SUBDOMAINS setting to True. Without this, your site is potentially vulnerable to attack via an insecure connection to a subdomain. Only set this to True if you are certain that all subdomains of your domain should be served exclusively via SSL.
+?: (security.W021) You have not set the SECURE_HSTS_PRELOAD setting to True. Without this, your site cannot be submitted to the browser preload list.
+
+System check identified 2 issues (0 silenced).
+Redis���ӳɹ�������: 172.28.225.228:6379, ���ݿ�: 0

@@ -17,7 +17,7 @@ from src.algorithm.ca_center import (
     sm2_generate_keypair,
 )
 from src.algorithm.secure_key_storage import SecureKeyStorage
-from gmssl import sm2
+from src.utils.secure_sm2 import SecureSM2
 import os
 
 class UnifiedEcommerceService:
@@ -359,7 +359,7 @@ class UnifiedEcommerceService:
         return private_key
 
     def _public_key_from_private_key(self, private_key_hex: str) -> str:
-        sm2c = sm2.CryptSM2(public_key="", private_key=private_key_hex)
+        sm2c = SecureSM2(public_key="", private_key=private_key_hex)
         return sm2c._kg(int(private_key_hex, 16), sm2c.ecc_table["g"])
 
     def issue_user_certificate(self, username: str) -> Dict[str, Any]:

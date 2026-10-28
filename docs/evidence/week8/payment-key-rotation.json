@@ -1,0 +1,8 @@
+{
+  "time_utc": "2026-10-17T04:15:30.238463+00:00",
+  "merchant": "ECOMMERCE_DEMO",
+  "rotated_together": true,
+  "public_key": "7a205ee84d1199d6b658e9662599b75e167325c0f8daf3759e6dc2443a9f757257dd802313099ec7063d83db0d656bc9541981b0e453ead44930c9c7eb1d1270",
+  "restart_both_services_required": true,
+  "old_env_backup": "keys/payment-backups (gitignored)"
+}

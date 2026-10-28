@@ -1,0 +1,98 @@
+[
+  {
+    "name": "3000 / TLS + CSP",
+    "passed": true,
+    "status": 200,
+    "csp": "default-src 'none'; script-src 'self' 'nonce-C6gXTaheUXSQFoV2+08ryomIkAaFvUXV'; script-src-attr 'none'; style-src 'self' 'nonce-C6gXTaheUXSQFoV2+08ryomIkAaFvUXV'; style-src-attr 'none'; img-src 'self' https: http: data: blob:; font-src 'self' data:; connect-src 'self' wss://localhost:3000 wss://127.0.0.1:3000; form-action 'self'; frame-ancestors 'none'; base-uri 'self'; object-src 'none'",
+    "hsts": "max-age=86400"
+  },
+  {
+    "name": "3000 /login TLS + CSP",
+    "passed": true,
+    "status": 200,
+    "csp": "default-src 'none'; script-src 'self' 'nonce-o/qJxM7/6/A/bRF3ahMdS8+I8D9qQZGj'; script-src-attr 'none'; style-src 'self' 'nonce-o/qJxM7/6/A/bRF3ahMdS8+I8D9qQZGj'; style-src-attr 'none'; img-src 'self' https: http: data: blob:; font-src 'self' data:; connect-src 'self' wss://localhost:3000 wss://127.0.0.1:3000; form-action 'self'; frame-ancestors 'none'; base-uri 'self'; object-src 'none'",
+    "hsts": "max-age=86400"
+  },
+  {
+    "name": "3000 /products TLS + CSP",
+    "passed": true,
+    "status": 200,
+    "csp": "default-src 'none'; script-src 'self' 'nonce-L25mY8IAQaF2qOZMdg8mfEWfgGu+0MGu'; script-src-attr 'none'; style-src 'self' 'nonce-L25mY8IAQaF2qOZMdg8mfEWfgGu+0MGu'; style-src-attr 'none'; img-src 'self' https: http: data: blob:; font-src 'self' data:; connect-src 'self' wss://localhost:3000 wss://127.0.0.1:3000; form-action 'self'; frame-ancestors 'none'; base-uri 'self'; object-src 'none'",
+    "hsts": "max-age=86400"
+  },
+  {
+    "name": "3000 API health through same-origin proxy",
+    "passed": true,
+    "status": 200
+  },
+  {
+    "name": "3000 anonymous admin API denied",
+    "passed": true,
+    "status": 401
+  },
+  {
+    "name": "8443 / TLS + CSP",
+    "passed": true,
+    "status": 200,
+    "csp": "default-src 'none'; script-src 'self'; script-src-attr 'none'; style-src 'self'; style-src-attr 'none'; img-src 'self' https: http: data: blob:; font-src 'self' data:; connect-src 'self'; form-action 'self'; frame-ancestors 'none'; object-src 'none'; base-uri 'self'",
+    "hsts": "max-age=86400"
+  },
+  {
+    "name": "8443 /login TLS + CSP",
+    "passed": true,
+    "status": 200,
+    "csp": "default-src 'none'; script-src 'self'; script-src-attr 'none'; style-src 'self'; style-src-attr 'none'; img-src 'self' https: http: data: blob:; font-src 'self' data:; connect-src 'self'; form-action 'self'; frame-ancestors 'none'; object-src 'none'; base-uri 'self'",
+    "hsts": "max-age=86400"
+  },
+  {
+    "name": "8443 /products TLS + CSP",
+    "passed": true,
+    "status": 200,
+    "csp": "default-src 'none'; script-src 'self'; script-src-attr 'none'; style-src 'self'; style-src-attr 'none'; img-src 'self' https: http: data: blob:; font-src 'self' data:; connect-src 'self'; form-action 'self'; frame-ancestors 'none'; object-src 'none'; base-uri 'self'",
+    "hsts": "max-age=86400"
+  },
+  {
+    "name": "8443 API health through same-origin proxy",
+    "passed": true,
+    "status": 200
+  },
+  {
+    "name": "8443 anonymous admin API denied",
+    "passed": true,
+    "status": 401
+  },
+  {
+    "name": "development nonce matches HTML and changes each response",
+    "passed": true
+  },
+  {
+    "name": "development rejects unknown Host",
+    "passed": true,
+    "status": 403
+  },
+  {
+    "name": "HTTP 3000 does not serve login",
+    "passed": true,
+    "connection": "TLS-only listener closed plaintext connection"
+  },
+  {
+    "name": "plaintext/spoofed gateway POST rejected",
+    "passed": true,
+    "status": 426
+  },
+  {
+    "name": "plaintext/spoofed gateway POST rejected",
+    "passed": true,
+    "status": 426
+  },
+  {
+    "name": "plaintext/spoofed gateway POST rejected",
+    "passed": true,
+    "status": 426
+  },
+  {
+    "name": "HTTP 8088 upgrades to fixed HTTPS host",
+    "passed": true,
+    "status": 308
+  }
+]

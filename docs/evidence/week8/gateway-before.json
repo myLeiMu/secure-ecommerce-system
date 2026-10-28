@@ -1,0 +1,25 @@
+{
+  "time_utc": "2026-10-17T04:24:25.508845+00:00",
+  "tls_ca_verified": true,
+  "entry": "https://localhost:8443",
+  "checks": [
+    {
+      "path": "/",
+      "error_type": "ConnectionError"
+    },
+    {
+      "path": "/products",
+      "error_type": "ConnectionError"
+    },
+    {
+      "path": "/login",
+      "error_type": "ConnectionError"
+    },
+    {
+      "path": "/api/health/",
+      "error_type": "ConnectionError"
+    }
+  ],
+  "frontend_headers_passed": false,
+  "scope": "Targeted header verification, not a full Burp rescan; API health status reported separately."
+}

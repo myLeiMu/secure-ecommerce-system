@@ -34,8 +34,9 @@ class EvidenceResult(unittest.TextTestResult):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--serve', action='store_true')
+    parser.add_argument('--output-dir', help='Keep dated reruns separate from the original evidence')
     args = parser.parse_args()
-    output = ROOT / 'docs/evidence/week4'
+    output = Path(args.output_dir) if args.output_dir else ROOT / 'docs/evidence/week4'
     output.mkdir(parents=True, exist_ok=True)
     suite = unittest.TestSuite([unittest.defaultTestLoader.loadTestsFromTestCase(TunnelTests),
                               unittest.defaultTestLoader.loadTestsFromModule(test_course_security)])

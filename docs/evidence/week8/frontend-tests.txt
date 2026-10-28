@@ -1,0 +1,18 @@
+
+> ecommerce-frontend@1.0.0 test
+> jest --coverage --runInBand
+
+------------------|---------|----------|---------|---------|-------------------
+File              | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s 
+------------------|---------|----------|---------|---------|-------------------
+All files         |   87.93 |    70.96 |     100 |      94 |                   
+ productImages.js |     100 |    66.66 |     100 |     100 | 2                 
+ security.js      |     100 |      100 |     100 |     100 |                   
+ validation.js    |   79.41 |    69.23 |     100 |      90 | 9,20,43           
+------------------|---------|----------|---------|---------|-------------------
+
+Test Suites: 3 passed, 3 total
+Tests:       23 passed, 23 total
+Snapshots:   0 total
+Time:        4.487 s
+Ran all test suites.

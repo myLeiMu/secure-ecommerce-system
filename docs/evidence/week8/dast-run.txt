@@ -1,0 +1,43 @@
+127.0.0.1 - - [17/Oct/2026 12:17:46] "GET /api/orders/1 HTTP/1.1" 200 236
+Forbidden: /api/orders/1
+127.0.0.1 - - [17/Oct/2026 12:17:46] "GET /api/orders/1 HTTP/1.1" 403 102
+Unauthorized: /api/admin/categories
+127.0.0.1 - - [17/Oct/2026 12:17:46] "POST /api/admin/categories HTTP/1.1" 401 72
+Bad Request: /api/products
+127.0.0.1 - - [17/Oct/2026 12:17:46] "GET /api/products?keyword=%27+OR+1%3D1-- HTTP/1.1" 400 126
+商品搜索: keyword='<script>alert(1)</script>', category=None, 结果数: 0
+127.0.0.1 - - [17/Oct/2026 12:17:46] "GET /api/products?keyword=%3Cscript%3Ealert%281%29%3C%2Fscript%3E HTTP/1.1" 200 81
+127.0.0.1 - - [17/Oct/2026 12:17:46] "GET /api/users/profile HTTP/1.1" 200 305
+127.0.0.1 - - [17/Oct/2026 12:17:46] "GET /api/users/profile HTTP/1.1" 200 305
+127.0.0.1 - - [17/Oct/2026 12:17:46] "POST /api/auth/logout HTTP/1.1" 200 88
+Unauthorized: /api/users/profile
+127.0.0.1 - - [17/Oct/2026 12:17:46] "GET /api/users/profile HTTP/1.1" 401 72
+Unauthorized: /api/users/profile
+127.0.0.1 - - [17/Oct/2026 12:17:46] "GET /api/users/profile HTTP/1.1" 401 72
+JWT密钥初始化完成，长度: 62
+JWT密钥初始化完成，长度: 62
+Redis连接失败: Error 10061 connecting to 127.0.0.1:1. 由于目标计算机积极拒绝，无法连接。.，将使用内存缓存
+JWT密钥初始化完成，长度: 62
+JWT密钥初始化完成，长度: 62
+统一电商服务初始化完成！
+JWT密钥初始化完成，长度: 62
+JWT密钥初始化完成，长度: 62
+统一电商服务初始化完成！
+JWT密钥初始化完成，长度: 62
+统一电商服务初始化完成！
+[缓存] 缓存未命中，设置缓存: product_list:keyword=<script>alert(1)</script>
+JWT密钥初始化完成，长度: 62
+JWT密钥初始化完成，长度: 62
+统一电商服务初始化完成！
+[缓存] 缓存未命中，设置缓存: user_profile:user1
+JWT密钥初始化完成，长度: 62
+[缓存] 缓存命中: user_profile:user1
+JWT密钥初始化完成，长度: 62
+[JWT黑名单] 令牌已加入黑名单，过期时间: 60分钟
+JWT密钥初始化完成，长度: 62
+统一电商服务初始化完成！
+用户登出: user1
+[LOGOUT] 用户登出，令牌已加入Redis黑名单
+JWT密钥初始化完成，长度: 62
+JWT令牌无效: invalid token format
+docs\evidence\week8\dast-regression.json: {"idor_protected": true, "cross_origin_write_denied": true, "sqli_probe_denied": true, "xss_script_not_reflected": true, "logout_revokes_bearer": true, "invalid_bearer_denied": true, "bank_card_disclosed": false}

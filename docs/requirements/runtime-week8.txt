@@ -1,0 +1,22 @@
+# Application direct dependencies and security patch constraints.
+# Versions observed in WAF on 2026-10-22; not a complete transitive/hash lock.
+# The separate requirements.txt is a historical mixed pip/Conda environment snapshot.
+Django==5.2.18
+djangorestframework==3.17.2
+django-cors-headers==4.9.0
+django-redis==6.0.0
+drf-yasg==1.21.11
+SQLAlchemy==2.0.44
+PyMySQL==1.1.2
+mysqlclient==2.2.7
+cryptography==50.0.2
+gmssl==3.2.2
+gmpy2==2.2.1
+pycryptodome==3.21.0
+PyJWT==2.15.1
+python-dotenv==1.2.4
+redis==7.0.1
+requests==2.34.2
+waitress==3.0.2
+certifi==2026.10.19
+sqlparse==0.6.0

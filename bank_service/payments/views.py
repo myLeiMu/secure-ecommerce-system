@@ -1,3 +1,4 @@
+import logging
 import secrets
 import time
 from decimal import Decimal, InvalidOperation
@@ -18,6 +19,8 @@ from rest_framework.response import Response
 from .models import BankAccount, PaymentTransaction
 from .security import create_result_envelope, get_merchant_public_key, is_timestamp_fresh, verify_params
 
+
+logger = logging.getLogger(__name__)
 
 REQUIRED_PAY_FIELDS = ("order_no", "amount", "merchant_id", "timestamp", "signature")
 
@@ -68,39 +71,114 @@ def _send_callback(payment: PaymentTransaction) -> None:
     if not payment.callback_url:
         payment.callback_status = "skipped"
         payment.callback_response = "callback_url not configured"
+        logger.info(
+            "bank callback skipped transaction_id=%s order_no=%s reason=no_callback_url",
+            payment.transaction_id,
+            payment.order_no,
+        )
         return
 
     try:
+        logger.info(
+            "bank callback sending transaction_id=%s order_no=%s callback_url=%s",
+            payment.transaction_id,
+            payment.order_no,
+            payment.callback_url,
+        )
         response = requests.post(payment.callback_url, json=_result_params(payment), timeout=5)
         payment.callback_status = "success" if 200 <= response.status_code < 300 else "failed"
         payment.callback_response = f"{response.status_code} {response.text[:500]}"
+        logger.info(
+            "bank callback completed transaction_id=%s order_no=%s status=%s http_status=%s",
+            payment.transaction_id,
+            payment.order_no,
+            payment.callback_status,
+            response.status_code,
+        )
     except requests.RequestException as exc:
         payment.callback_status = "failed"
         payment.callback_response = str(exc)
+        logger.warning(
+            "bank callback failed transaction_id=%s order_no=%s error=%s",
+            payment.transaction_id,
+            payment.order_no,
+            exc,
+        )
+
+
+def _successful_order_key(merchant_id: str, order_no: str) -> str:
+    return f"{merchant_id}:{order_no}"
 
 
 def _validate_pay_request(params):
+    logger.info(
+        "bank verify start merchant_id=%s order_no=%s amount=%s timestamp=%s",
+        params.get("merchant_id"),
+        params.get("order_no"),
+        params.get("amount"),
+        params.get("timestamp"),
+    )
     missing = [field for field in REQUIRED_PAY_FIELDS if not params.get(field)]
     if missing:
+        logger.warning(
+            "bank verify failed merchant_id=%s order_no=%s reason=missing_fields fields=%s",
+            params.get("merchant_id"),
+            params.get("order_no"),
+            ",".join(missing),
+        )
         return False, f"缺少参数: {', '.join(missing)}"
 
     try:
         amount = Decimal(params["amount"]).quantize(Decimal("0.01"))
     except (InvalidOperation, TypeError):
+        logger.warning(
+            "bank verify failed merchant_id=%s order_no=%s reason=invalid_amount amount=%s",
+            params.get("merchant_id"),
+            params.get("order_no"),
+            params.get("amount"),
+        )
         return False, "金额格式不正确"
     if amount <= 0:
+        logger.warning(
+            "bank verify failed merchant_id=%s order_no=%s reason=non_positive_amount amount=%s",
+            params.get("merchant_id"),
+            params.get("order_no"),
+            params.get("amount"),
+        )
         return False, "金额必须大于 0"
 
     public_key = get_merchant_public_key(params["merchant_id"])
     if not public_key:
+        logger.warning(
+            "bank verify failed merchant_id=%s order_no=%s reason=merchant_public_key_missing",
+            params.get("merchant_id"),
+            params.get("order_no"),
+        )
         return False, "未知商户或商户公钥未配置"
 
     if not verify_params(params, public_key, params.get("signature")):
+        logger.warning(
+            "bank verify failed merchant_id=%s order_no=%s reason=bad_signature",
+            params.get("merchant_id"),
+            params.get("order_no"),
+        )
         return False, "支付请求 SM2 签名校验失败"
 
     if not is_timestamp_fresh(params.get("timestamp")):
+        logger.warning(
+            "bank verify failed merchant_id=%s order_no=%s reason=expired_timestamp timestamp=%s",
+            params.get("merchant_id"),
+            params.get("order_no"),
+            params.get("timestamp"),
+        )
         return False, "支付请求已过期，请重新发起支付"
 
+    logger.info(
+        "bank verify success merchant_id=%s order_no=%s amount=%s",
+        params.get("merchant_id"),
+        params.get("order_no"),
+        params.get("amount"),
+    )
     return True, ""
 
 
@@ -147,6 +225,21 @@ def process_payment(request):
     pay_password = request.POST.get("pay_password", "")
     amount = Decimal(params["amount"]).quantize(Decimal("0.01")) if params.get("amount") else Decimal("0.00")
 
+    if is_valid and account_number and pay_password:
+        existing_success = PaymentTransaction.objects.filter(
+            merchant_id=params.get("merchant_id", ""),
+            order_no=params.get("order_no", ""),
+            status=PaymentTransaction.STATUS_SUCCESS,
+        ).first()
+        if existing_success:
+            logger.info(
+                "bank payment duplicate success reused transaction_id=%s merchant_id=%s order_no=%s",
+                existing_success.transaction_id,
+                existing_success.merchant_id,
+                existing_success.order_no,
+            )
+            return redirect(_build_result_url(request, existing_success))
+
     payment = PaymentTransaction.objects.create(
         transaction_id=f"BNK{timezone.now().strftime('%Y%m%d%H%M%S')}{secrets.token_hex(4).upper()}",
         order_no=params.get("order_no", ""),
@@ -164,23 +257,89 @@ def process_payment(request):
     if is_valid:
         if not account_number or not pay_password:
             message = "请输入银行卡号和支付密码"
+            logger.warning(
+                "bank payment failed transaction_id=%s order_no=%s reason=missing_account_or_password",
+                payment.transaction_id,
+                payment.order_no,
+            )
         elif params.get("bound_account_number") and account_number != params["bound_account_number"]:
             message = "付款账户必须使用电商已绑定银行卡"
+            logger.warning(
+                "bank payment failed transaction_id=%s order_no=%s reason=account_not_bound account_number=%s",
+                payment.transaction_id,
+                payment.order_no,
+                account_number,
+            )
         else:
             with transaction.atomic():
+                existing_success = PaymentTransaction.objects.select_for_update().filter(
+                    merchant_id=params.get("merchant_id", ""),
+                    order_no=params.get("order_no", ""),
+                    status=PaymentTransaction.STATUS_SUCCESS,
+                ).first()
+                if existing_success:
+                    logger.info(
+                        "bank payment duplicate success reused transaction_id=%s merchant_id=%s order_no=%s",
+                        existing_success.transaction_id,
+                        existing_success.merchant_id,
+                        existing_success.order_no,
+                    )
+                    return redirect(_build_result_url(request, existing_success))
+
                 account = BankAccount.objects.select_for_update().filter(account_number=account_number).first()
                 if not account or not account.is_active:
                     message = "银行卡不存在或已停用"
+                    logger.warning(
+                        "bank payment failed transaction_id=%s order_no=%s reason=account_missing_or_disabled account_number=%s",
+                        payment.transaction_id,
+                        payment.order_no,
+                        account_number,
+                    )
                 elif account.pay_password != pay_password:
                     message = "支付密码错误"
+                    logger.warning(
+                        "bank payment failed transaction_id=%s order_no=%s reason=bad_password account_number=%s",
+                        payment.transaction_id,
+                        payment.order_no,
+                        account_number,
+                    )
                 elif account.balance < amount:
                     message = "账户余额不足"
+                    logger.warning(
+                        "bank payment failed transaction_id=%s order_no=%s reason=insufficient_balance account_number=%s balance=%s amount=%s",
+                        payment.transaction_id,
+                        payment.order_no,
+                        account_number,
+                        account.balance,
+                        amount,
+                    )
                 else:
                     account.balance -= amount
                     account.save(update_fields=["balance", "updated_at"])
                     status = PaymentTransaction.STATUS_SUCCESS
                     message = "支付成功"
                     payment.paid_at = timezone.now()
+                    payment.status = status
+                    payment.message = message
+                    payment.successful_order_key = _successful_order_key(payment.merchant_id, payment.order_no)
+                    payment.save(update_fields=["status", "message", "paid_at", "successful_order_key"])
+                    logger.info(
+                        "bank payment success transaction_id=%s merchant_id=%s order_no=%s account_number=%s amount=%s balance_after=%s",
+                        payment.transaction_id,
+                        payment.merchant_id,
+                        payment.order_no,
+                        account_number,
+                        amount,
+                        account.balance,
+                    )
+    else:
+        logger.warning(
+            "bank payment failed transaction_id=%s merchant_id=%s order_no=%s reason=invalid_request message=%s",
+            payment.transaction_id,
+            payment.merchant_id,
+            payment.order_no,
+            message,
+        )
 
     result_plaintext = {
         "order_no": payment.order_no,
@@ -205,6 +364,11 @@ def process_payment(request):
     else:
         payment.callback_status = "skipped"
         payment.callback_response = "merchant public key not configured"
+        logger.warning(
+            "bank callback skipped transaction_id=%s order_no=%s reason=merchant_public_key_missing",
+            payment.transaction_id,
+            payment.order_no,
+        )
     payment.save(
         update_fields=[
             "status",
@@ -214,6 +378,7 @@ def process_payment(request):
             "callback_status",
             "callback_response",
             "paid_at",
+            "successful_order_key",
         ]
     )
     return redirect(_build_result_url(request, payment))
@@ -240,22 +405,43 @@ def refund_payment(request):
     transaction_id = request.data.get("transaction_id", "")
     order_no = request.data.get("order_no", "")
     amount_value = request.data.get("amount", "")
+    logger.info(
+        "bank refund received transaction_id=%s order_no=%s amount=%s",
+        transaction_id,
+        order_no,
+        amount_value,
+    )
     if not transaction_id:
+        logger.warning("bank refund failed reason=missing_transaction_id")
         return Response({"code": 400, "message": "缺少 transaction_id", "data": None}, status=400)
 
     with transaction.atomic():
         payment = PaymentTransaction.objects.select_for_update().filter(transaction_id=transaction_id).first()
         if not payment:
+            logger.warning("bank refund failed transaction_id=%s reason=payment_not_found", transaction_id)
             return Response({"code": 404, "message": "原支付交易不存在", "data": None}, status=404)
         if order_no and payment.order_no != order_no:
+            logger.warning(
+                "bank refund failed transaction_id=%s reason=order_mismatch request_order_no=%s payment_order_no=%s",
+                transaction_id,
+                order_no,
+                payment.order_no,
+            )
             return Response({"code": 400, "message": "订单号与原交易不一致", "data": None}, status=400)
         if payment.status == PaymentTransaction.STATUS_REFUNDED:
+            logger.info("bank refund idempotent transaction_id=%s order_no=%s", payment.transaction_id, payment.order_no)
             return Response({
                 "code": 0,
                 "message": "该交易已退款",
                 "data": {"transaction_id": payment.transaction_id, "refunded": True},
             })
         if payment.status != PaymentTransaction.STATUS_SUCCESS:
+            logger.warning(
+                "bank refund failed transaction_id=%s order_no=%s reason=payment_not_success status=%s",
+                payment.transaction_id,
+                payment.order_no,
+                payment.status,
+            )
             return Response({"code": 400, "message": "只有支付成功交易可以退款", "data": None}, status=400)
 
         refund_amount = payment.amount
@@ -263,18 +449,42 @@ def refund_payment(request):
             try:
                 refund_amount = Decimal(str(amount_value)).quantize(Decimal("0.01"))
             except (InvalidOperation, TypeError):
+                logger.warning(
+                    "bank refund failed transaction_id=%s reason=invalid_amount amount=%s",
+                    payment.transaction_id,
+                    amount_value,
+                )
                 return Response({"code": 400, "message": "退款金额格式不正确", "data": None}, status=400)
         if refund_amount != payment.amount:
+            logger.warning(
+                "bank refund failed transaction_id=%s reason=partial_refund_not_supported request_amount=%s payment_amount=%s",
+                payment.transaction_id,
+                refund_amount,
+                payment.amount,
+            )
             return Response({"code": 400, "message": "模拟银行仅支持全额退款", "data": None}, status=400)
 
         account = BankAccount.objects.select_for_update().filter(account_number=payment.account_number).first()
         if not account:
+            logger.warning(
+                "bank refund failed transaction_id=%s reason=account_not_found account_number=%s",
+                payment.transaction_id,
+                payment.account_number,
+            )
             return Response({"code": 404, "message": "原付款账户不存在", "data": None}, status=404)
         account.balance += refund_amount
         account.save(update_fields=["balance", "updated_at"])
         payment.status = PaymentTransaction.STATUS_REFUNDED
         payment.message = "已退款"
         payment.save(update_fields=["status", "message", "updated_at"])
+        logger.info(
+            "bank refund success transaction_id=%s order_no=%s account_number=%s amount=%s balance_after=%s",
+            payment.transaction_id,
+            payment.order_no,
+            payment.account_number,
+            refund_amount,
+            account.balance,
+        )
 
     return Response({
         "code": 0,

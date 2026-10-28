@@ -1,4 +1,4 @@
-import { seal, protectedRequest } from './tunnelCrypto.cjs';
+import { seal, protectedRequest } from './tunnelCrypto.mjs';
 
 export function installTunnel(client) {
   client.interceptors.request.use(async config => {

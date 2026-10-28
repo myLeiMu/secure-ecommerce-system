@@ -4,6 +4,8 @@ Fixture accounts user1..user5 / TestPass123! (user3 admin, user4 auditor).
 Bank payments are not part of this preview. Stop the process to discard data.
 """
 import mimetypes
+import argparse
+import ssl
 import sys
 from pathlib import Path
 from urllib.parse import unquote
@@ -30,12 +32,22 @@ def serve(environ, start_response):
     if not target.is_file():
         target = dist / 'index.html'
     content = target.read_bytes()
-    start_response('200 OK', [('Content-Type', mimetypes.guess_type(target)[0] or 'application/octet-stream'),
+    start_response('200 OK', [('Content-Security-Policy', "default-src 'none'; script-src 'self'; script-src-attr 'none'; style-src 'self'; style-src-attr 'none'; img-src 'self' https: http: data: blob:; font-src 'self' data:; connect-src 'self'; form-action 'self'; frame-ancestors 'none'; base-uri 'self'; object-src 'none'"),
+                              ('X-Frame-Options', 'DENY'), ('X-Content-Type-Options', 'nosniff'),
+                              ('Content-Type', mimetypes.guess_type(target)[0] or 'application/octet-stream'),
                               ('Content-Length', str(len(content)))])
     return [content]
 
 
 if __name__ == '__main__':
-    print('Disposable integration preview: http://127.0.0.1:8765', flush=True)
-    with make_server('127.0.0.1', 8765, serve) as server:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--https', action='store_true')
+    parser.add_argument('--port', type=int, default=8765)
+    args = parser.parse_args()
+    print(f'Disposable integration preview: {"https" if args.https else "http"}://127.0.0.1:{args.port}', flush=True)
+    with make_server('127.0.0.1', args.port, serve) as server:
+        if args.https:
+            context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+            context.load_cert_chain(root / 'keys/mtls_local/localhost.crt', root / 'keys/mtls_local/localhost.key')
+            server.socket = context.wrap_socket(server.socket, server_side=True)
         server.serve_forever()

@@ -1,5 +1,5 @@
 import math
-import random
+import secrets
 
 class BigInteger:
     def __init__(self, number_str):
@@ -146,7 +146,7 @@ class RSAWithCRT:
 
         # 进行k轮测试
         for _ in range(k):
-            a = random.randint(2, n - 2)
+            a = secrets.randbelow(n - 3) + 2
             x = mod_pow(a, d, n)
 
             if x == 1 or x == n - 1:
@@ -164,13 +164,13 @@ class RSAWithCRT:
         """
         while True:
             # 生成奇数
-            num = random.getrandbits(bits)
+            num = secrets.randbits(bits)
             num |= (1 << bits - 1) | 1  # 确保是bits位数且为奇数
 
             if self.miller_rabin_test(num):
                 return num
 
-    def generate_keypair(self, bits=512):
+    def generate_keypair(self, bits=1024):
         """
         ⽣成RSA密钥对
         参数:

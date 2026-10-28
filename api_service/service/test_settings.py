@@ -2,6 +2,7 @@
 from .settings import *  # noqa
 
 DEBUG = False
+SECURE_SSL_REDIRECT = False  # Isolated in-memory HTTP fixtures only.
 ALLOWED_HOSTS = ['testserver', 'localhost', '127.0.0.1']
 DATABASES = {'default': {'ENGINE': 'django.db.backends.sqlite3', 'NAME': ':memory:'}}
 REDIS_CONFIG = {'HOST': '127.0.0.1', 'PORT': 1}

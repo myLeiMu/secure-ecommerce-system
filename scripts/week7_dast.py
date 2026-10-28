@@ -15,7 +15,7 @@ from api_service.tests.test_course_security import CourseSecurityTests, SessionL
 from django.core.wsgi import get_wsgi_application
 
 
-def scan(base, token_a, token_b, label):
+def scan(base, token_a, token_b, label, output_dir=None):
     checks = []
 
     def probe(name, method, path, token=None, **kwargs):
@@ -53,7 +53,7 @@ def scan(base, token_a, token_b, label):
                'logout_revokes_bearer': before['status'] == 200 and logout['status'] == 200 and after['status'] == 401,
                'invalid_bearer_denied': invalid['status'] == 401,
                'bank_card_disclosed': profile['full_card_exposed']}
-    output = ROOT / 'docs/evidence/week7'
+    output = Path(output_dir) if output_dir else ROOT / 'docs/evidence/week7'
     output.mkdir(parents=True, exist_ok=True)
     report = {'time_utc': datetime.now(timezone.utc).isoformat(),
               'tool': 'week7_dast.py (requests over actual localhost WSGI HTTP)',
@@ -70,6 +70,7 @@ def scan(base, token_a, token_b, label):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--label', choices=('baseline', 'regression'), required=True)
+    parser.add_argument('--output-dir', help='Keep dated reruns separate from the original evidence')
     args = parser.parse_args()
     fixture = CourseSecurityTests()
     fixture.setUp()
@@ -83,7 +84,7 @@ def main():
 
         def client():
             try:
-                outcome['exit'] = scan(base, token_a, token_b, args.label)
+                outcome['exit'] = scan(base, token_a, token_b, args.label, args.output_dir)
             except BaseException as exc:
                 outcome['error'] = exc
             finally:

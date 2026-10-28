@@ -32,6 +32,8 @@ class JWTUtils:
             'user_id': user_data['user_id'],
             'username': user_data['username'],
             'role': user_data.get('role', 'normal'),
+            'mfa': bool(user_data.get('mfa', False)),
+            'security_version': user_data.get('security_version', 0),
             'iat': int(now.timestamp()),  # 使用整数时间戳
             'exp': int(expires.timestamp()),
             'iss': 'ecommerce-system',
@@ -102,7 +104,7 @@ class JWTUtils:
         return payload
 # 认证服务类
 class AuthService:
-    """认证服务类，集成实验5的防护措施"""
+    """认证服务类，集成防护措施"""
 
     def __init__(self, user_system, jwt_secret: Optional[str] = None):
         self.user_system = user_system

@@ -1,0 +1,44 @@
+
+> ecommerce-frontend@1.0.0 build
+> vue-cli-service build
+
+All browser targets in the browserslist configuration have supported ES module.
+Therefore we don't build two separate bundles for differential loading.
+
+
+-  Building for production...
+ WARNING  Compiled with 2 warnings12:17:10
+
+ warning  
+
+entrypoint size limit: The following entrypoint(s) combined asset size exceeds the recommended limit (244 KiB). This can impact web performance.
+Entrypoints:
+  app (377 KiB)
+      js/chunk-vendors.d22c2439.js
+      css/app.f9ef737f.css
+      js/app.2a3b9c7d.js
+
+
+ warning  
+
+webpack performance recommendations: 
+The runtime is part of the initial chunk of app. It describes every other chunk, so a change anywhere in the build rewrites these assets and clients download them again.
+Set 'optimization.runtimeChunk' to emit the runtime as its own chunk.
+For more info visit https://webpack.js.org/configuration/optimization/#optimizationruntimechunk
+
+  File                                 Size               Gzipped
+
+  dist\js\chunk-vendors.d22c2439.js    241.99 KiB         87.15 KiB
+  dist\js\app.2a3b9c7d.js              99.20 KiB          28.18 KiB
+  dist\js\110.162a1d1b.js              24.95 KiB          8.32 KiB
+  dist\js\370.688c79db.js              2.76 KiB           1.43 KiB
+  dist\css\app.f9ef737f.css            35.48 KiB          7.01 KiB
+  dist\css\110.c6e0c010.css            10.42 KiB          2.40 KiB
+  dist\css\370.d838f411.css            1.90 KiB           0.73 KiB
+
+  Images and other types of assets omitted.
+  Build at: 2026-10-17T04:17:10.453Z - Hash: 4ff149f20013fb4c - Time: 9114ms
+
+ DONE  Build complete. The dist directory is ready to be deployed.
+ INFO  Check out deployment instructions at https://cli.vuejs.org/guide/deployment.html
+       

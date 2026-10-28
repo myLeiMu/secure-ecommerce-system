@@ -15,7 +15,7 @@ engine = create_engine(
     pool_timeout=30,  # 连接超时时间(秒)
     pool_recycle=3600,  # 连接回收时间(秒)
     pool_pre_ping=True,  # 连接前ping检测
-    echo=True,  # 实际环境设为False
+    echo=False,  # 实际环境设为False
     future=True
 )
 
@@ -48,7 +48,7 @@ def init_db():
     """初始化数据库表"""
     try:
         # 确保模型被加载到Base.metadata
-        from src.Data_base.models import user, product, order  # noqa: F401
+        from src.Data_base.models import user, product, order, security  # noqa: F401
 
         Base.metadata.create_all(bind=engine)
         _ensure_schema_updates()
@@ -81,10 +81,11 @@ def _ensure_schema_updates():
         if 'users' in tables:
             user_cols = {c['name'] for c in inspector.get_columns('users')}
             if 'bank_card_number' not in user_cols:
-                conn.execute(text("ALTER TABLE users ADD COLUMN bank_card_number VARCHAR(64) NULL DEFAULT NULL"))
+                conn.execute(text("ALTER TABLE users ADD COLUMN bank_card_number VARCHAR(512) NULL DEFAULT NULL"))
             else:
                 conn.execute(text("UPDATE users SET bank_card_number = NULL WHERE bank_card_number = ''"))
-                conn.execute(text("ALTER TABLE users MODIFY COLUMN bank_card_number VARCHAR(64) NULL DEFAULT NULL"))
+                if engine.dialect.name == 'mysql':
+                    conn.execute(text("ALTER TABLE users MODIFY COLUMN bank_card_number VARCHAR(512) NULL DEFAULT NULL"))
 
         if 'orders' in tables:
             order_cols = {c['name'] for c in inspector.get_columns('orders')}

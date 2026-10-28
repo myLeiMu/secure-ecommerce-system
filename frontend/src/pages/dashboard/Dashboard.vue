@@ -1,910 +1,163 @@
 <template>
-  <div class="dashboard-page">
-    <div class="dashboard-header">
-      <div class="header-content">
-        <h1>管理员控制台</h1>
-        <p>欢迎回来，{{ currentUser?.username || '管理员' }}！</p>
-        <div class="admin-badge">
-          <span class="badge">管理员</span>
-          <span class="last-login">最后登录: {{ formatLastLogin(currentUser?.last_login) }}</span>
-        </div>
-      </div>
-      <div class="header-actions">
-        <button class="btn primary" @click="refreshData">
-          <span class="btn-icon">🔄</span>
-          刷新数据
-        </button>
-        <button class="btn secondary" @click="showSystemStats = !showSystemStats">
-          <span class="btn-icon">📊</span>
-          系统统计
-        </button>
-      </div>
-    </div>
-
-    <!-- 系统统计面板 -->
-    <div v-if="showSystemStats" class="system-stats-panel">
-      <h3>实时系统状态</h3>
-      <div class="system-stats">
-        <div class="system-stat">
-          <span class="stat-label">CPU 使用率</span>
-          <div class="progress-bar">
-            <div class="progress-fill" :style="{ width: systemStats.cpu + '%' }"></div>
-          </div>
-          <span class="stat-value">{{ systemStats.cpu }}%</span>
-        </div>
-        <div class="system-stat">
-          <span class="stat-label">内存使用</span>
-          <div class="progress-bar">
-            <div class="progress-fill" :style="{ width: systemStats.memory + '%' }"></div>
-          </div>
-          <span class="stat-value">{{ systemStats.memory }}%</span>
-        </div>
-        <div class="system-stat">
-          <span class="stat-label">磁盘空间</span>
-          <div class="progress-bar">
-            <div class="progress-fill" :style="{ width: systemStats.disk + '%' }"></div>
-          </div>
-          <span class="stat-value">{{ systemStats.disk }}%</span>
-        </div>
-      </div>
-    </div>
-
-    <div class="stats-grid">
-      <div class="stat-card">
-        <div class="stat-icon">👥</div>
-        <div class="stat-info">
-          <h3>总用户数</h3>
-          <p class="stat-number">{{ adminStats.totalUsers }}</p>
-          <p class="stat-change">今日新增: {{ adminStats.todayNewUsers }}</p>
-        </div>
-      </div>
-
-      <div class="stat-card">
-        <div class="stat-icon">🛒</div>
-        <div class="stat-info">
-          <h3>总订单数</h3>
-          <p class="stat-number">{{ adminStats.totalOrders }}</p>
-          <p class="stat-change">今日订单: {{ adminStats.todayOrders }}</p>
-        </div>
-      </div>
-
-      <div class="stat-card">
-        <div class="stat-icon">💰</div>
-        <div class="stat-info">
-          <h3>总销售额</h3>
-          <p class="stat-number">¥{{ formatPrice(adminStats.totalRevenue) }}</p>
-          <p class="stat-change">今日收入: ¥{{ formatPrice(adminStats.todayRevenue) }}</p>
-        </div>
-      </div>
-
-      <div class="stat-card">
-        <div class="stat-icon">📦</div>
-        <div class="stat-info">
-          <h3>商品总数</h3>
-          <p class="stat-number">{{ adminStats.totalProducts }}</p>
-          <p class="stat-change">库存预警: {{ adminStats.lowStockCount }}</p>
-        </div>
-      </div>
-    </div>
-
-    <div class="dashboard-content">
-      <!-- 左侧：用户管理和最近活动 -->
-      <div class="content-column">
-        <div class="content-section">
-          <div class="section-header">
-            <h2>用户管理</h2>
-            <router-link to="/admin/users" class="view-all">查看全部</router-link>
-          </div>
-          <div class="user-management">
-            <div class="user-stats">
-              <div class="user-stat">
-                <span class="label">正常用户</span>
-                <span class="value">{{ userStats.activeUsers }}</span>
-              </div>
-              <div class="user-stat">
-                <span class="label">未验证</span>
-                <span class="value warning">{{ userStats.unverifiedUsers }}</span>
-              </div>
-              <div class="user-stat">
-                <span class="label">已锁定</span>
-                <span class="value danger">{{ userStats.lockedUsers }}</span>
-              </div>
-            </div>
-            <div class="recent-users">
-              <h4>最近注册用户</h4>
-              <div v-for="user in recentUsers" :key="user.id" class="recent-user">
-                <div class="user-avatar">{{ user.username.charAt(0).toUpperCase() }}</div>
-                <div class="user-info">
-                  <p class="username">{{ user.username }}</p>
-                  <span class="register-time">{{ user.registerTime }}</span>
-                </div>
-                <span :class="['user-status', user.status]">{{ user.statusText }}</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="content-section">
-          <h2>系统活动日志</h2>
-          <div class="activity-list">
-            <div v-for="activity in systemActivities" :key="activity.id" class="activity-item">
-              <div :class="['activity-icon', activity.type]">{{ activity.icon }}</div>
-              <div class="activity-details">
-                <p class="activity-text">{{ activity.text }}</p>
-                <span class="activity-time">{{ activity.time }}</span>
-              </div>
-              <span :class="['activity-level', activity.level]">{{ activity.level }}</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- 右侧：快捷操作和订单管理 -->
-      <div class="content-column">
-        <div class="content-section">
-          <h2>管理员工具</h2>
-          <div class="admin-tools">
-            <router-link to="/admin/products" class="admin-tool">
-              <span class="tool-icon">📦</span>
-              <span class="tool-text">商品管理</span>
-              <span class="tool-desc">管理商品信息和库存</span>
-            </router-link>
-            
-            <router-link to="/admin/orders" class="admin-tool">
-              <span class="tool-icon">🛒</span>
-              <span class="tool-text">订单管理</span>
-              <span class="tool-desc">处理订单和发货</span>
-            </router-link>
-            
-            <router-link to="/admin/users" class="admin-tool">
-              <span class="tool-icon">👥</span>
-              <span class="tool-text">用户管理</span>
-              <span class="tool-desc">管理用户账户和权限</span>
-            </router-link>
-            
-            <router-link to="/admin/categories" class="admin-tool">
-              <span class="tool-icon">📑</span>
-              <span class="tool-text">分类管理</span>
-              <span class="tool-desc">管理商品分类</span>
-            </router-link>
-
-            <router-link to="/admin/analytics" class="admin-tool">
-              <span class="tool-icon">📊</span>
-              <span class="tool-text">数据分析</span>
-              <span class="tool-desc">查看销售和用户分析</span>
-            </router-link>
-
-            <router-link to="/admin/settings" class="admin-tool">
-              <span class="tool-icon">⚙️</span>
-              <span class="tool-text">系统设置</span>
-              <span class="tool-desc">配置系统参数</span>
-            </router-link>
-          </div>
-        </div>
-
-        <div class="content-section">
-          <div class="section-header">
-            <h2>待处理订单</h2>
-            <span class="badge danger">{{ pendingOrders.length }}</span>
-          </div>
-          <div class="pending-orders">
-            <div v-for="order in pendingOrders" :key="order.id" class="pending-order">
-              <div class="order-info">
-                <p class="order-id">#{{ order.id }}</p>
-                <p class="order-customer">{{ order.customer }}</p>
-                <p class="order-amount">¥{{ formatPrice(order.amount) }}</p>
-              </div>
-              <div class="order-actions">
-                <button class="btn small primary" @click="processOrder(order.id)">处理</button>
-                <button class="btn small secondary" @click="viewOrder(order.id)">查看</button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+  <div class="console">
+    <aside class="console-nav" aria-label="控制台功能导航">
+      <p class="nav-caption">{{ roleLabels[role] }}功能</p>
+      <button v-for="item in tabs" :key="item.id" :class="{ selected: tab === item.id }" :aria-current="tab === item.id ? 'page' : undefined" @click="selectTab(item.id)"><span aria-hidden="true">{{ item.icon }}</span>{{ item.label }}</button>
+    </aside>
+    <section class="workspace">
+      <header class="page-heading"><div><p class="eyebrow">工作台 / {{ activeTab.label }}</p><h1>{{ activeTab.label }}</h1><p class="subtitle">{{ activeTab.description }}</p></div><button class="button secondary" :disabled="loading" @click="load">{{ loading ? '刷新中…' : '刷新数据' }}</button></header>
+      <p v-if="error" class="alert error" role="alert">{{ error }}</p><p v-if="notice" class="alert success" role="status">{{ notice }}</p>
+      <div v-if="loading" class="loading" role="status">正在获取最新数据…</div>
+      <template v-else-if="tab === 'overview'">
+        <div class="metrics"><article v-for="metric in metrics" :key="metric.key"><span>{{ metric.label }}</span><strong>{{ metric.money ? '¥' : '' }}{{ overview[metric.key] ?? '—' }}</strong><small>{{ metric.note }}</small></article></div>
+        <div class="overview-grid"><article class="panel"><h2>待处理事项</h2><button class="task-row" @click="selectTab('orders')"><span><strong>订单发货</strong><small>查看付款状态并录入物流单号</small></span><b>{{ overview.pending_shipments || 0 }} →</b></button><button class="task-row" @click="selectTab('products')"><span><strong>低库存商品</strong><small>库存不足 10 件，及时补充库存</small></span><b>{{ overview.low_stock || 0 }} →</b></button></article><article class="panel"><h2>管理与安全</h2><p class="explanation">账号权限变更即时生效；关键操作会记录操作者、时间、对象和结果。</p><button class="button secondary" @click="selectTab('audit')">查看审计记录 →</button></article></div>
+      </template>
+      <MfaSettings v-else-if="tab === 'security'" />
+      <article v-else-if="tab === 'permissions'" class="panel"><h2>角色权限矩阵</h2><div class="table-scroll"><table><thead><tr><th>角色</th><th>允许的资源与操作</th><th>登录验证</th></tr></thead><tbody><tr v-for="(permissions, name) in visibleMatrix" :key="name"><td>{{ roleLabels[name] }}</td><td><span v-for="permission in permissions" :key="permission" class="permission">{{ permissionLabels[permission] || permission }}</span></td><td>{{ ['admin', 'auditor'].includes(name) ? '密码 / 证书 + TOTP' : '密码 / 证书' }}</td></tr></tbody></table></div></article>
+      <article v-else class="panel records">
+        <div class="toolbar"><form class="filters" @submit.prevent="search"><input v-if="tab !== 'categories'" v-model.trim="q" :placeholder="searchPlaceholder" aria-label="搜索" /><select v-if="Object.keys(filterOptions).length" v-model="filter" aria-label="状态筛选"><option value="">全部</option><option v-for="(label, key) in filterOptions" :key="key" :value="key">{{ label }}</option></select><input v-if="tab === 'audit'" v-model="since" type="date" aria-label="开始日期" /><button v-if="tab !== 'categories'" class="button secondary">查询</button></form><button v-if="['products', 'categories'].includes(tab)" class="button" @click="edit()">+ {{ tab === 'products' ? '新增商品' : '新增分类' }}</button><button v-if="tab === 'audit'" class="button" :disabled="saving" @click="exportAudit">导出审计报告</button></div>
+        <div class="table-scroll"><table><thead><tr><th v-for="column in columns" :key="column.key">{{ column.label }}</th><th v-if="tab !== 'audit'">操作</th></tr></thead><tbody v-if="rows.length"><tr v-for="row in rows" :key="rowId(row)"><td v-for="column in columns" :key="column.key" :class="{ resource: column.key === 'resource' }"><span :class="cellClass(column.key, row[column.key])">{{ display(column.key, row[column.key]) }}</span><small v-if="column.key === 'product_name'">{{ row.sku }}</small><small v-if="column.key === 'username' && tab === 'users'">ID {{ row.user_id }}</small></td><td v-if="tab !== 'audit'"><button class="text-button" :disabled="!canEdit(row)" @click="edit(row)">{{ tab === 'orders' ? '发货' : tab === 'users' ? '管理权限' : '编辑' }}</button></td></tr></tbody><tbody v-else><tr><td :colspan="columns.length + 1" class="empty"><strong>暂无符合条件的记录</strong><p>尝试调整筛选条件，或刷新数据。</p></td></tr></tbody></table></div>
+        <footer v-if="tab !== 'categories'" class="pagination"><span>共 {{ total }} 条记录 · 第 {{ page }} / {{ Math.max(1, Math.ceil(total / 20)) }} 页</span><div><button class="button secondary" :disabled="page <= 1" @click="changePage(-1)">上一页</button><button class="button secondary" :disabled="page * 20 >= total" @click="changePage(1)">下一页</button></div></footer>
+      </article>
+      <p class="footer-note">{{ roleLabels[role] }}工作空间 · 关键管理操作与审计访问均有记录</p>
+    </section>
+    <div v-if="dialog" class="modal-backdrop" @click.self="closeDialog" @keydown.esc="closeDialog" @keydown.tab="trapFocus">
+      <section class="admin-dialog" :class="{ 'product-dialog': tab === 'products' }" role="dialog" aria-modal="true" aria-labelledby="dialog-title"><header><h2 id="dialog-title">{{ dialogTitle }}</h2><button class="close" :disabled="saving" aria-label="关闭" @click="closeDialog">×</button></header>
+        <form class="dialog-form" @submit.prevent="save"><div class="dialog-body">
+          <template v-if="tab === 'users'"><p class="hint">正在管理 {{ form.username }}。保存后该用户的旧会话将失效。</p><label>角色<select v-model="form.role"><option v-for="(label, name) in assignableRoles" :key="name" :value="name">{{ label }}</option></select></label><label>账号状态<select v-model="form.is_active"><option :value="true">正常</option><option :value="false">停用</option></select></label></template>
+          <template v-if="tab === 'products'"><label>商品名称<input v-model.trim="form.product_name" required maxlength="200" /></label><div class="form-grid"><label>SKU<input v-model.trim="form.sku" required maxlength="50" /></label><label>分类<select v-model.number="form.category_id" aria-label="分类" required><option disabled value="">请选择分类</option><option v-for="category in categories" :key="category.category_id" :value="category.category_id">{{ category.category_name }}</option></select></label><label>售价（元）<input v-model.number="form.sale_price" type="number" min="0.01" max="99999999.99" step="0.01" required /></label><label>库存<input v-model.number="form.stock_quantity" type="number" min="0" max="100000000" step="1" required /></label></div><label>商品描述<textarea v-model="form.description" rows="3" maxlength="10000"></textarea></label><label>网络图片 URL（可选）<textarea v-model.trim="form.image_urls_text" rows="3" placeholder="粘贴图片直链，每行一个，最多 8 张"></textarea></label><p class="hint">支持 HTTP / HTTPS 图片直链，建议使用 HTTPS。</p><ImageUrlPreview :value="form.image_urls_text" /><div class="form-grid"><label v-if="role === 'admin'">所属卖家 ID（可选）<input v-model.number="form.seller_id" type="number" min="1" /></label><label>上架状态<select v-model="form.status"><option value="active">上架</option><option value="inactive">下架</option></select></label></div></template>
+          <template v-if="tab === 'categories'"><label>分类名称<input v-model.trim="form.category_name" required maxlength="100" /></label><label>排序<input v-model.number="form.sort_order" type="number" min="0" step="1" required /></label><label>状态<select v-model="form.is_active"><option :value="true">启用</option><option :value="false">停用</option></select></label><p class="hint">停用前需先下架该分类下的商品。</p></template>
+          <template v-if="tab === 'orders'"><p class="hint">订单 {{ form.order_number }} · ¥{{ form.total_amount }}</p><label>物流单号<input v-model.trim="form.tracking_number" required maxlength="100" /></label><p class="hint">确认后订单变为“已发货”，请核对单号。</p></template>
+          <p v-if="dialogError" class="alert error" role="alert">{{ dialogError }}</p></div><footer><button type="button" class="button secondary" :disabled="saving" @click="closeDialog">取消</button><button class="button" :disabled="saving">{{ saving ? '保存中…' : tab === 'orders' ? '确认发货' : '保存修改' }}</button></footer>
+        </form>
+      </section>
     </div>
   </div>
 </template>
 
-<script>
-import { computed, ref, onMounted } from 'vue';
+<script setup>
+import { computed, nextTick, onMounted, ref } from 'vue';
 import { useStore } from 'vuex';
-
-export default {
-  name: 'AdminDashboard',
-  setup() {
-    const store = useStore();
-    
-    const currentUser = computed(() => store.getters['auth/currentUser']);
-    const showSystemStats = ref(false);
-
-    // 管理员统计数据
-    const adminStats = ref({
-      totalUsers: 1247,
-      todayNewUsers: 23,
-      totalOrders: 5689,
-      todayOrders: 45,
-      totalRevenue: 1256890,
-      todayRevenue: 12450,
-      totalProducts: 156,
-      lowStockCount: 8
-    });
-
-    // 用户统计
-    const userStats = ref({
-      activeUsers: 1189,
-      unverifiedUsers: 45,
-      lockedUsers: 13
-    });
-
-    // 系统状态
-    const systemStats = ref({
-      cpu: 45,
-      memory: 68,
-      disk: 32
-    });
-
-    // 最近注册用户
-    const recentUsers = ref([
-      { id: 1, username: 'john_doe', registerTime: '2分钟前', status: 'active', statusText: '正常' },
-      { id: 2, username: 'jane_smith', registerTime: '5分钟前', status: 'unverified', statusText: '未验证' },
-      { id: 3, username: 'mike_wilson', registerTime: '10分钟前', status: 'active', statusText: '正常' },
-      { id: 4, username: 'sara_brown', registerTime: '15分钟前', status: 'locked', statusText: '已锁定' }
-    ]);
-
-    // 系统活动日志
-    const systemActivities = ref([
-      {
-        id: 1,
-        icon: '🔒',
-        text: '用户登录失败次数过多，账户已自动锁定',
-        time: '2分钟前',
-        type: 'security',
-        level: 'warning'
-      },
-      {
-        id: 2,
-        icon: '📦',
-        text: '商品库存预警：iPhone 13 库存低于阈值',
-        time: '5分钟前',
-        type: 'inventory',
-        level: 'warning'
-      },
-      {
-        id: 3,
-        icon: '💰',
-        text: '新订单支付成功 #ORD202400125',
-        time: '10分钟前',
-        type: 'order',
-        level: 'info'
-      },
-      {
-        id: 4,
-        icon: '👥',
-        text: '新用户注册成功：alex_johnson',
-        time: '15分钟前',
-        type: 'user',
-        level: 'info'
-      },
-      {
-        id: 5,
-        icon: '🔄',
-        text: '系统数据备份完成',
-        time: '30分钟前',
-        type: 'system',
-        level: 'info'
-      }
-    ]);
-
-    // 待处理订单
-    const pendingOrders = ref([
-      { id: 'ORD202400125', customer: '张先生', amount: 5999, status: 'pending' },
-      { id: 'ORD202400124', customer: '李女士', amount: 4299, status: 'pending' },
-      { id: 'ORD202400123', customer: '王先生', amount: 2999, status: 'pending' }
-    ]);
-
-    const refreshData = () => {
-      // 模拟刷新数据
-      console.log('刷新管理员数据...');
-    };
-
-    const processOrder = (orderId) => {
-      console.log('处理订单:', orderId);
-    };
-
-    const viewOrder = (orderId) => {
-      console.log('查看订单:', orderId);
-    };
-
-    const formatPrice = (price) => {
-      return price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-    };
-
-    const formatLastLogin = (date) => {
-      if (!date) return '未知';
-      return new Date(date).toLocaleString('zh-CN');
-    };
-
-    onMounted(() => {
-      // 可以在这里加载真实的管理员数据
-      console.log('管理员控制台已加载');
-    });
-
-    return {
-      currentUser,
-      showSystemStats,
-      adminStats,
-      userStats,
-      systemStats,
-      recentUsers,
-      systemActivities,
-      pendingOrders,
-      refreshData,
-      processOrder,
-      viewOrder,
-      formatPrice,
-      formatLastLogin
-    };
-  }
-};
+import { apiClient } from '../../services/http';
+import ImageUrlPreview from '../../components/common/ImageUrlPreview.vue';
+import { parseImageUrls, isImageUrl } from '../../utils/productImages';
+import MfaSettings from '../../components/forms/MfaSettings.vue';
+const store = useStore();
+const currentUser = computed(() => store.getters['auth/currentUser']);
+const role = computed(() => String(currentUser.value?.role || currentUser.value?.user_role || '').toLowerCase());
+const roleLabels = { admin: '管理员', merchant: '交易用户', normal: '交易用户', auditor: '审计员' };
+const assignableRoles = { normal: '交易用户（买家 / 卖家）', admin: '管理员', auditor: '审计员' };
+const orderLabels = { pending: '待处理', confirmed: '已确认', processing: '处理中', shipped: '已发货', delivered: '已送达', cancelled: '已取消', refunded: '已退款' };
+const paymentLabels = { pending: '未支付', paid: '已支付', failed: '支付失败', refunded: '已退款' };
+const permissionLabels = { 'catalog.read':'浏览商品', 'profile.self':'个人资料', 'cart.self':'自己的购物车', 'orders.self':'自己的订单', 'payment.self':'自己的支付', 'products.own':'自己的商品', 'users.manage':'用户管理', 'products.manage':'全部商品管理', 'categories.manage':'分类管理', 'orders.manage':'订单管理', 'audit.read':'查看审计', 'audit.export':'导出审计', 'security.read':'安全事件查询' };
+const allTabs = [
+  { id: 'security', label: '账号安全', icon: '◇', description: '更换身份验证器，恢复设备访问。', roles: ['admin','auditor'] },
+  { id: 'overview', label: '运营概览', icon: '◫', description: '查看经营数据与当前待办事项。', roles: ['admin'] },
+  { id: 'users', label: '用户管理', icon: '◎', description: '分配用户角色，管理账号访问状态。', roles: ['admin'] },
+  { id: 'products', label: '商品管理', icon: '▣', description: '维护商品信息、库存和上架状态。', roles: ['admin','normal','merchant'] },
+  { id: 'categories', label: '分类管理', icon: '≡', description: '维护商品分类与展示顺序。', roles: ['admin'] },
+  { id: 'orders', label: '订单管理', icon: '▤', description: '查看订单付款状态，处理已付款订单的发货。', roles: ['admin'] },
+  { id: 'audit', label: '日志与安全事件', icon: '◷', description: '追溯管理操作，查询访问拒绝和身份验证事件。', roles: ['admin','auditor'] },
+  { id: 'permissions', label: '角色权限', icon: '◇', description: '查看各角色可访问的资源与操作。', roles: ['admin','auditor'] }
+];
+const tabs = computed(() => allTabs.filter(t => t.roles.includes(role.value)));
+const tab = ref(role.value === 'auditor' ? 'audit' : ['normal', 'merchant'].includes(role.value) ? 'products' : 'overview');
+const activeTab = computed(() => allTabs.find(t => t.id === tab.value));
+const rows = ref([]), overview = ref({}), matrix = ref({}), categories = ref([]), total = ref(0), page = ref(1);
+// 旧 merchant 与 normal 是同一种交易身份，矩阵只展示三个业务角色。
+const visibleMatrix = computed(() => Object.fromEntries(
+  ['normal', 'admin', 'auditor']
+    .map(name => [name, matrix.value[name] ?? (name === 'normal' ? matrix.value.merchant : undefined)])
+    .filter(([, permissions]) => permissions !== undefined)
+));
+const q = ref(''), filter = ref(''), since = ref(''), error = ref(''), notice = ref(''), loading = ref(false), saving = ref(false);
+const dialog = ref(false), form = ref({}), dialogError = ref('');
+let requestSequence = 0, previousFocus;
+const metrics = [{key:'paid_total',label:'已支付订单金额',note:'当前支付状态为已支付的订单合计',money:true},{key:'orders',label:'订单总数',note:'累计创建的订单'},{key:'users',label:'注册用户',note:'系统内全部角色账号'},{key:'products',label:'在售商品',note:'当前已上架的商品数量'}];
+const columnMap = {users:{username:'用户',email:'邮箱',user_role:'角色',is_active:'状态',last_login:'最近登录'},products:{product_name:'商品 / SKU',sale_price:'售价',stock_quantity:'库存',seller_id:'卖家 ID',status:'状态'},categories:{category_id:'ID',category_name:'分类名称',sort_order:'排序',is_active:'状态'},orders:{order_number:'订单',total_amount:'金额',order_status:'订单状态',payment_status:'支付状态',tracking_number:'物流单号'},audit:{created_at:'时间',username:'操作人',action:'事件',resource:'资源',result:'结果',ip:'来源 IP'}};
+const columns = computed(() => Object.entries(columnMap[tab.value] || {}).map(([key,label])=>({key,label})));
+const filterOptions = computed(() => ({users:roleLabels,products:{active:'已上架',inactive:'已下架'},orders:orderLabels,audit:{success:'成功',denied:'拒绝'}}[tab.value] || {}));
+const searchPlaceholder = computed(() => ({users:'搜索用户名或邮箱',products:'搜索商品名或 SKU',orders:'搜索订单编号',audit:'搜索资源路径'}[tab.value] || '搜索'));
+const dialogTitle = computed(() => ({users:'管理用户权限',products:form.value.product_id ? '编辑商品' : '新增商品',categories:form.value.category_id ? '编辑分类' : '新增分类',orders:'订单发货'}[tab.value]));
+const productBase = computed(() => role.value !== 'admin' ? '/merchant/products' : '/admin/products');
+const rowId = row => row.event_id || row.product_id || row.order_id || row.category_id || row.user_id;
+const canEdit = row => tab.value === 'users' ? row.user_id !== currentUser.value.user_id : tab.value !== 'orders' || (row.payment_status === 'paid' && ['pending','confirmed','processing'].includes(row.order_status));
+function display(key,val) {
+  if (val === null || val === undefined || val === '') return '—';
+  if (['last_login','created_at'].includes(key)) return new Date(val).toLocaleString('zh-CN',{hour12:false});
+  if (['sale_price','total_amount'].includes(key)) return '¥' + val;
+  if (key === 'is_active') return val ? '正常' : '停用';
+  return ({user_role:roleLabels,order_status:orderLabels,payment_status:paymentLabels,status:{active:'已上架',inactive:'已下架'},result:{success:'成功',denied:'拒绝'}}[key] || {})[val] || val;
+}
+function cellClass(key,val) { if (['is_active','status','result','user_role','order_status'].includes(key)) return ['badge', [true,'active','success'].includes(val)?'green':[false,'denied'].includes(val)?'red':'']; return key === 'stock_quantity' && val < 10 ? 'low' : ''; }
+const params = () => ({page:page.value,page_size:20,q:q.value,...(tab.value === 'users' ? {role:filter.value} : tab.value === 'audit' ? {result:filter.value,since:since.value} : {status:filter.value})});
+async function load() {
+  if (tab.value === 'security') { ++requestSequence; loading.value = false; return; }
+  const sequence = ++requestSequence; loading.value = true; error.value = '';
+  try {
+    const url = tab.value === 'audit' ? '/audit/events' : tab.value === 'permissions' ? '/audit/permissions' : tab.value === 'products' ? productBase.value : '/admin/' + tab.value;
+    const response = await apiClient.request('GET', url, null, {params:params()});
+    if (sequence !== requestSequence) return;
+    if (response.code !== 0) throw new Error(response.message);
+    if (tab.value === 'overview') overview.value = response.data;
+    else if (tab.value === 'permissions') matrix.value = response.data;
+    else if (tab.value === 'categories') rows.value = response.data;
+    else { rows.value = response.data.items; total.value = response.data.total; }
+  } catch (e) { if (sequence === requestSequence) { error.value = e.message; rows.value = []; } }
+  finally { if (sequence === requestSequence) loading.value = false; }
+}
+function selectTab(id) { tab.value=id;page.value=1;q.value='';filter.value='';since.value='';notice.value='';load(); }
+function search() {page.value=1;load();}
+function changePage(delta) {page.value+=delta;load();}
+async function edit(row = {}) {
+  previousFocus=document.activeElement;form.value={product_name:'',sku:'',category_id:'',sale_price:'',stock_quantity:0,description:'',status:'active',sort_order:0,is_active:true,...row,role:row.user_role === 'merchant' ? 'normal' : row.user_role,image_urls_text:(row.image_urls || []).join('\n')};dialogError.value='';dialog.value=true;
+  if(tab.value==='products') {try {const response=await apiClient.request('GET',role.value==='admin'?'/admin/categories':'/categories');categories.value=(response.data || []).filter(c=>c.is_active!==false);} catch(e){dialogError.value=e.message;}}
+  await nextTick();document.querySelector('.admin-dialog input, .admin-dialog select')?.focus();
+}
+function closeDialog(){if(!saving.value){dialog.value=false;previousFocus?.focus();}}
+function trapFocus(event){const nodes=[...document.querySelectorAll('.admin-dialog button:not(:disabled),.admin-dialog input,.admin-dialog select,.admin-dialog textarea')];if(!nodes.length)return;const first=nodes[0],last=nodes[nodes.length-1];if(event.shiftKey&&document.activeElement===first){event.preventDefault();last.focus();}else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first.focus();}}
+async function save() {
+  saving.value=true;dialogError.value='';
+  try {
+    const f=form.value;let url,method,data;
+    if(tab.value==='users'){url=`/admin/users/${f.user_id}`;method='PATCH';data={role:f.role,is_active:f.is_active};}
+    if(tab.value==='products'){const images=parseImageUrls(f.image_urls_text);if(images.length>8 || images.some(url=>!isImageUrl(url)))throw new Error('请填写有效的 HTTP / HTTPS 图片链接，最多 8 张');url=productBase.value+(f.product_id?`/${f.product_id}`:'');method=f.product_id?'PUT':'POST';data={sku:f.sku,product_name:f.product_name,description:f.description,sale_price:f.sale_price,stock_quantity:f.stock_quantity,category_id:f.category_id,status:f.status,image_urls:images};if(f.seller_id&&role.value==='admin')data.seller_id=f.seller_id;}
+    if(tab.value==='categories'){url='/admin/categories'+(f.category_id?`/${f.category_id}`:'');method=f.category_id?'PUT':'POST';data={category_name:f.category_name,sort_order:f.sort_order,is_active:f.is_active};}
+    if(tab.value==='orders'){url=`/admin/orders/${f.order_id}/ship`;method='POST';data={tracking_number:f.tracking_number};}
+    const response=await apiClient.request(method,url,data);if(response.code!==0)throw new Error(response.message);
+    dialog.value=false;notice.value=response.message||'已保存';previousFocus?.focus();await load();
+  }catch(e){dialogError.value=e.message;}finally{saving.value=false;}
+}
+async function exportAudit(){saving.value=true;error.value='';try{const data=await apiClient.request('GET','/audit/export',null,{params:params()});const url=URL.createObjectURL(new Blob([JSON.stringify(data,null,2)],{type:'application/json'}));const a=document.createElement('a');a.href=url;a.download='audit-report.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);notice.value='已导出筛选范围内最近 10000 条记录';await load();}catch(e){error.value=e.message;}finally{saving.value=false;}}
+onMounted(load);
 </script>
 
 <style scoped>
-.dashboard-page {
-  max-width: 1400px;
-  margin: 0 auto;
-  padding: 2rem 1rem;
-}
-
-.dashboard-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 2rem;
-  padding-bottom: 1.5rem;
-  border-bottom: 2px solid #e9ecef;
-}
-
-.header-content h1 {
-  margin: 0 0 0.5rem;
-  color: #2c3e50;
-  font-size: 2.2rem;
-  font-weight: 700;
-}
-
-.header-content p {
-  margin: 0 0 0.75rem;
-  color: #6c757d;
-  font-size: 1.1rem;
-}
-
-.admin-badge {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-}
-
-.badge {
-  background: #007bff;
-  color: white;
-  padding: 0.25rem 0.75rem;
-  border-radius: 12px;
-  font-size: 0.75rem;
-  font-weight: 600;
-}
-
-.last-login {
-  font-size: 0.875rem;
-  color: #6c757d;
-}
-
-.header-actions {
-  display: flex;
-  gap: 1rem;
-}
-
-.btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.75rem 1.5rem;
-  border: none;
-  border-radius: 6px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s;
-}
-
-.btn.primary {
-  background: #007bff;
-  color: white;
-}
-
-.btn.secondary {
-  background: #6c757d;
-  color: white;
-}
-
-.btn.small {
-  padding: 0.5rem 1rem;
-  font-size: 0.875rem;
-}
-
-.btn:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-}
-
-.system-stats-panel {
-  background: white;
-  padding: 1.5rem;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  margin-bottom: 2rem;
-}
-
-.system-stats-panel h3 {
-  margin: 0 0 1rem;
-  color: #2c3e50;
-}
-
-.system-stats {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 1rem;
-}
-
-.system-stat {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-}
-
-.stat-label {
-  min-width: 80px;
-  color: #6c757d;
-  font-size: 0.875rem;
-}
-
-.progress-bar {
-  flex: 1;
-  height: 8px;
-  background: #e9ecef;
-  border-radius: 4px;
-  overflow: hidden;
-}
-
-.progress-fill {
-  height: 100%;
-  background: #28a745;
-  transition: width 0.3s;
-}
-
-.stat-value {
-  min-width: 40px;
-  text-align: right;
-  font-weight: 600;
-  color: #2c3e50;
-}
-
-.stats-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 1.5rem;
-  margin-bottom: 3rem;
-}
-
-.stat-card {
-  background: white;
-  padding: 1.5rem;
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  transition: all 0.3s;
-  border-left: 4px solid #007bff;
-}
-
-.stat-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
-}
-
-.stat-icon {
-  font-size: 2.5rem;
-  width: 70px;
-  height: 70px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: linear-gradient(135deg, #007bff, #0056b3);
-  border-radius: 12px;
-  color: white;
-}
-
-.stat-info h3 {
-  margin: 0 0 0.5rem;
-  color: #6c757d;
-  font-size: 0.875rem;
-  font-weight: 600;
-  text-transform: uppercase;
-}
-
-.stat-number {
-  margin: 0 0 0.25rem;
-  font-size: 2rem;
-  font-weight: 700;
-  color: #2c3e50;
-}
-
-.stat-change {
-  margin: 0;
-  font-size: 0.875rem;
-  color: #28a745;
-  font-weight: 500;
-}
-
-.dashboard-content {
-  display: grid;
-  grid-template-columns: 2fr 1fr;
-  gap: 2rem;
-}
-
-.content-column {
-  display: flex;
-  flex-direction: column;
-  gap: 2rem;
-}
-
-.content-section {
-  background: white;
-  padding: 1.5rem;
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
-.section-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 1.5rem;
-}
-
-.section-header h2 {
-  margin: 0;
-  color: #2c3e50;
-  font-size: 1.25rem;
-  font-weight: 600;
-}
-
-.view-all {
-  color: #007bff;
-  text-decoration: none;
-  font-size: 0.875rem;
-  font-weight: 500;
-}
-
-.user-management {
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
-}
-
-.user-stats {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 1rem;
-}
-
-.user-stat {
-  text-align: center;
-  padding: 1rem;
-  background: #f8f9fa;
-  border-radius: 8px;
-}
-
-.user-stat .label {
-  display: block;
-  color: #6c757d;
-  font-size: 0.875rem;
-  margin-bottom: 0.5rem;
-}
-
-.user-stat .value {
-  display: block;
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: #28a745;
-}
-
-.user-stat .value.warning {
-  color: #ffc107;
-}
-
-.user-stat .value.danger {
-  color: #dc3545;
-}
-
-.recent-users h4 {
-  margin: 0 0 1rem;
-  color: #2c3e50;
-  font-size: 1rem;
-}
-
-.recent-user {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  padding: 0.75rem;
-  border-bottom: 1px solid #e9ecef;
-}
-
-.recent-user:last-child {
-  border-bottom: none;
-}
-
-.user-avatar {
-  width: 36px;
-  height: 36px;
-  background: #007bff;
-  color: white;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 600;
-  font-size: 0.875rem;
-}
-
-.user-info {
-  flex: 1;
-}
-
-.username {
-  margin: 0 0 0.25rem;
-  font-weight: 600;
-  color: #2c3e50;
-}
-
-.register-time {
-  font-size: 0.75rem;
-  color: #6c757d;
-}
-
-.user-status {
-  font-size: 0.75rem;
-  padding: 0.25rem 0.5rem;
-  border-radius: 12px;
-  font-weight: 600;
-}
-
-.user-status.active {
-  background: #d4edda;
-  color: #155724;
-}
-
-.user-status.unverified {
-  background: #fff3cd;
-  color: #856404;
-}
-
-.user-status.locked {
-  background: #f8d7da;
-  color: #721c24;
-}
-
-.admin-tools {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 1rem;
-}
-
-.admin-tool {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.75rem;
-  padding: 1.5rem 1rem;
-  background: #f8f9fa;
-  border-radius: 8px;
-  text-decoration: none;
-  color: #2c3e50;
-  transition: all 0.3s;
-  text-align: center;
-}
-
-.admin-tool:hover {
-  background: #007bff;
-  color: white;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
-}
-
-.tool-icon {
-  font-size: 2rem;
-}
-
-.tool-text {
-  font-weight: 600;
-  font-size: 1rem;
-}
-
-.tool-desc {
-  font-size: 0.75rem;
-  opacity: 0.8;
-}
-
-.activity-list {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-
-.activity-item {
-  display: flex;
-  align-items: flex-start;
-  gap: 1rem;
-  padding: 1rem;
-  background: #f8f9fa;
-  border-radius: 8px;
-  transition: background-color 0.3s;
-}
-
-.activity-item:hover {
-  background: #e9ecef;
-}
-
-.activity-icon {
-  font-size: 1.2rem;
-  width: 36px;
-  height: 36px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: white;
-  border-radius: 8px;
-  flex-shrink: 0;
-}
-
-.activity-icon.security {
-  background: #fff3cd;
-  color: #856404;
-}
-
-.activity-icon.inventory {
-  background: #ffeaa7;
-  color: #e17055;
-}
-
-.activity-icon.order {
-  background: #d1ecf1;
-  color: #0c5460;
-}
-
-.activity-icon.user {
-  background: #d4edda;
-  color: #155724;
-}
-
-.activity-icon.system {
-  background: #e2e3e5;
-  color: #383d41;
-}
-
-.activity-details {
-  flex: 1;
-}
-
-.activity-text {
-  margin: 0 0 0.25rem;
-  color: #2c3e50;
-  font-weight: 500;
-}
-
-.activity-time {
-  font-size: 0.75rem;
-  color: #6c757d;
-}
-
-.activity-level {
-  font-size: 0.75rem;
-  padding: 0.25rem 0.5rem;
-  border-radius: 12px;
-  font-weight: 600;
-  text-transform: uppercase;
-}
-
-.activity-level.info {
-  background: #d1ecf1;
-  color: #0c5460;
-}
-
-.activity-level.warning {
-  background: #fff3cd;
-  color: #856404;
-}
-
-.pending-orders {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-
-.pending-order {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 1rem;
-  background: #f8f9fa;
-  border-radius: 8px;
-  border-left: 4px solid #ffc107;
-}
-
-.order-info p {
-  margin: 0.25rem 0;
-}
-
-.order-id {
-  font-weight: 600;
-  color: #2c3e50;
-}
-
-.order-customer {
-  color: #6c757d;
-  font-size: 0.875rem;
-}
-
-.order-amount {
-  color: #28a745;
-  font-weight: 600;
-}
-
-.order-actions {
-  display: flex;
-  gap: 0.5rem;
-}
-
-.badge.danger {
-  background: #dc3545;
-  color: white;
-  padding: 0.25rem 0.5rem;
-  border-radius: 12px;
-  font-size: 0.75rem;
-  font-weight: 600;
-}
-
-@media (max-width: 1024px) {
-  .dashboard-content {
-    grid-template-columns: 1fr;
-  }
-  
-  .admin-tools {
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  }
-}
-
-@media (max-width: 768px) {
-  .dashboard-header {
-    flex-direction: column;
-    gap: 1rem;
-  }
-  
-  .header-actions {
-    width: 100%;
-    justify-content: flex-start;
-  }
-  
-  .stats-grid {
-    grid-template-columns: 1fr;
-  }
-  
-  .user-stats {
-    grid-template-columns: 1fr;
-  }
-  
-  .system-stats {
-    grid-template-columns: 1fr;
-  }
-}
+.console{display:flex;min-height:calc(100vh - 160px);background:#f5f6fa;color:#333;font-family:inherit}.console-nav{width:240px;flex-shrink:0;background:#1f2937;color:#d1d5db;padding:32px 16px;display:flex;flex-direction:column}.nav-caption{font-size:14px;color:#d1d5db;padding:0 16px;margin-bottom:16px}.console-nav>button{border:0;text-align:left;font:inherit;font-size:16px;background:transparent;color:#d1d5db;padding:12px 16px;border-radius:4px;margin-bottom:8px;cursor:pointer}.console-nav>button span{display:inline-block;width:28px;font-size:19px;vertical-align:middle}.console-nav>button.selected{background:#2563eb;color:#fff}.console-nav>button:hover:not(.selected){background:#374151}.workspace{flex:1;min-width:0;padding:24px}.page-heading{display:flex;justify-content:space-between;align-items:center;gap:16px;margin-bottom:28px}.eyebrow{font-size:14px;color:#6c757d;margin-bottom:14px}h1{font-size:28px;margin:0 0 8px;font-weight:600}.subtitle{font-size:14px;color:#6c757d}.button{border:1px solid transparent;background:#007bff;color:white;padding:9px 16px;border-radius:4px;font:inherit;font-size:14px;cursor:pointer;white-space:nowrap}.button.secondary{background:white;border-color:#ddd;color:#6c757d}.button:hover{filter:brightness(.96)}button:disabled{opacity:.45;cursor:not-allowed}.metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:18px;margin-bottom:24px}.metrics article{background:white;border:1px solid #e9ecef;border-radius:8px;padding:24px}.metrics span{font-size:14px;color:#6c757d}.metrics strong{display:block;font-size:29px;color:#333;margin:19px 0 13px;overflow-wrap:anywhere;font-variant-numeric:tabular-nums}.metrics small{font-size:12px;color:#6c757d}.panel{background:white;border:1px solid #e9ecef;border-radius:8px;padding:24px}h2{font-size:20px;margin:0 0 24px;font-weight:600}.overview-grid{display:grid;grid-template-columns:1.4fr 1fr;gap:24px}.task-row{display:flex;justify-content:space-between;align-items:center;width:100%;padding:18px 0;border:0;border-top:1px solid #e9ecef;background:white;text-align:left;color:#333;cursor:pointer}.task-row strong{font-size:14px}.task-row small{display:block;color:#6c757d;font-size:14px;margin-top:7px}.task-row b{font-size:18px;font-weight:500;color:#007bff}.explanation{font-size:14px;line-height:1.9;color:#6c757d;margin-bottom:24px}.toolbar{display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap;margin-bottom:24px}.filters{display:flex;gap:10px;flex-wrap:wrap}input,select,textarea{font:inherit;font-size:14px;border:1px solid #ddd;padding:9px 11px;border-radius:4px;background:white;color:#333;min-width:0}.filters input{max-width:220px}input:focus,select:focus,textarea:focus{outline:2px solid #81a9ef;outline-offset:1px}.table-scroll{overflow:auto}.table-scroll table{min-width:760px}table{width:100%;border-collapse:collapse;text-align:left;font-size:14px;white-space:nowrap}th{font-weight:500;color:#6c757d;background:#f8f9fa;padding:14px}td{padding:19px 14px;border-bottom:1px solid #e9ecef;color:#333}td small{display:block;font-size:12px;color:#6c757d;margin-top:7px}.resource{max-width:300px;overflow-wrap:anywhere;white-space:normal}.badge{display:inline-block;background:#f0f3f7;color:#6d7b90;font-size:12px;padding:5px 9px;border-radius:4px}.green{background:#eaf6f0;color:#319169}.red{background:#fff0ef;color:#be5049}.low{color:#d08a27;font-weight:600}.text-button{border:0;background:transparent;color:#007bff;font:inherit;cursor:pointer;padding:5px 0}.pagination{display:flex;justify-content:space-between;align-items:center;margin-top:22px;font-size:14px;color:#6c757d;gap:15px}.pagination>div{display:flex;gap:8px}.empty{text-align:center;padding:70px 20px}.empty p{color:#6c757d;margin-top:12px}.footer-note{font-size:12px;color:#6c757d;margin-top:25px}.alert{font-size:14px;padding:13px 16px;border-radius:4px;margin-bottom:18px}.error{background:#fff0ef;color:#aa3e35}.success{background:#e9f6ef;color:#247a56}.loading{padding:70px;text-align:center;color:#6c757d}.permission{display:inline-block;margin:3px 5px 3px 0;padding:5px 8px;background:#f1f5fb;border-radius:4px}.hint{font-size:14px;line-height:1.8;color:#6c757d}@media(max-width:1200px){.metrics{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:760px){.console{display:block}.console-nav{width:100%;padding:16px;display:flex;flex-direction:row;flex-wrap:wrap;gap:4px}.nav-caption,.console-nav>button{padding:8px;font-size:14px;margin:0}.console-nav>button span{display:none}.workspace{padding:16px}.page-heading{align-items:flex-start}h1{font-size:23px}.metrics{gap:10px}.metrics article{padding:18px 14px}.metrics strong{font-size:24px}.overview-grid{grid-template-columns:1fr}.panel{padding:16px}.pagination{flex-wrap:wrap}.form-grid{grid-template-columns:1fr}.subtitle{line-height:1.7}.records{padding:12px}}
+
+.metrics article,.panel{box-shadow:0 2px 8px rgba(0,0,0,.06)}
+.button:hover:not(:disabled){background:#0056b3;filter:none}
+.button.secondary:hover:not(:disabled){background:#f8f9fa}
+.console-nav>button:focus-visible,.button:focus-visible,.text-button:focus-visible{outline:2px solid #80bdff;outline-offset:3px}
+@media(min-width:769px){.console-nav{align-self:flex-start;position:sticky;top:80px;min-height:calc(100vh - 80px)}}
+@media(max-width:768px){.console{display:block}.console-nav{width:100%;min-height:0;flex-direction:row;flex-wrap:wrap;gap:4px;padding:16px}.nav-caption{display:none}.console-nav>button{padding:8px;font-size:14px;margin:0}.workspace{padding:16px}.filters{width:100%}.filters input{max-width:100%;flex:1 1 160px}}
+
+/* Dedicated dialog classes avoid the shared full-screen .modal rules. */
+.modal-backdrop{position:fixed;inset:0;z-index:1100;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;padding:24px}
+.admin-dialog{width:520px;max-width:100%;max-height:calc(100dvh - 48px);display:flex;flex-direction:column;overflow:hidden;background:white;border:1px solid #e9ecef;border-radius:12px;box-shadow:0 20px 60px rgba(0,0,0,.2)}
+.admin-dialog.product-dialog{width:800px}
+.admin-dialog>header{display:flex;flex:none;align-items:center;justify-content:space-between;gap:16px;padding:20px 24px;border-bottom:1px solid #e9ecef}
+.admin-dialog h2{margin:0;font-size:20px}
+.admin-dialog .close{width:36px;height:36px;flex:none;border:0;border-radius:6px;background:#f8f9fa;color:#6c757d;font-size:26px;cursor:pointer}
+.dialog-form{display:flex;flex-direction:column;min-height:0;overflow:hidden}
+.dialog-body{display:grid;gap:20px;padding:24px;overflow-y:auto;min-height:0;overscroll-behavior:contain}
+.admin-dialog label{display:grid;gap:8px;min-width:0;font-size:14px;font-weight:500;color:#333}
+.admin-dialog input,.admin-dialog select,.admin-dialog textarea{width:100%;min-width:0;min-height:42px;padding:10px 12px;font-size:14px;line-height:1.5;box-sizing:border-box}
+.admin-dialog textarea{resize:vertical;min-height:90px;max-height:240px}
+.admin-dialog .form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px}
+.admin-dialog .hint{margin:0;overflow-wrap:anywhere;line-height:1.7}
+.admin-dialog .alert{margin:0}
+.dialog-form>footer{display:flex;flex:none;justify-content:flex-end;gap:12px;padding:16px 24px;background:#f8f9fa;border-top:1px solid #e9ecef}
+.dialog-form>footer .button{min-width:100px;min-height:42px}
+@media(max-width:576px){.modal-backdrop{padding:12px}.admin-dialog{max-height:calc(100dvh - 24px);border-radius:10px}.admin-dialog>header{padding:16px}.dialog-body{padding:16px;gap:16px}.admin-dialog .form-grid{grid-template-columns:1fr;gap:16px}.dialog-form>footer{padding:12px 16px}.dialog-form>footer .button{flex:1;min-width:0}}
 </style>

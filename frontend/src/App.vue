@@ -5,7 +5,7 @@
     <div class="app-layout">
       <Sidebar v-if="showSidebar" />
 
-      <main class="main-content" :class="{ 'with-sidebar': showSidebar }">
+      <main class="main-content" :class="{ 'with-sidebar': showSidebar, 'dashboard-content': route.path === '/dashboard' }">
         <router-view />
       </main>
     </div>
@@ -31,7 +31,7 @@ import Sidebar from './components/layout/Sidebar.vue';
 import MobileNav from './components/layout/MobileNav.vue';
 import LoadingSpinner from './components/common/LoadingSpinner.vue';
 
-const HIDE_SIDEBAR_ROUTES = ['/login', '/register', '/forgot-password'];
+const HIDE_SIDEBAR_ROUTES = ['/login', '/register', '/forgot-password', '/dashboard'];
 
 export default {
   name: 'App',
@@ -51,6 +51,7 @@ export default {
 
     return {
       appLoading,
+      route,
       showSidebar
     };
   }
@@ -85,6 +86,7 @@ body {
 
 .main-content {
   flex: 1;
+  min-width: 0;
   padding: 1.5rem;
   min-height: 100%;
   background: #f5f6fa;
@@ -111,6 +113,11 @@ body {
 .global-loading p {
   margin-top: 1rem;
   color: #666;
+}
+
+/* 控制台自带功能导航，由它负责与普通侧栏相同的页面边距。 */
+.main-content.dashboard-content {
+  padding: 0;
 }
 
 /* 响应式设计 */

@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { installTunnel } from './tunnel';
 
 class APIClient {
   constructor() {
@@ -15,6 +16,7 @@ class APIClient {
     if (this.token) {
       this.client.defaults.headers.common.Authorization = `Bearer ${this.token}`;
     }
+    installTunnel(this.client);
   }
 
   resolveBaseURL(rawBaseURL) {
@@ -71,7 +73,7 @@ class APIClient {
       throw networkError;
     }
 
-    throw new Error('请求配置错误');
+    throw new Error(error.message || '请求配置错误');
   }
 
   handleUnauthorized() {

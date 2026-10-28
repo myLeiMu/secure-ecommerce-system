@@ -13,4 +13,5 @@ PASSWORD = os.getenv('DB_PASSWORD', '')  # 从环境变量获取
 DB = os.getenv('DB_NAME', 'ecommerce_system')
 
 # dialect + driver://username:passwor@host:port/database
-DB_URI = f'mysql+pymysql://{USERNAME}:{PASSWORD}@{HOST}:{PORT}/{DB}'
+from sqlalchemy.engine import URL
+DB_URI = os.getenv('DATABASE_URL') or URL.create('mysql+pymysql', username=USERNAME, password=PASSWORD, host=HOST, port=PORT, database=DB)

@@ -13,9 +13,13 @@ sys.path.insert(0, str(BASE_DIR))
 sys.path.insert(0, str(BASE_DIR / 'src'))
 
 
-SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', 'django-insecure-fallback-secret-key')
-DEBUG = os.getenv('DEBUG', 'True').lower() == 'true'
+SECRET_KEY = os.getenv('DJANGO_SECRET_KEY')
+if not SECRET_KEY:
+    raise RuntimeError('DJANGO_SECRET_KEY must be configured in the environment')
+DEBUG = os.getenv('DEBUG', 'False').lower() == 'true'
 ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1,0.0.0.0').split(',')
+SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SECURE = True
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -31,6 +35,7 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    'api.middleware.TrustedHTTPSMiddleware',
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -40,8 +45,9 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'api.middleware.JWTAuthenticationMiddleware',
-    'api.middleware.SecurityMiddleware',
     'api.middleware.RateLimitMiddleware',
+    'api.tunnel.TunnelMiddleware',
+    'api.middleware.SecurityMiddleware',
 ]
 
 ROOT_URLCONF = 'service.urls'
@@ -103,30 +109,23 @@ REST_FRAMEWORK = {
 }
 
 # CORS 配置
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3000",
-    "http://localhost:3001",
-    "http://127.0.0.1:3000",
-    "http://127.0.0.1:3001",
-    "http://192.168.31.244:3000",
-    "http://192.168.185.197:3000",
-    "http://10.252.105.57:3000"
-]
-CORS_ALLOWED_ORIGIN_REGEXES = [
-    r"^http://localhost:\d+$",
-    r"^http://127\.0\.0\.1:\d+$",
-]
-CSRF_TRUSTED_ORIGINS = [
-    "http://localhost:3000",
-    "http://localhost:3001",
-    "http://127.0.0.1:3000",
-    "http://127.0.0.1:3001",
-]
+# Browser clients use the same-origin /api proxy. No cross-origin credentials.
+CORS_ALLOWED_ORIGINS = []
+CORS_ALLOWED_ORIGIN_REGEXES = []
+CORS_ALLOW_CREDENTIALS = False
+CSRF_TRUSTED_ORIGINS = ['https://localhost:8443', 'https://localhost:3000']
 
-CORS_ALLOW_CREDENTIALS = True
-
-SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
-USE_X_FORWARDED_HOST = True
+# Only the authenticated local gateways may attest to the browser's TLS connection.
+SECURE_PROXY_SSL_HEADER = None
+MTLS_PROXY_SECRET = os.getenv('MTLS_PROXY_SECRET', '')
+SECURE_SSL_REDIRECT = True
+SECURE_SSL_HOST = os.getenv('PUBLIC_HTTPS_HOST', 'localhost:8443')
+SECURE_HSTS_SECONDS = 86400
+SECURE_HSTS_INCLUDE_SUBDOMAINS = False
+SECURE_HSTS_PRELOAD = False
+# Local signed/encrypted bank callback and health probes are not browser login routes.
+SECURE_REDIRECT_EXEMPT = [r'^api/health/?$', r'^api/pay/callback$']
+USE_X_FORWARDED_HOST = False
 
 
 
@@ -143,14 +142,14 @@ JWT_CONFIG = {
 # matching merchant public key; ecommerce uses this private key to decrypt them.
 ECOMMERCE_MERCHANT_PRIVATE_KEY = os.getenv(
     "ECOMMERCE_MERCHANT_PRIVATE_KEY",
-    "a96e3fd619a89a6c239d84435c4c174f35439f8fb1f3d0b773d505c4aa75265c",
+    "",
 )
 BANK_PAY_BASE_URL = os.getenv("BANK_PAY_BASE_URL", "http://127.0.0.1:8000")
 BANK_REFUND_URL = os.getenv("BANK_REFUND_URL", "http://127.0.0.1:8000/api/refund")
 ECOMMERCE_MERCHANT_ID = os.getenv("ECOMMERCE_MERCHANT_ID", "ECOMMERCE_DEMO")
 ECOMMERCE_PAYMENT_RETURN_URL = os.getenv(
     "ECOMMERCE_PAYMENT_RETURN_URL",
-    "http://localhost:3000/payment/result",
+    "https://localhost:8443/payment/result",
 )
 ECOMMERCE_BANK_CALLBACK_URL = os.getenv(
     "ECOMMERCE_BANK_CALLBACK_URL",

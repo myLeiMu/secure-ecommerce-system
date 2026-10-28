@@ -1,4 +1,5 @@
 import sys
+from tempfile import TemporaryDirectory
 from src.algorithm.rsa_service import SM2Service
 from src.utils.security import sm3_digest
 
@@ -18,8 +19,9 @@ def test_environment():
     else:
         print("跳过：未安装 gmpy2")
     print("\n=== SM2 功能测试 ===")
-    sm2_service = SM2Service()
-    sm2_service.generate_keys(password="test-password")
+    with TemporaryDirectory() as key_dir:
+        sm2_service = SM2Service(key_dir)
+        sm2_service.generate_keys()
     print("SM2 密钥生成成功")
     # 测试哈希函数
     print("\n=== 哈希功能测试 ===")

@@ -9,6 +9,7 @@ from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 from datetime import datetime, timezone
 from decimal import Decimal
+import logging
 import time
 import secrets
 import requests
@@ -24,7 +25,7 @@ from api_service.api.payment_crypto import open_result_envelope, sign_payment_pa
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 from src.unified_service import UnifiedEcommerceService
 from sqlalchemy.orm import joinedload
-from gmssl import sm2
+from src.utils.secure_sm2 import SecureSM2
 from src.algorithm.ca_center import parse_certificate_pem, verify_certificate_with_root
 from src.Data_base.models.product import Product
 from src.Data_base.models.user import User
@@ -38,6 +39,8 @@ from src.Data_base.models.order import (
     PaymentMethod,
 )
 
+
+logger = logging.getLogger(__name__)
 
 # 统一响应格式
 class APIResponse:
@@ -404,7 +407,7 @@ class CertLoginView(APIView):
                     "timestamp": datetime.now().isoformat()
                 }, status=status)
 
-            verifier = sm2.CryptSM2(public_key=cert_info["subject_public_key_hex"], private_key="")
+            verifier = SecureSM2(public_key=cert_info["subject_public_key_hex"], private_key="")
             if not verifier.verify(signature_hex, challenge.encode("utf-8")):
                 return Response({
                     "code": 401,
@@ -526,8 +529,12 @@ class CertMTLSLoginView(APIView):
                 "timestamp": datetime.now().isoformat()
             }, status=400)
 
+        proxy_secret = os.environ.get('MTLS_PROXY_SECRET', '')
+        provided_secret = request.META.get('HTTP_X_MTLS_PROXY_SECRET', '')
+        if not proxy_secret or not secrets.compare_digest(proxy_secret.encode(), provided_secret.encode()):
+            return Response(APIResponse.error('证书登录必须经过受信任的 mTLS 网关', 403), status=403)
         verify_header = request.META.get("HTTP_X_SSL_CLIENT_VERIFY", "")
-        if verify_header and verify_header.upper() != "SUCCESS":
+        if verify_header.upper() != "SUCCESS":
             return Response({
                 "code": 401,
                 "message": "客户端证书握手未通过",
@@ -565,12 +572,17 @@ class CertMTLSLoginView(APIView):
                     cert_info = parse_certificate_pem(certificate_pem)
                     cert_cn = cert_info.get("subject_common_name", "")
                 except Exception:
-                    cert_cn = _extract_cn_from_dn(request.META.get("HTTP_X_SSL_CLIENT_S_DN", ""))
+                    # Standard browser TLS certificates are RSA/ECDSA X.509, not application SM2 certificates.
+                    from cryptography import x509
+                    from cryptography.x509.oid import NameOID
+                    certificate = x509.load_pem_x509_certificate(certificate_pem.encode('utf-8'))
+                    names = certificate.subject.get_attributes_for_oid(NameOID.COMMON_NAME)
+                    cert_cn = names[0].value if len(names) == 1 else ""
 
             input_username = serializer.validated_data.get("username")
             login_username = input_username or cert_cn
 
-            if input_username and cert_cn and input_username != cert_cn:
+            if not cert_cn or (input_username and input_username != cert_cn):
                 return Response({
                     "code": 401,
                     "message": "证书主体与用户名不一致",
@@ -1091,11 +1103,9 @@ class UserProfileView(APIView):
         security=[{'Bearer': []}]
     )
     def get(self, request):
-        print(f"[Profile DEBUG] request.user_info: {getattr(request, 'user_info', 'NOT SET')}")
 
         # 检查用户认证状态
         if not hasattr(request, 'user_info') or not request.user_info:
-            print("[Profile DEBUG] 用户未认证")
             return JsonResponse({
                 "code": 401,
                 "message": "用户未认证",
@@ -1108,12 +1118,11 @@ class UserProfileView(APIView):
             username = request.user_info['username']
             user_info = UserCache.get_user_profile(username)
 
-            print(f"[Profile DEBUG] 获取的用户信息: {user_info}")
 
             if user_info:
                 # 直接构建响应数据
                 if isinstance(user_info, dict):
-                    user_data = user_info
+                    user_data = dict(user_info)
                 else:
                     # 如果是对象，手动转换为字典
                     user_data = {}
@@ -1127,6 +1136,10 @@ class UserProfileView(APIView):
                             else:
                                 user_data[field] = value
 
+                # Cached profiles may predate masking; never send a full PAN.
+                card = user_data.get('bank_card_number')
+                if card:
+                    user_data['bank_card_number'] = '****' + str(card)[-4:]
                 return JsonResponse({
                     "code": 0,
                     "message": "success",
@@ -1143,8 +1156,6 @@ class UserProfileView(APIView):
 
         except Exception as e:
             import traceback
-            print(f"[Profile DEBUG] 获取用户信息错误: {str(e)}")
-            print(f"[Profile DEBUG] 异常详情: {traceback.format_exc()}")
 
             return JsonResponse({
                 "code": 500,
@@ -1288,7 +1299,7 @@ class BankCardBindView(APIView):
             db.commit()
             UserCache.invalidate_user_caches(user.username)
             return Response(APIResponse.success({
-                "bank_card_number": card_no,
+                "bank_card_number": '****' + card_no[-4:],
                 "bank_card_last_four": card_no[-4:],
             }, "银行卡绑定成功"))
         except Exception as e:
@@ -2203,6 +2214,8 @@ class OrderBankPayView(APIView):
         security=[{'Bearer': []}]
     )
     def post(self, request, order_id):
+        if not settings.ECOMMERCE_MERCHANT_PRIVATE_KEY:
+            return Response(APIResponse.error("支付密钥未配置", 503), status=503)
         user_info = _get_user_info(request)
         if not user_info:
             return Response(APIResponse.error("用户未认证", 401), status=401)
@@ -2269,10 +2282,23 @@ class BankPaymentSyncResultView(APIView):
         security=[{'Bearer': []}]
     )
     def post(self, request):
+        logger.info(
+            "bank callback received transaction_id=%s has_encrypted_key=%s has_iv=%s has_data=%s",
+            request.data.get("transaction_id"),
+            bool(request.data.get("encrypted_key")),
+            bool(request.data.get("iv")),
+            bool(request.data.get("data")),
+        )
+        if not settings.ECOMMERCE_MERCHANT_PRIVATE_KEY:
+            return Response(APIResponse.error("支付密钥未配置", 503), status=503)
         encrypted_key = request.data.get("encrypted_key")
         iv = request.data.get("iv")
         data = request.data.get("data")
         if not encrypted_key or not iv or not data:
+            logger.warning(
+                "bank callback rejected transaction_id=%s reason=missing_envelope_fields",
+                request.data.get("transaction_id"),
+            )
             return Response(APIResponse.error("缺少 encrypted_key、iv 或 data", 400), status=400)
 
         try:
@@ -2309,6 +2335,8 @@ class BankPaymentCallbackView(APIView):
         tags=["支付"],
     )
     def post(self, request):
+        if not settings.ECOMMERCE_MERCHANT_PRIVATE_KEY:
+            return Response(APIResponse.error("支付密钥未配置", 503), status=503)
         encrypted_key = request.data.get("encrypted_key")
         iv = request.data.get("iv")
         data = request.data.get("data")
@@ -2320,12 +2348,29 @@ class BankPaymentCallbackView(APIView):
         try:
             result = open_result_envelope(encrypted_key, iv, data, merchant_private_key)
         except Exception as exc:
+            logger.warning(
+                "bank callback decrypt failed transaction_id=%s error=%s",
+                request.data.get("transaction_id"),
+                exc,
+            )
             return Response(APIResponse.error(f"支付结果解密失败: {str(exc)}", 400), status=400)
 
         order_no = result.get("order_no")
         pay_status = result.get("status")
         bank_transaction_id = result.get("bank_transaction_id") or request.data.get("transaction_id")
+        logger.info(
+            "bank callback decrypted order_no=%s status=%s bank_transaction_id=%s",
+            order_no,
+            pay_status,
+            bank_transaction_id,
+        )
         if not order_no or not pay_status or not bank_transaction_id:
+            logger.warning(
+                "bank callback rejected order_no=%s status=%s bank_transaction_id=%s reason=missing_plaintext_fields",
+                order_no,
+                pay_status,
+                bank_transaction_id,
+            )
             return Response(APIResponse.error("支付结果正文缺少必要字段", 400, result), status=400)
 
         service = UnifiedEcommerceService()
@@ -2333,6 +2378,11 @@ class BankPaymentCallbackView(APIView):
         try:
             order = db.query(Order).filter(Order.order_number == order_no).first()
             if not order:
+                logger.warning(
+                    "bank callback rejected order_no=%s bank_transaction_id=%s reason=order_not_found",
+                    order_no,
+                    bank_transaction_id,
+                )
                 return Response(APIResponse.error("订单不存在", 404, result), status=404)
 
             existing_payment = db.query(Payment).filter(Payment.order_id == order.order_id).first()
@@ -2342,6 +2392,13 @@ class BankPaymentCallbackView(APIView):
                 and existing_payment.gateway_transaction_id == bank_transaction_id
                 and existing_payment.payment_status == target_status
             ):
+                logger.info(
+                    "bank callback idempotent order_no=%s order_id=%s bank_transaction_id=%s payment_status=%s",
+                    order_no,
+                    order.order_id,
+                    bank_transaction_id,
+                    existing_payment.payment_status.value,
+                )
                 return Response(APIResponse.success({
                     "order_no": order_no,
                     "payment_status": existing_payment.payment_status.value,
@@ -2357,6 +2414,12 @@ class BankPaymentCallbackView(APIView):
                     payment_gateway="mock_bank",
                 )
                 db.add(existing_payment)
+                logger.info(
+                    "bank callback creating payment order_no=%s order_id=%s bank_transaction_id=%s",
+                    order_no,
+                    order.order_id,
+                    bank_transaction_id,
+                )
 
             now = datetime.now()
             existing_payment.gateway_transaction_id = bank_transaction_id
@@ -2370,6 +2433,14 @@ class BankPaymentCallbackView(APIView):
                 order.order_status = OrderStatus.CONFIRMED
 
             db.commit()
+            logger.info(
+                "bank callback updated order_no=%s order_id=%s order_status=%s payment_status=%s bank_transaction_id=%s",
+                order_no,
+                order.order_id,
+                order.order_status.value,
+                order.payment_status.value,
+                bank_transaction_id,
+            )
             return Response(APIResponse.success({
                 "order_no": order_no,
                 "order_status": order.order_status.value,
@@ -2379,6 +2450,11 @@ class BankPaymentCallbackView(APIView):
             }, "回调处理成功"))
         except Exception as e:
             db.rollback()
+            logger.exception(
+                "bank callback processing failed order_no=%s bank_transaction_id=%s",
+                order_no,
+                bank_transaction_id,
+            )
             return Response(APIResponse.error(f"回调处理失败: {str(e)}", 500), status=500)
 
 

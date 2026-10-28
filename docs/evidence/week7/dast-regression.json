@@ -1,0 +1,139 @@
+{
+  "time_utc": "2026-09-29T06:56:22.268778+00:00",
+  "tool": "week7_dast.py (requests over actual localhost WSGI HTTP)",
+  "environment": "ephemeral localhost port, in-memory SQLite, fictitious accounts and card; no production mutations",
+  "scope": [
+    "SQLi",
+    "XSS reflection",
+    "cross-origin unauthenticated write",
+    "IDOR",
+    "JWT/logout",
+    "card disclosure",
+    "security headers"
+  ],
+  "checks": [
+    {
+      "name": "order owner",
+      "method": "GET",
+      "path": "/orders/1",
+      "status": 200,
+      "content_type": "application/json",
+      "x_content_type_options": "nosniff",
+      "x_frame_options": "DENY",
+      "cors_allow_origin": null,
+      "csp": null
+    },
+    {
+      "name": "order IDOR",
+      "method": "GET",
+      "path": "/orders/1",
+      "status": 403,
+      "content_type": "application/json",
+      "x_content_type_options": "nosniff",
+      "x_frame_options": "DENY",
+      "cors_allow_origin": null,
+      "csp": null
+    },
+    {
+      "name": "write without bearer/cross origin",
+      "method": "POST",
+      "path": "/admin/categories",
+      "status": 401,
+      "content_type": "application/json",
+      "x_content_type_options": "nosniff",
+      "x_frame_options": "DENY",
+      "cors_allow_origin": null,
+      "csp": null
+    },
+    {
+      "name": "SQLi-shaped product query",
+      "method": "GET",
+      "path": "/products",
+      "status": 400,
+      "content_type": "application/json",
+      "x_content_type_options": "nosniff",
+      "x_frame_options": "DENY",
+      "cors_allow_origin": null,
+      "csp": null
+    },
+    {
+      "name": "XSS-shaped product query",
+      "method": "GET",
+      "path": "/products",
+      "status": 200,
+      "content_type": "application/json",
+      "x_content_type_options": "nosniff",
+      "x_frame_options": "DENY",
+      "cors_allow_origin": null,
+      "csp": null,
+      "script_reflected": false
+    },
+    {
+      "name": "bank card profile response",
+      "method": "GET",
+      "path": "/users/profile",
+      "status": 200,
+      "content_type": "application/json",
+      "x_content_type_options": "nosniff",
+      "x_frame_options": "DENY",
+      "cors_allow_origin": null,
+      "csp": null,
+      "full_card_exposed": false,
+      "last_four_present": true
+    },
+    {
+      "name": "active bearer",
+      "method": "GET",
+      "path": "/users/profile",
+      "status": 200,
+      "content_type": "application/json",
+      "x_content_type_options": "nosniff",
+      "x_frame_options": "DENY",
+      "cors_allow_origin": null,
+      "csp": null
+    },
+    {
+      "name": "logout bearer",
+      "method": "POST",
+      "path": "/auth/logout",
+      "status": 200,
+      "content_type": "application/json",
+      "x_content_type_options": "nosniff",
+      "x_frame_options": "DENY",
+      "cors_allow_origin": null,
+      "csp": null
+    },
+    {
+      "name": "revoked bearer",
+      "method": "GET",
+      "path": "/users/profile",
+      "status": 401,
+      "content_type": "application/json",
+      "x_content_type_options": "nosniff",
+      "x_frame_options": "DENY",
+      "cors_allow_origin": null,
+      "csp": null
+    },
+    {
+      "name": "invalid bearer",
+      "method": "GET",
+      "path": "/users/profile",
+      "status": 401,
+      "content_type": "application/json",
+      "x_content_type_options": "nosniff",
+      "x_frame_options": "DENY",
+      "cors_allow_origin": null,
+      "csp": null
+    }
+  ],
+  "summary": {
+    "idor_protected": true,
+    "cross_origin_write_denied": true,
+    "sqli_probe_denied": true,
+    "xss_script_not_reflected": true,
+    "logout_revokes_bearer": true,
+    "invalid_bearer_denied": true,
+    "bank_card_disclosed": false
+  },
+  "limit": "Bounded probes are not a full ZAP/Burp spider or authenticated active scan."
+}

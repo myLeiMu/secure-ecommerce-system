@@ -1,0 +1,426 @@
+{
+  "environment": "isolated SQLite and temporary SM2 CA; real certificate and signature verification",
+  "cases": [
+    {
+      "case": "certificate challenge",
+      "method": "POST",
+      "path": "/api/auth/cert/challenge",
+      "expected": 200,
+      "actual": 200,
+      "passed": true
+    },
+    {
+      "case": "SM2 signature rejected",
+      "method": "POST",
+      "path": "/api/auth/cert/login",
+      "expected": 401,
+      "actual": 401,
+      "passed": true
+    },
+    {
+      "case": "certificate challenge",
+      "method": "POST",
+      "path": "/api/auth/cert/challenge",
+      "expected": 200,
+      "actual": 200,
+      "passed": true
+    },
+    {
+      "case": "user1 certificate login",
+      "method": "POST",
+      "path": "/api/auth/cert/login",
+      "expected": 200,
+      "actual": 200,
+      "passed": true
+    },
+    {
+      "case": "trader denied platform management",
+      "method": "GET",
+      "path": "/api/admin/users",
+      "expected": 403,
+      "actual": 403,
+      "passed": true
+    },
+    {
+      "case": "trader denied audit",
+      "method": "GET",
+      "path": "/api/audit/events",
+      "expected": 403,
+      "actual": 403,
+      "passed": true
+    },
+    {
+      "case": "trader own order allowed",
+      "method": "GET",
+      "path": "/api/orders/1",
+      "expected": 200,
+      "actual": 200,
+      "passed": true
+    },
+    {
+      "case": "trader own listings allowed",
+      "method": "GET",
+      "path": "/api/merchant/products",
+      "expected": 200,
+      "actual": 200,
+      "passed": true
+    },
+    {
+      "case": "trader cannot edit another seller listing",
+      "method": "PUT",
+      "path": "/api/merchant/products/1",
+      "expected": 403,
+      "actual": 403,
+      "passed": true
+    },
+    {
+      "case": "certificate challenge",
+      "method": "POST",
+      "path": "/api/auth/cert/challenge",
+      "expected": 200,
+      "actual": 200,
+      "passed": true
+    },
+    {
+      "case": "user4 certificate login",
+      "method": "POST",
+      "path": "/api/auth/cert/login",
+      "expected": 200,
+      "actual": 200,
+      "passed": true
+    },
+    {
+      "case": "certificate alone issues no privileged JWT",
+      "passed": true
+    },
+    {
+      "case": "MFA alone without challenge denied",
+      "method": "POST",
+      "path": "/api/auth/mfa/verify",
+      "expected": 400,
+      "actual": 400,
+      "passed": true
+    },
+    {
+      "case": "incorrect MFA denied",
+      "method": "POST",
+      "path": "/api/auth/mfa/verify",
+      "expected": 400,
+      "actual": 400,
+      "passed": true
+    },
+    {
+      "case": "correct MFA allows login",
+      "method": "POST",
+      "path": "/api/auth/mfa/verify",
+      "expected": 200,
+      "actual": 200,
+      "passed": true
+    },
+    {
+      "case": "consumed challenge replay denied",
+      "method": "POST",
+      "path": "/api/auth/mfa/verify",
+      "expected": 400,
+      "actual": 400,
+      "passed": true
+    },
+    {
+      "case": "auditor audit allowed",
+      "method": "GET",
+      "path": "/api/audit/events",
+      "expected": 200,
+      "actual": 200,
+      "passed": true
+    },
+    {
+      "case": "auditor platform management denied",
+      "method": "GET",
+      "path": "/api/admin/users",
+      "expected": 403,
+      "actual": 403,
+      "passed": true
+    },
+    {
+      "case": "auditor order creation denied",
+      "method": "POST",
+      "path": "/api/orders",
+      "expected": 403,
+      "actual": 403,
+      "passed": true
+    },
+    {
+      "case": "auditor listing management denied",
+      "method": "GET",
+      "path": "/api/merchant/products",
+      "expected": 403,
+      "actual": 403,
+      "passed": true
+    },
+    {
+      "case": "certificate challenge",
+      "method": "POST",
+      "path": "/api/auth/cert/challenge",
+      "expected": 200,
+      "actual": 200,
+      "passed": true
+    },
+    {
+      "case": "user4 certificate login",
+      "method": "POST",
+      "path": "/api/auth/cert/login",
+      "expected": 200,
+      "actual": 200,
+      "passed": true
+    },
+    {
+      "case": "old TOTP in new challenge denied",
+      "method": "POST",
+      "path": "/api/auth/mfa/verify",
+      "expected": 400,
+      "actual": 400,
+      "passed": true
+    },
+    {
+      "case": "one-time recovery allows login",
+      "method": "POST",
+      "path": "/api/auth/mfa/verify",
+      "expected": 200,
+      "actual": 200,
+      "passed": true
+    },
+    {
+      "case": "certificate challenge",
+      "method": "POST",
+      "path": "/api/auth/cert/challenge",
+      "expected": 200,
+      "actual": 200,
+      "passed": true
+    },
+    {
+      "case": "user4 certificate login",
+      "method": "POST",
+      "path": "/api/auth/cert/login",
+      "expected": 200,
+      "actual": 200,
+      "passed": true
+    },
+    {
+      "case": "used recovery rejected",
+      "method": "POST",
+      "path": "/api/auth/mfa/verify",
+      "expected": 400,
+      "actual": 400,
+      "passed": true
+    },
+    {
+      "case": "required MFA audit events recorded",
+      "passed": true
+    }
+  ],
+  "audit": [
+    {
+      "action": "auth.login.failed",
+      "username": null,
+      "result": "denied",
+      "resource": "/api/auth/cert/login",
+      "time": "2026-09-10T01:07:24.635286"
+    },
+    {
+      "action": "auth.login",
+      "username": "user1",
+      "result": "success",
+      "resource": "/api/auth/cert/login",
+      "time": "2026-09-10T01:07:24.698192"
+    },
+    {
+      "action": "rbac.denied",
+      "username": "user1",
+      "result": "denied",
+      "resource": "/api/admin/users",
+      "time": "2026-09-10T01:07:24.709113"
+    },
+    {
+      "action": "get /api/admin/users",
+      "username": "user1",
+      "result": "denied",
+      "resource": "/api/admin/users",
+      "time": "2026-09-10T01:07:24.710893"
+    },
+    {
+      "action": "rbac.denied",
+      "username": "user1",
+      "result": "denied",
+      "resource": "/api/audit/events",
+      "time": "2026-09-10T01:07:24.722634"
+    },
+    {
+      "action": "get /api/audit/events",
+      "username": "user1",
+      "result": "denied",
+      "resource": "/api/audit/events",
+      "time": "2026-09-10T01:07:24.723936"
+    },
+    {
+      "action": "put /api/merchant/products/1",
+      "username": "user1",
+      "result": "denied",
+      "resource": "/api/merchant/products/1",
+      "time": "2026-09-10T01:07:24.771214"
+    },
+    {
+      "action": "auth.mfa.challenge",
+      "username": "user4",
+      "result": "success",
+      "resource": "/api/auth/cert/login",
+      "time": "2026-09-10T01:07:24.824221"
+    },
+    {
+      "action": "auth.mfa.failed",
+      "username": "user4",
+      "result": "denied",
+      "resource": "/api/auth/mfa/verify",
+      "time": "2026-09-10T01:07:24.837410"
+    },
+    {
+      "action": "MFA_FAILED",
+      "username": "user4",
+      "result": "denied",
+      "resource": "/api/auth/mfa/verify",
+      "time": "2026-09-10T01:07:24.837414"
+    },
+    {
+      "action": "auth.mfa.enroll",
+      "username": "user4",
+      "result": "success",
+      "resource": "/api/auth/mfa/verify",
+      "time": "2026-09-10T01:07:24.845549"
+    },
+    {
+      "action": "auth.mfa.verify",
+      "username": "user4",
+      "result": "success",
+      "resource": "/api/auth/mfa/verify",
+      "time": "2026-09-10T01:07:24.845553"
+    },
+    {
+      "action": "MFA_SUCCESS",
+      "username": "user4",
+      "result": "success",
+      "resource": "/api/auth/mfa/verify",
+      "time": "2026-09-10T01:07:24.845555"
+    },
+    {
+      "action": "MFA_REPLAY",
+      "username": "user4",
+      "result": "denied",
+      "resource": "/api/auth/mfa/verify",
+      "time": "2026-09-10T01:07:24.850470"
+    },
+    {
+      "action": "audit.read",
+      "username": "user4",
+      "result": "success",
+      "resource": "/api/audit/events",
+      "time": "2026-09-10T01:07:24.865803"
+    },
+    {
+      "action": "rbac.denied",
+      "username": "user4",
+      "result": "denied",
+      "resource": "/api/admin/users",
+      "time": "2026-09-10T01:07:24.874230"
+    },
+    {
+      "action": "get /api/admin/users",
+      "username": "user4",
+      "result": "denied",
+      "resource": "/api/admin/users",
+      "time": "2026-09-10T01:07:24.874748"
+    },
+    {
+      "action": "rbac.denied",
+      "username": "user4",
+      "result": "denied",
+      "resource": "/api/orders",
+      "time": "2026-09-10T01:07:24.882651"
+    },
+    {
+      "action": "post /api/orders",
+      "username": "user4",
+      "result": "denied",
+      "resource": "/api/orders",
+      "time": "2026-09-10T01:07:24.883371"
+    },
+    {
+      "action": "rbac.denied",
+      "username": "user4",
+      "result": "denied",
+      "resource": "/api/merchant/products",
+      "time": "2026-09-10T01:07:24.891222"
+    },
+    {
+      "action": "get /api/merchant/products",
+      "username": "user4",
+      "result": "denied",
+      "resource": "/api/merchant/products",
+      "time": "2026-09-10T01:07:24.891697"
+    },
+    {
+      "action": "auth.mfa.challenge",
+      "username": "user4",
+      "result": "success",
+      "resource": "/api/auth/cert/login",
+      "time": "2026-09-10T01:07:24.937630"
+    },
+    {
+      "action": "auth.mfa.failed",
+      "username": "user4",
+      "result": "denied",
+      "resource": "/api/auth/mfa/verify",
+      "time": "2026-09-10T01:07:24.942509"
+    },
+    {
+      "action": "MFA_REPLAY",
+      "username": "user4",
+      "result": "denied",
+      "resource": "/api/auth/mfa/verify",
+      "time": "2026-09-10T01:07:24.942512"
+    },
+    {
+      "action": "auth.mfa.verify",
+      "username": "user4",
+      "result": "success",
+      "resource": "/api/auth/mfa/verify",
+      "time": "2026-09-10T01:07:24.949567"
+    },
+    {
+      "action": "MFA_SUCCESS",
+      "username": "user4",
+      "result": "success",
+      "resource": "/api/auth/mfa/verify",
+      "time": "2026-09-10T01:07:24.949570"
+    },
+    {
+      "action": "auth.mfa.challenge",
+      "username": "user4",
+      "result": "success",
+      "resource": "/api/auth/cert/login",
+      "time": "2026-09-10T01:07:25.001787"
+    },
+    {
+      "action": "auth.mfa.failed",
+      "username": "user4",
+      "result": "denied",
+      "resource": "/api/auth/mfa/verify",
+      "time": "2026-09-10T01:07:25.006399"
+    },
+    {
+      "action": "MFA_FAILED",
+      "username": "user4",
+      "result": "denied",
+      "resource": "/api/auth/mfa/verify",
+      "time": "2026-09-10T01:07:25.006402"
+    }
+  ]
+}

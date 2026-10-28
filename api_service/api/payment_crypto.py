@@ -1,7 +1,8 @@
 import base64
 import json
 
-from gmssl import func, sm2, sm3, sm4
+from src.utils.secure_sm2 import SecureSM2, secure_scalar
+from gmssl import func, sm3, sm4
 
 
 SIGNED_REQUEST_FIELDS = ("order_no", "amount", "merchant_id", "timestamp")
@@ -22,18 +23,18 @@ def sm3_hash_text(text: str) -> str:
 
 
 def public_key_from_private(private_key_hex: str) -> str:
-    crypt = sm2.CryptSM2(public_key="", private_key=private_key_hex)
+    crypt = SecureSM2(public_key="", private_key=private_key_hex)
     return crypt._kg(int(private_key_hex, 16), crypt.ecc_table["g"])
 
 
 def sign_payment_params(params: dict, private_key_hex: str) -> str:
     digest_hex = sm3_hash_text(canonical_string(params))
-    signer = sm2.CryptSM2(public_key=public_key_from_private(private_key_hex), private_key=private_key_hex)
-    return signer.sign(bytes.fromhex(digest_hex), func.random_hex(64))
+    signer = SecureSM2(public_key=public_key_from_private(private_key_hex), private_key=private_key_hex)
+    return signer.sign(bytes.fromhex(digest_hex), secure_scalar())
 
 
 def sm2_decrypt_key(encrypted_key: str, private_key_hex: str) -> bytes:
-    crypt = sm2.CryptSM2(public_key="", private_key=private_key_hex)
+    crypt = SecureSM2(public_key="", private_key=private_key_hex)
     raw = base64.urlsafe_b64decode(encrypted_key.encode("ascii"))
     return crypt.decrypt(raw)
 

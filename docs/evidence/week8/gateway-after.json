@@ -1,0 +1,53 @@
+{
+  "time_utc": "2026-10-17T04:30:30.251004+00:00",
+  "tls_ca_verified": true,
+  "entry": "https://localhost:8443",
+  "checks": [
+    {
+      "path": "/",
+      "status": 200,
+      "headers": {
+        "Content-Type": "text/html",
+        "X-Frame-Options": "DENY",
+        "Content-Security-Policy": "frame-ancestors 'none'; object-src 'none'; base-uri 'self'",
+        "X-Content-Type-Options": "nosniff"
+      }
+    },
+    {
+      "path": "/products",
+      "status": 200,
+      "headers": {
+        "Content-Type": "text/html",
+        "X-Frame-Options": "DENY",
+        "Content-Security-Policy": "frame-ancestors 'none'; object-src 'none'; base-uri 'self'",
+        "X-Content-Type-Options": "nosniff"
+      }
+    },
+    {
+      "path": "/products/",
+      "status": 200,
+      "headers": {
+        "Content-Type": "text/html",
+        "X-Frame-Options": "DENY",
+        "Content-Security-Policy": "frame-ancestors 'none'; object-src 'none'; base-uri 'self'",
+        "X-Content-Type-Options": "nosniff"
+      }
+    },
+    {
+      "path": "/login",
+      "status": 200,
+      "headers": {
+        "Content-Type": "text/html",
+        "X-Frame-Options": "DENY",
+        "Content-Security-Policy": "frame-ancestors 'none'; object-src 'none'; base-uri 'self'",
+        "X-Content-Type-Options": "nosniff"
+      }
+    },
+    {
+      "path": "/api/health/",
+      "error_type": "ReadTimeout"
+    }
+  ],
+  "frontend_headers_passed": true,
+  "scope": "Targeted header verification, not a full Burp rescan; API health status reported separately."
+}

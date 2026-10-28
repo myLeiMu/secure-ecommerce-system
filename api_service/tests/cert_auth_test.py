@@ -75,11 +75,18 @@ def try_password_login(base_url: str, username: str, password: str, timeout: int
 
 
 def ensure_user(base_url: str, username: str, password: str, timeout: int) -> None:
+    # 尝试密码登录
     token = try_password_login(base_url, username, password, timeout)
     if token:
+        print(f"  用户 {username} 已存在，登录成功")
         return
+    
+    print(f"  用户 {username} 不存在，开始注册...")
+    # 生成随机手机号和邮箱
     phone = f"139{random.randint(10000000, 99999999)}"
     email = f"{username}_{int(time.time())}@example.com"
+    
+    # 注册用户
     r = requests.post(
         f"{base_url}/api/users/register",
         json={
@@ -91,11 +98,20 @@ def ensure_user(base_url: str, username: str, password: str, timeout: int) -> No
         },
         timeout=timeout,
     )
+    
     if r.status_code != 200 or (r.json().get("code") != 0):
         raise RuntimeError(f"注册失败: {r.status_code} {r.text}")
+    
+    print(f"  [INFO] 用户注册成功: {username}")
+    print(f"  [INFO] 注册邮箱: {email}")
+    print(f"  [INFO] 注册手机: {phone}")
+    
+    # 验证注册后可以登录
     token = try_password_login(base_url, username, password, timeout)
     if not token:
         raise RuntimeError("注册后密码登录失败")
+    
+    print(f"  注册后登录验证成功")
 
 
 def cert_login_flow(base_url: str, username: str, cert_pem: str, private_key_hex: str, timeout: int) -> str:
@@ -144,19 +160,49 @@ def main():
     parser.add_argument("--timeout", type=int, default=60)
     args = parser.parse_args()
     base_url = resolve_base_url(args.base_url)
-
+    
+    print("=" * 60)
+    print("开始测试：证书身份认证完整流程")
+    print("=" * 60)
+    print(f"测试服务器: {base_url}")
+    print(f"测试用户: {args.username}")
+    
+    # 1. 确保用户存在
+    print("\n[1/4] 准备测试用户...")
     ensure_user(base_url, args.username, args.password, args.timeout)
+    print("[PASS] 测试用户准备完成")
+    
+    # 2. 生成证书材料
+    print("\n[2/4] 生成证书材料...")
     cert_path, key_path = create_local_cert_material(args.username, args.out_dir)
     with open(cert_path, "r", encoding="utf-8") as f:
         cert_pem = f.read()
     with open(key_path, "r", encoding="utf-8") as f:
         private_key_hex = f.read().strip()
+    print("[PASS] 证书材料生成完成")
+    print(f"  证书文件: {os.path.basename(cert_path)}")
+    print(f"  私钥文件: {os.path.basename(key_path)}")
+    
+    # 3. 执行证书登录流程
+    print("\n[3/4] 执行证书登录流程...")
     token = cert_login_flow(base_url, args.username, cert_pem, private_key_hex, args.timeout)
+    print("[PASS] 证书登录成功")
+    print(f"  获取到JWT令牌: {token[:30]}...")
+    
+    # 4. 验证令牌有效性
+    print("\n[4/4] 验证令牌有效性...")
     verify_profile(base_url, token, args.timeout)
-    print("PASS cert-auth flow")
-    print(f"BASE_URL={base_url}")
-    print(f"TOKEN_PREFIX={token[:24]}")
-    print(f"CERT_PATH={os.path.abspath(cert_path)}")
+    print("[PASS] 令牌验证成功，可以正常访问用户信息")
+    
+    print("\n" + "=" * 60)
+    print("测试结果：证书身份认证完整流程测试通过！")
+    print("=" * 60)
+    print(f"测试详情:")
+    print(f"  - 服务器地址: {base_url}")
+    print(f"  - 测试用户: {args.username}")
+    print(f"  - 证书路径: {os.path.abspath(cert_path)}")
+    print(f"  - 令牌前缀: {token[:24]}...")
+    print(f"  - 测试时间: {time.strftime('%Y-%m-%d %H:%M:%S')}")
 
 
 if __name__ == "__main__":

@@ -1,0 +1,2 @@
+WARNING:pip_audit._cache:Failed to write to cache directory, performance may be degraded: [WinError 17] ϵͳ�޷����ļ��Ƶ���ͬ�Ĵ�����������: 'C:\\Users\\66476\\AppData\\Local\\pip-audit\\Cache\\6\\7\\5\\a\\b\\tmp4e20543k' -> 'C:\\Users\\66476\\AppData\\Local\\pip-audit\\Cache\\6\\7\\5\\a\\b\\675ab760160f7896418da155e1e0c0347b8354c398decec1a2c3b988'
+No known vulnerabilities found

@@ -1,0 +1,9 @@
+timeStamp,elapsed,label,responseCode,responseMessage,threadName,dataType,success,failureMessage,bytes,sentBytes,grpThreads,allThreads,URL,Latency,IdleTime,Connect
+1792211790450,3269,login,200,OK,Trading user journey 1-1,text,true,,939,258,1,1,http://127.0.0.1:8768/api/auth/login,3264,0,18
+1792211795801,6,products,200,OK,Trading user journey 1-1,text,true,,13102,228,1,1,http://127.0.0.1:8768/api/products?page=1&page_size=20,5,0,1
+1792211796826,9,setup_cart,200,OK,Trading user journey 1-1,text,true,,442,567,1,1,http://127.0.0.1:8768/api/cart,9,0,1
+1792211797851,10,order,200,OK,Trading user journey 1-1,text,true,,562,591,1,1,http://127.0.0.1:8768/api/orders,10,0,1
+1792211798875,2800,login,200,OK,Trading user journey 1-1,text,true,,939,258,1,1,http://127.0.0.1:8768/api/auth/login,2800,0,1
+1792211802685,5,products,200,OK,Trading user journey 1-1,text,true,,13113,228,1,1,http://127.0.0.1:8768/api/products?page=1&page_size=20,5,0,0
+1792211803696,10,setup_cart,200,OK,Trading user journey 1-1,text,true,,442,567,1,1,http://127.0.0.1:8768/api/cart,10,0,1
+1792211804708,10,order,200,OK,Trading user journey 1-1,text,true,,562,591,1,1,http://127.0.0.1:8768/api/orders,10,0,1

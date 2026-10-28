@@ -1,0 +1,12 @@
+
+> ecommerce-frontend@1.0.0 test
+> vitest run
+
+
+ RUN  v5.0.5 D:/Coding/secure-ecommerce-project/frontend
+
+
+ Test Files  3 passed (3)
+      Tests  23 passed (23)
+   Start at  20:16:31
+   Duration  2.60s (environment 96%, transform 2%, worker 2%, import 1%)

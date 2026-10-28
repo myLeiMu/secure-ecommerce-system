@@ -1,0 +1,29 @@
+{
+  "time_utc": "2026-10-17T04:43:35.104717+00:00",
+  "entry": "http://127.0.0.1:3001",
+  "navigation_accept": "text/html",
+  "checks": [
+    {
+      "path": "/",
+      "status": 200,
+      "x_frame_options": "DENY",
+      "csp": "frame-ancestors 'none'; object-src 'none'; base-uri 'self'"
+    },
+    {
+      "path": "/login",
+      "status": 200,
+      "x_frame_options": "DENY",
+      "csp": "frame-ancestors 'none'; object-src 'none'; base-uri 'self'"
+    },
+    {
+      "path": "/products/",
+      "status": 200,
+      "x_frame_options": "DENY",
+      "csp": "frame-ancestors 'none'; object-src 'none'; base-uri 'self'"
+    }
+  ],
+  "untrusted_host_status": 200,
+  "untrusted_host_rejected": true,
+  "passed": true,
+  "note": "webpack-dev-server 4 sends Invalid Host header with HTTP 200; rejection is checked by body, not inferred from status. Vue SPA navigation requires HTML Accept."
+}

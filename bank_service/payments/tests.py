@@ -5,6 +5,7 @@ from urllib.parse import parse_qs, urlparse
 
 from django.conf import settings
 from django.test import Client, TestCase
+from django.test import override_settings
 from django.urls import reverse
 
 from .models import BankAccount, PaymentTransaction
@@ -13,6 +14,16 @@ from .security import get_merchant_private_key, open_result_envelope, sign_param
 
 class PaymentFlowTests(TestCase):
     def setUp(self):
+        # Fresh fixture keys: tests never depend on checked-in or live private keys.
+        import secrets
+        from gmssl import sm2
+        private = f'{secrets.randbelow(int(sm2.default_ecc_table["n"], 16) - 1) + 1:064x}'
+        signer = sm2.CryptSM2(public_key='', private_key=private)
+        public = signer._kg(int(private, 16), sm2.default_ecc_table['g'])
+        keys = override_settings(BANK_MERCHANT_PRIVATE_KEYS={'ECOMMERCE_DEMO': private},
+                                 BANK_MERCHANT_PUBLIC_KEYS={'ECOMMERCE_DEMO': public})
+        keys.enable()
+        self.addCleanup(keys.disable)
         self.client = Client()
         self.account = BankAccount.objects.create(
             account_number="6222000000000001",
@@ -119,3 +130,31 @@ class PaymentFlowTests(TestCase):
         payment = PaymentTransaction.objects.get(order_no="ORD10001")
         self.assertEqual(payment.status, PaymentTransaction.STATUS_FAILED)
         self.assertEqual(payment.message, "账户余额不足")
+
+    @patch("payments.views.requests.post")
+    def test_replayed_successful_payment_does_not_debit_twice(self, mock_post):
+        mock_post.return_value.status_code = 200
+        mock_post.return_value.text = "ok"
+        params = self.signed_params()
+        payload = {
+            **params,
+            "account_number": self.account.account_number,
+            "pay_password": "123456",
+        }
+
+        first_response = self.client.post(reverse("pay-process"), payload)
+        second_response = self.client.post(reverse("pay-process"), payload)
+
+        self.assertEqual(first_response.status_code, 302)
+        self.assertEqual(second_response.status_code, 302)
+        self.account.refresh_from_db()
+        self.assertEqual(self.account.balance, Decimal("74.50"))
+        self.assertEqual(
+            PaymentTransaction.objects.filter(
+                order_no="ORD10001",
+                merchant_id="ECOMMERCE_DEMO",
+                status=PaymentTransaction.STATUS_SUCCESS,
+            ).count(),
+            1,
+        )
+        self.assertEqual(mock_post.call_count, 1)

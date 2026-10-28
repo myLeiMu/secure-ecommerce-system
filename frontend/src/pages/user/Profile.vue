@@ -263,7 +263,8 @@ export default {
       profileForm.username = profile.username || '';
       profileForm.email = profile.email || '';
       profileForm.phone = profile.phone || '';
-      bankCardForm.bankCardNumber = profile.bank_card_number || '';
+      // Existing card is shown masked above; entering a new card is explicit.
+      bankCardForm.bankCardNumber = '';
     };
 
     const maskBankCard = (value) => {

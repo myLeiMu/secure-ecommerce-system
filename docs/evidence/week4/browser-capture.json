@@ -1,0 +1,37 @@
+{
+  "environment": "Isolated localhost HTTP demo, real browser Axios interceptor (not nginx mTLS)",
+  "request": {
+    "method": "POST",
+    "path": "/api/tunnel/demo",
+    "body": {
+      "v": 1,
+      "kid": "d7e3ccfe4300f729",
+      "ts": 1789610223,
+      "nonce": "123f490aba77222ccd99f108",
+      "encrypted_key": "44c090989e92e0e1cbdb0cd9be3fcee9ee0c0f1c18f9846477545826f0444b0d17968b9c6d2cb14b5865482bc939e5a65a038a9efe37bc47821ce3be1f4519fbe28fa531653167cfdf397b87cf7df6cf1641996b141a064e4853853d5e1c09c490ee7d61626634b7ea83b04fbd8f6d74",
+      "ciphertext": "5eae9dfc3a11563cf9688e2925a33eb20858771a2f7022d0a4bafee00806bc8a2f880d82aed123a43c8a8d86981b40923a50850ec7a04e4d0eb7dcc6401df9ba9ce3989a8297c608108938232d7d46fe052932b7b6592d10e6c3f0e8cf4d83541639ef9ca9c6d8e88375e1b0205c60257b01",
+      "tag": "88e7af966c72bf323fa8221fff2417f9"
+    }
+  },
+  "response": {
+    "status": 200,
+    "body": {
+      "code": 200,
+      "message": "密文验证通过，收件信息已解密（演示不保存）",
+      "data": {
+        "verified": true,
+        "phone_masked": "138****1234",
+        "plaintext_sha256": "80d0d57ed42547a421f996480111169def5adbe24f0287f3dbc6f68713de8699"
+      }
+    }
+  },
+  "replay": {
+    "status": 409,
+    "body": {
+      "code": "TUNNEL_REPLAY",
+      "message": "检测到重复请求，请重新提交",
+      "data": null
+    }
+  },
+  "errors": []
+}

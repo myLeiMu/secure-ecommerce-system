@@ -64,9 +64,9 @@
           <p class="field-hint">请选择最匹配的交易分类</p>
         </div>
         <div class="form-field">
-          <label class="field-label">图片 URL</label>
-          <input v-model="form.image_urls_text" type="text" placeholder="多个链接用英文逗号分隔" />
-          <p class="field-hint">示例：https://a.com/1.jpg,https://a.com/2.jpg</p>
+          <label class="field-label">网络图片 URL</label>
+          <textarea v-model="form.image_urls_text" rows="3" placeholder="粘贴网络图片 URL，每行一个" aria-label="图片 URL"></textarea>
+          <p class="field-hint">支持 HTTP / HTTPS 图片直链，每行一个，建议使用 HTTPS。</p><ImageUrlPreview :value="form.image_urls_text" />
         </div>
       </div>
       <div class="form-field">
@@ -107,6 +107,8 @@
 import { computed, onMounted, reactive, ref, watch } from 'vue';
 import { useStore } from 'vuex';
 import { useRoute, useRouter } from 'vue-router';
+import ImageUrlPreview from '../../components/common/ImageUrlPreview.vue';
+import { parseImageUrls, isImageUrl } from '../../utils/productImages';
 import ProductCard from '../../components/common/ProductCard.vue';
 import LoadingSpinner from '../../components/common/LoadingSpinner.vue';
 import ErrorMessage from '../../components/common/ErrorMessage.vue';
@@ -115,7 +117,7 @@ import { cartAPI } from '../../services/api/cartAPI';
 
 export default {
   name: 'ProductList',
-  components: { ProductCard, LoadingSpinner, ErrorMessage },
+  components: { ImageUrlPreview, ProductCard, LoadingSpinner, ErrorMessage },
   setup() {
     const store = useStore();
     const route = useRoute();
@@ -237,7 +239,7 @@ export default {
       form.sale_price = Number(product.sale_price || 0);
       form.stock_quantity = Number(product.stock_quantity || 0);
       form.category_id = Number(product.category_id || '');
-      form.image_urls_text = Array.isArray(product.image_urls) ? product.image_urls.join(',') : '';
+      form.image_urls_text = Array.isArray(product.image_urls) ? product.image_urls.join('\n') : '';
       formVisible.value = true;
     };
 
@@ -247,10 +249,8 @@ export default {
     };
 
     const buildProductPayload = () => {
-      const imageUrls = form.image_urls_text
-        .split(',')
-        .map((item) => item.trim())
-        .filter(Boolean);
+      const imageUrls = parseImageUrls(form.image_urls_text);
+      if (imageUrls.some(url => !isImageUrl(url))) throw new Error('请填写有效的 HTTP / HTTPS 图片链接');
       const basePayload = {
         product_name: form.product_name.trim(),
         description: form.description.trim(),

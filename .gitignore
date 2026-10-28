@@ -24,7 +24,7 @@ rsa_key_secure.json
 asym_key_secure.json
 asym_key_secure.json.backup.*
 API测试报告.md
-
+dist-releases/
 # Raw Burp reports can contain live authentication material. Commit reviewed copies only.
 docs/reports/DAST.html
 docs/reports/DAST-fixed.html

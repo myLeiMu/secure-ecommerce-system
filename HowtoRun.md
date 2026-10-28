@@ -1,155 +1,119 @@
-### Redis配置（不配也行，系统会直接用内存进行缓存）
-在WSL中安装Redis,当然你用虚拟机也可以
-```
-sudo apt update
-sudo apt install redis-server
-```
+# 第八周版本启动与环境配置
 
-修改配置
-`sudo nano /etc/redis/redis.conf`
+对应版本：[第八周交付索引](docs/week8/README.md)。旧的 HTTP 3000、Vue CLI 和直接 runserver 8080 说明已被本页替代。以下默认 Windows 项目目录 `D:/Coding/secure-ecommerce-project`，nginx 在 WSL Ubuntu-22.04；换机器必须调整路径和 WSL 网卡地址。
 
-绑定所有接口，不只是127.0.0.1
-`bind 0.0.0.0`
+## 1. 已有本机环境日常启动
 
-保护模式关闭（允许外部连接）
-`protected-mode no`
+保留现有 `.env`、数据库和 `keys/`，不要复制模板覆盖它们，不要重新生成银行卡、TOTP 或隧道加密密钥。
 
-设置密码（通过查找**# requirepass foobared**这里要去掉#即注释符）
-`requirepass Redis_passwd`
+1. 启动 WSL、MySQL 和已配置的 nginx。WSL 内可用 `sudo nginx -t` 检查配置；已有服务用 `sudo service nginx start` 启动。不要更改其他项目的 80 端口服务。
+2. 在项目根目录、WAF 环境启动电商后端：
 
-这里如果更改了自己的密码也要相应地在.env中更改
+   ```powershell
+   conda activate WAF
+   python scripts/serve_backend.py
+   ```
 
-设置完成后输入`ip route get 1 | awk '{print $7}'`
-查看wsl（或者虚拟机）的ip地址，然后在.env中修改配置
+   后端监听 127.0.0.1:8080 和 Windows 的 WSL 专用网卡，不监听所有网卡。找不到 WSL 网卡时先启动 WSL；网卡地址变更后还要同步 nginx upstream。不要同时启动旧 runserver 占用 8080。
+3. 课堂展示使用生产构建：
 
-## 后端
+   ```powershell
+   cd frontend
+   npm ci
+   npm run build
+   ```
 
-先安装项目依赖，在doc里面
+   打开 **https://localhost:8443**。nginx 直接服务 `frontend/dist`，此模式不需要运行 Vite。
+4. 需要前端热更新时，在 frontend 另开终端运行 `npm run dev`，打开 **https://localhost:3000**。证书登录按钮转到 8443；3000 不是 nginx mTLS 入口。
+5. 演示支付时，另一个 WAF 终端在项目根目录执行：
 
-先打开Redis
-我这里是在wsl中
-输入`sudo service redis-server start`或者`sudo systemctl start redis-server`
+   ```powershell
+   python bank_service/manage.py runserver 127.0.0.1:8001
+   ```
 
-之后返回主机终端输入
-`cd api_service``就可启动后端
+   本机 `.env` 的 BANK_PAY_BASE_URL/BANK_REFUND_URL 应对应 8001，支付回跳到 HTTPS 8443，因此完整支付演示也从 8443 登录开始。模拟银行仅用于本机课堂。
 
-### 如果要看swagger文档
+| 地址 | 用途 |
+| --- | --- |
+| https://localhost:8443 | nginx 生产前端、同源 API、浏览器证书验证 |
+| https://localhost:3000 | Vite 开发前端及同源代理，需要本地 TLS 文件 |
+| http://127.0.0.1:8080 | 内部电商上游；不是浏览器业务入口，敏感明文请求被拒绝 |
+| http://localhost:8088 | 跳转至固定 HTTPS 8443 |
+| http://127.0.0.1:8001 | 仅本机模拟银行 |
 
-访问http://127.0.0.1:8080/api/swagger/
+## 2. 新机器获取源码后
 
-登录账号
-normal(这是我们定义的普通用户):
-username:testuser
-password:TestPass123!
-admin:
-username:admin
-password:AdminPass123!
+源码包和 Git 都不提供实际账号密码、数据库、私钥或认证抓包。以下属于新安装操作，**已有环境跳过**。本次没有在另一台空白机器完整复现部署，不能把环境模板视为一键部署保证。
 
-要认证的功能需要在Authorize中输入**Bearer token(中间有个空格)**
-这个token是你登录的时候返回的response里的token
-### 手动检测方案（可跳过）
-测试黑名单统计
-`python manage.py cleanup_jwt_blacklist --stats`
+### 运行依赖
 
-清理过期令牌
-`python manage.py cleanup_jwt_blacklist --cleanup`
+本版实际验证 Python 3.13.5、Node 22.20.0。新建独立 WAF 环境后，在项目根目录执行：
 
-同时显示统计和清理
-`python manage.py cleanup_jwt_blacklist --stats --cleanup`
-
-到此后端配置完毕
-## 前端
-
-配置完vue后，在frontend文件夹，即前端项目中输入`npm install`这一步是安装前端的依赖
-之后输入`npm run dev`即可，按照终端提示进入前端，也可直接访问 http://localhost:3000/ 
-这里前端的管理员和普通用户的界面不一样
-
-## 数据库
-
-我们这里是用的mysql，这里我们是使用的root用户，需要自行在.env中更改你自己的root账户密码，不然连接不上数据库
-
-## mTLS证书弹窗演示
-
-先在项目根目录执行：
-`python -m api_service.tests.prepare_mtls_popup_demo`
-
-它会生成：
-- 浏览器导入文件：`keys/mtls_demo/client_testuser.p12`
-- nginx配置：`keys/mtls_demo/nginx_mtls_demo.conf`
-
-然后按顺序：
-1. 把 `client_testuser.p12` 导入浏览器证书（密码默认 `123456`）
-2. 启后端：`conda activate WAF` 后执行 `python api_service\manage.py runserver 127.0.0.1:8080`
-3. 启nginx（指定上面生成的配置文件）
-4. 打开 `https://localhost:8443/api/health/`，会弹证书选择窗口
-5. 调用 `https://localhost:8443/api/auth/cert/mtls-login`，body:
-`{"username":"testuser"}`
-
-## 模拟银行服务
-
-银行服务是独立 Django 项目，默认运行在 `127.0.0.1:8000`，电商后端默认运行在 `127.0.0.1:8080`。
-
-前端登录和银行支付回跳必须使用同一个浏览器来源。默认回跳到：
-
-```text
-http://localhost:3000/payment/result
+```powershell
+python -m pip install -r docs/requirements/runtime-week8.txt
+python -m pip install -r docs/requirements/security-tools.txt
+cd frontend
+npm ci
 ```
 
-所以测试时建议始终从 `http://localhost:3000` 进入前端，不要一会儿用 `localhost`、一会儿用 `127.0.0.1`，否则浏览器 localStorage 中的登录 token 不共享，支付成功后点“查看我的订单”会被当成未登录并跳到登录页。
+[runtime-week8.txt](docs/requirements/runtime-week8.txt) 是按现有 WAF 实装版本整理的应用直接依赖与关键补丁约束，不是含全部传递依赖及哈希的跨平台锁文件。[requirements.txt](docs/requirements/requirements.txt) 是历史环境快照，包含 Conda/科学计算包，不应原样作为任意机器的 pip 安装清单。JMeter 还需单独安装 Java/JMeter，见 [performance/README](performance/README.md)。
 
-### 银行数据库
+### 数据库、密钥和账号
 
-银行服务使用 MySQL 和 Django migration。默认读取项目根目录 `.env` 中的 MySQL 配置：
-DB_HOST，DB_PORT，DB_USERNAME，DB_PASSWORD。
+1. 在数据库管理工具创建电商库 `ecommerce_system` 和银行库 `mock_bank_service`，使用各自仅可访问本库的应用账号。实际密码在本地配置，不提交 Git。
+2. 仅在根目录尚无 `.env` 时，把 `.env.example` 复制为 `.env`，填写数据库连接。BANK_DB_USERNAME/PASSWORD 是独立配置，空值不会自动继承电商账号；两套都要填写。
+3. 进入 Python 交互解释器，执行以下代码生成缺失的 Django 密钥，不输出密钥，不覆盖已有值：
 
-银行数据库默认名：
-mock_bank_service
+   ```python
+   import secrets
+   from dotenv import dotenv_values, set_key
+   config = dotenv_values('.env')
+   for name in ('DJANGO_SECRET_KEY', 'BANK_DJANGO_SECRET_KEY'):
+       if not config.get(name):
+           set_key('.env', name, secrets.token_urlsafe(48))
+   ```
 
-首次使用时先创建数据库：
-mysql -u root -p
-CREATE DATABASE mock_bank_service;
+   退出解释器后运行 `python scripts/setup_security.py`，生成缺失的 JWT、代理和 TOTP 加密密钥。新环境无旧账号可使用这一步；恢复旧数据库必须恢复原 MFA/卡号/隧道密钥，不能用新钥代替。
+4. 创建结构并生成新环境的必要密钥：
 
-然后在主目录里面执行迁移和初始化测试银行卡：
-python bank_service\manage.py migrate
-python bank_service\manage.py seed_bank
+   ```powershell
+   python api_service/manage.py init_security
+   python scripts/encrypt_stored_cards.py
+   python scripts/setup_tunnel.py
+   python api_service/manage.py seed_week1
+   ```
 
-启动银行服务：
-python bank_service\manage.py runserver 127.0.0.1:8000
+   seed_week1 交互输入新课堂账号密码，不使用公开固定密码参数；已有账号保持不变。它创建三个业务身份，多名卖家测试账号仍是 normal。主要演示账号为 week1_admin、week1_auditor、week1_buyer。管理员和审计员首次登录按界面绑定 TOTP，二维码与手动密钥等价。
+5. 如需新环境支付，先初始化银行库 `python bank_service/manage.py migrate`，再用 `python bank_service/manage.py seed_bank` 创建仅供课堂的测试数据。**仅新环境初始化时**执行 `python scripts/rotate_payment_keys.py --rotate` 配置电商与银行的配对商户密钥；已有环境不要重复执行，尤其不能在待支付订单仍有效时随意换钥。
 
-这里如果端口被占用可以直接在.env中配置，添加新项如：
-BANK_PAY_BASE_URL=http://127.0.0.1:8001
-BANK_REFUND_URL=http://127.0.0.1:8001/api/refund
-然后将所有的请求都指向这个端口
-银行 Swagger：
-http://127.0.0.1:8000/api/swagger/
+`.env` 和 `keys/` 需要私下加密备份；绑定账号、证书及数据库状态也需匹配。恢复加密数据库但丢失原密钥时，应停止恢复流程，不把密文当明文或重新生成密钥强行启动。
 
-### 银行测试账户
-在银行卡数据库中准备了三张卡，密码都是123456。
+### 新环境 WSL nginx 与证书
 
-测试完整支付流程时，需要先在电商个人中心绑定银行侧存在的银行卡号，例如 `6222000000000001`。银行支付页只会显示当前用户绑定的银行卡。
+1. 启动 WSL，在 Windows 查看专用网卡：
 
+   ```powershell
+   Get-NetIPAddress -AddressFamily IPv4 | Where-Object { $_.InterfaceAlias -like '*WSL*' } | Select-Object InterfaceAlias,IPAddress
+   ```
 
-### 商户配置
+2. 在项目根目录运行 `python scripts/prepare_wsl_mtls.py --backend-ip <实际WSL网卡IPv4>`。它生成本机 CA、localhost 证书、三个课堂账号 P12、代理 secret include 和 nginx 配置，位于忽略的 `keys/mtls_local/`。不要把这些文件上传仓库。
+3. 在 WSL 安装好 nginx 后，将生成的 `nginx-site.conf` 安装为本项目站点，`proxy-secret.conf` 安装到 `/etc/nginx/snippets/secondhand-mtls-secret.conf`（仅 root 可读）。例如，**仅新安装且目标文件尚不存在**：
 
-默认商户：
-merchant_id=ECOMMERCE_DEMO
+   ```bash
+   sudo install -d -m 755 /etc/nginx/snippets
+   sudo install -m 600 /mnt/d/Coding/secure-ecommerce-project/keys/mtls_local/proxy-secret.conf /etc/nginx/snippets/secondhand-mtls-secret.conf
+   sudo install -m 644 /mnt/d/Coding/secure-ecommerce-project/keys/mtls_local/nginx-site.conf /etc/nginx/sites-available/mtls_demo.conf
+   sudo ln -s /etc/nginx/sites-available/mtls_demo.conf /etc/nginx/sites-enabled/mtls_demo.conf
+   sudo nginx -t
+   sudo service nginx start
+   ```
 
-银行侧保存商户公钥用于验签和加密 SM4 密钥。本地测试命令 `make_pay_url` 还会读取商户私钥，用来模拟电商端签名。
+   已有配置先备份并核对，不能覆盖其他项目站点。若默认 nginx 80 站点与其他服务冲突，只调整本项目新安装的默认站点配置，不停止别人的服务。项目站点使用 8443 和 8088。已有 nginx 配置应用加固见[整改报告](docs/reports/2026-10-21-漏洞整改与复测.md)。
+4. Windows/浏览器信任 `classroom-ca.crt`；按需导入对应账号 P12，导入口令见本机配套 `*.import-password.txt`。P12 是私密身份材料，不在课堂投屏或文档中展示口令。
+5. nginx 验证证书信任链，后端通过受信代理读取客户端证书 CN，并与已有用户名匹配；角色从数据库读取，不由证书赋予。管理员和审计员还需完成账号的 TOTP 绑定。按[证书登录与手动课堂演示](docs/todo/证书登录与手动课堂演示.md)验证证书选取、用户名匹配和 MFA；更换 CA 后要同步浏览器、nginx 与 Burp 的信任配置。
 
-BANK_MERCHANT_PRIVATE_KEYS=ECOMMERCE_DEMO:商户私钥hex
-BANK_MERCHANT_PUBLIC_KEYS=ECOMMERCE_DEMO:商户公钥hex
-BANK_MERCHANT_CALLBACK_URLS=ECOMMERCE_DEMO:http://127.0.0.1:8080/api/pay/callback
+## 3. Redis 与测试边界
 
-### 生成测试支付 URL
+Redis 连接失败时代码有进程内缓存回退，但多进程共享状态和持久性不等价，不能把回退模式当成正式多实例部署。沿用本机已配置 Redis 即可；新配置应绑定回环或必要的专用接口、保留 protected-mode、设置凭据及访问限制，**不要照搬旧文档的 bind 0.0.0.0 / protected-mode no**。第九周需把是否启用 Redis 写入冻结环境。
 
-可以用以下命令生成一条测试支付 URL：
-python bank_service\manage.py make_pay_url --order-no ORD10001 --amount 88.50
-打开输出 URL，选择测试账户并输入支付密码，即可完成模拟支付。
-
-### 电商数据库补字段
-
-电商系统使用 SQLAlchemy 管理表结构。如果新增了 `users.bank_card_number`、`orders.is_deleted` 这类字段，需要在项目根目录执行：
-python -c "from src.Data_base.database import init_db; init_db()"
-
-银行服务的表结构更新使用 Django migration：
-python bank_service\manage.py migrate
+需要 Swagger 时使用 HTTPS 8443 的 `/api/swagger/`，用实际登录令牌临时授权，不能复制到仓库。安全复测与第八周演示见[交付说明](docs/week8/README.md)；原始 Burp 报告含认证信息，仅提交审核后的脱敏副本。

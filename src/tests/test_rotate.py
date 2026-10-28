@@ -1,14 +1,15 @@
 from src.algorithm.rsa_service import SM2Service
 from src.algorithm.secure_key_storage import SecureKeyStorage
+from tempfile import TemporaryDirectory
+import secrets
 
 def test_rotate_generate_new():
-    service = SM2Service()
-    storage = SecureKeyStorage()  # 实例化密钥存储
-    new_pass = "test-password"
-
-    print("===== 测试密钥轮换：生成新密钥并保存 =====")
-    storage.rotate_key(service, new_password=new_pass)
-    print("完成：新密钥已生成并保存。")
+    with TemporaryDirectory() as key_dir:
+        service = SM2Service(key_dir)
+        storage = service.secure_storage
+        print("===== 在临时目录测试密钥轮换 =====")
+        storage.rotate_key(service, new_password=secrets.token_urlsafe(24))
+        print("完成：测试密钥已生成并保存，不修改业务密钥。")
 
 if __name__ == "__main__":
     test_rotate_generate_new()

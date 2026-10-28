@@ -14,6 +14,7 @@ os.environ['DJANGO_SETTINGS_MODULE'] = 'service.test_settings'
 os.environ['DATABASE_URL'] = 'sqlite:///file:course_' + secrets.token_hex(8) + '?mode=memory&cache=shared&uri=true'
 os.environ['JWT_SECRET_KEY'] = 'test-only-key-' + 'x' * 48
 os.environ['MFA_ENCRYPTION_KEY'] = Fernet.generate_key().decode()
+os.environ['BANK_CARD_ENCRYPTION_KEY'] = Fernet.generate_key().decode()
 os.environ['SM3_PBKDF2_ITERATIONS'] = '50'  # Fast fixtures; production setting is untouched.
 import django
 django.setup()

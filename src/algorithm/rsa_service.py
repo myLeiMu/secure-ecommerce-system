@@ -3,12 +3,12 @@ import os
 import secrets
 import string
 from src.algorithm.secure_key_storage import SecureKeyStorage
-from gmssl import sm2, func
+from src.utils.secure_sm2 import SecureSM2, secure_scalar
 import base64
 
 class SM2Service:
-    def __init__(self):
-        self.key_dir = "keys"
+    def __init__(self, key_dir="keys"):
+        self.key_dir = os.fspath(key_dir)
         os.makedirs(self.key_dir, exist_ok=True)
         self.secure_storage = SecureKeyStorage(
             filepath=os.path.join(self.key_dir, "sm2_key_secure.json"),
@@ -25,12 +25,12 @@ class SM2Service:
         return ''.join(secrets.choice(characters) for _ in range(32))
 
     def generate_keys(self, password=None):
-        private_key_hex = func.random_hex(64)
-        sm2_crypt = sm2.CryptSM2(public_key="", private_key=private_key_hex)
+        private_key_hex = secure_scalar(private=True)
+        sm2_crypt = SecureSM2(public_key="", private_key=private_key_hex)
         public_key_hex = sm2_crypt._kg(int(private_key_hex, 16), sm2_crypt.ecc_table["g"])
         self.private_key_hex = private_key_hex
         self.public_key_hex = public_key_hex
-        self._sm2 = sm2.CryptSM2(public_key=public_key_hex, private_key=private_key_hex)
+        self._sm2 = SecureSM2(public_key=public_key_hex, private_key=private_key_hex)
         print("[+] 已生成SM2密钥对。")
 
         with open(os.path.join(self.key_dir, "public_key.json"), "w", encoding="utf-8") as f:
@@ -57,7 +57,7 @@ class SM2Service:
         with open(os.path.join(self.key_dir, "public_key.json"), "r", encoding="utf-8") as f:
             pub = json.load(f)
         self.public_key_hex = pub["public_key"]
-        self._sm2 = sm2.CryptSM2(public_key=self.public_key_hex, private_key=self.private_key_hex or "")
+        self._sm2 = SecureSM2(public_key=self.public_key_hex, private_key=self.private_key_hex or "")
         print("[+] 公钥已加载。")
 
     def load_private_key_auto(self):
@@ -76,7 +76,7 @@ class SM2Service:
         if private_data:
             self.private_key_hex = private_data["private_key"]
             self.public_key_hex = private_data["public_key"]
-            self._sm2 = sm2.CryptSM2(public_key=self.public_key_hex, private_key=self.private_key_hex)
+            self._sm2 = SecureSM2(public_key=self.public_key_hex, private_key=self.private_key_hex)
             print("[+] 私钥已成功解密加载。")
             return True
         else:

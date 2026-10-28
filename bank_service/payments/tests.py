@@ -5,6 +5,7 @@ from urllib.parse import parse_qs, urlparse
 
 from django.conf import settings
 from django.test import Client, TestCase
+from django.test import override_settings
 from django.urls import reverse
 
 from .models import BankAccount, PaymentTransaction
@@ -13,6 +14,16 @@ from .security import get_merchant_private_key, open_result_envelope, sign_param
 
 class PaymentFlowTests(TestCase):
     def setUp(self):
+        # Fresh fixture keys: tests never depend on checked-in or live private keys.
+        import secrets
+        from gmssl import sm2
+        private = f'{secrets.randbelow(int(sm2.default_ecc_table["n"], 16) - 1) + 1:064x}'
+        signer = sm2.CryptSM2(public_key='', private_key=private)
+        public = signer._kg(int(private, 16), sm2.default_ecc_table['g'])
+        keys = override_settings(BANK_MERCHANT_PRIVATE_KEYS={'ECOMMERCE_DEMO': private},
+                                 BANK_MERCHANT_PUBLIC_KEYS={'ECOMMERCE_DEMO': public})
+        keys.enable()
+        self.addCleanup(keys.disable)
         self.client = Client()
         self.account = BankAccount.objects.create(
             account_number="6222000000000001",

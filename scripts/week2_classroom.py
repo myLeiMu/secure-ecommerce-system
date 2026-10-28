@@ -23,10 +23,10 @@ from src.algorithm.ca_center import create_root_ca, create_csr, issue_certificat
 from gmssl import sm2, func
 
 
-def run(serve=False):
+def run(serve=False, output_dir=None):
     fixture = CourseSecurityTests()
     records = []
-    output = ROOT / 'docs' / 'evidence' / 'week2'
+    output = Path(output_dir) if output_dir else ROOT / 'docs' / 'evidence' / 'week2'
     output.mkdir(parents=True, exist_ok=True)
     with tempfile.TemporaryDirectory(prefix='week2-cert-') as temporary:
         fixture.setUp()
@@ -139,5 +139,6 @@ def run(serve=False):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--serve', action='store_true', help='Keep isolated data available for browser screenshots on port 8766')
+    parser.add_argument('--output-dir', help='Keep dated reruns separate from the original evidence')
     args = parser.parse_args()
-    run(args.serve)
+    run(args.serve, args.output_dir)

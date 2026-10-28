@@ -1,0 +1,36 @@
+Unauthorized: /api/auth/cert/login
+Forbidden: /api/admin/users
+Forbidden: /api/audit/events
+Forbidden: /api/merchant/products/1
+Bad Request: /api/auth/mfa/verify
+Bad Request: /api/auth/mfa/verify
+Bad Request: /api/auth/mfa/verify
+Forbidden: /api/admin/users
+Forbidden: /api/orders
+Forbidden: /api/merchant/products
+Bad Request: /api/auth/mfa/verify
+Bad Request: /api/auth/mfa/verify
+Redis����ʧ��: Error 10061 connecting to 127.0.0.1:1. ����Ŀ�����������ܾ����޷����ӡ�.����ʹ���ڴ滺��
+JWT��Կ��ʼ����ɣ�����: 62
+ͳһ���̷����ʼ����ɣ�
+JWT��Կ��ʼ����ɣ�����: 62
+JWT��Կ��ʼ����ɣ�����: 62
+JWT��Կ��ʼ����ɣ�����: 62
+JWT��Կ��ʼ����ɣ�����: 62
+JWT��Կ��ʼ����ɣ�����: 62
+ͳһ���̷����ʼ����ɣ�
+JWT��Կ��ʼ����ɣ�����: 62
+JWT��Կ��ʼ����ɣ�����: 62
+JWT��Կ��ʼ����ɣ�����: 62
+ͳһ���̷����ʼ����ɣ�
+JWT��Կ��ʼ����ɣ�����: 62
+JWT��Կ��ʼ����ɣ�����: 62
+JWT��Կ��ʼ����ɣ�����: 62
+JWT��Կ��ʼ����ɣ�����: 62
+JWT��Կ��ʼ����ɣ�����: 62
+JWT��Կ��ʼ����ɣ�����: 62
+ͳһ���̷����ʼ����ɣ�
+JWT��Կ��ʼ����ɣ�����: 62
+JWT��Կ��ʼ����ɣ�����: 62
+ͳһ���̷����ʼ����ɣ�
+PASS: 28 checks; report: docs\evidence\remediation-20261021\week2\results.json

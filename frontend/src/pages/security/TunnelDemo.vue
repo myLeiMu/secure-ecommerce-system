@@ -21,8 +21,6 @@
           <dl><dt>服务端解密出的手机号（脱敏）</dt><dd>{{ result.data.phone_masked }}</dd>
             <dt>解密数据摘要 SHA-256</dt><dd class="hash">{{ result.data.plaintext_sha256 }}</dd></dl>
         </template>
-        <div class="hint"><h3>课堂抓包提示</h3><p>打开开发者工具 Network，检查 POST /api/tunnel/demo：请求体只有密文、密钥封装、时间戳和 nonce。可在 Burp Repeater 原样重放，预期返回 409。</p>
-          <p>采用 SM2 + SM4-GCM；HTTPS 和账号权限检查仍然生效。每次点击会生成新密钥、新 nonce。</p></div>
       </section>
     </div>
   </main>
